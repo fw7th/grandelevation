@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grand Elevation Solar LTD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;900&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5A623;
+    --gold-light: #FFD07A;
+    --black: #111111;
+    --white: #FAFAFA;
+    --grey: #F0EDE8;
+    --text-muted: #6B6558;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--white);
+    color: var(--black);
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 6vw;
+    background: rgba(250,249,247,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .nav-logo img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    text-decoration: none; color: var(--black);
+    font-size: 0.875rem; font-weight: 500; letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    background: var(--black); color: var(--white);
+    padding: 10px 22px; border-radius: 100px;
+    font-size: 0.875rem; font-weight: 500;
+    text-decoration: none; transition: background 0.2s, transform 0.15s;
+  }
+  .nav-cta:hover { background: var(--gold); color: var(--black); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 120px 6vw 80px;
+    gap: 60px;
+    background: var(--white);
+  }
+  .hero-text { animation: fadeUp 0.9s ease both; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--gold-light); color: var(--black);
+    padding: 6px 16px; border-radius: 100px;
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); display: block; }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    line-height: 1.1; letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+  h1 em { color: var(--gold); font-style: normal; }
+  .hero-sub {
+    font-size: 1.05rem; color: var(--text-muted); line-height: 1.7;
+    max-width: 440px; margin-bottom: 44px;
+  }
+  .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--black); color: var(--white);
+    padding: 15px 32px; border-radius: 100px;
+    font-size: 0.95rem; font-weight: 500; text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { background: var(--gold); color: var(--black); transform: translateY(-2px); }
+  .btn-secondary {
+    border: 1.5px solid rgba(0,0,0,0.2); color: var(--black);
+    padding: 15px 32px; border-radius: 100px;
+    font-size: 0.95rem; font-weight: 500; text-decoration: none;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+  .hero-visual {
+    display: flex; justify-content: center; align-items: center;
+    animation: fadeUp 0.9s 0.2s ease both;
+  }
+  .logo-ring {
+    width: clamp(280px, 35vw, 420px);
+    height: clamp(280px, 35vw, 420px);
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    background: radial-gradient(circle at 60% 40%, #fff9ef 0%, var(--grey) 100%);
+    box-shadow: 0 30px 80px rgba(245,166,35,0.15), 0 8px 24px rgba(0,0,0,0.06);
+  }
+  .logo-ring img {
+    width: 75%; height: 75%; object-fit: contain; border-radius: 50%;
+  }
+  .ring-orbit {
+    position: absolute; inset: -20px; border-radius: 50%;
+    border: 1px dashed rgba(245,166,35,0.3);
+    animation: spin 20s linear infinite;
+  }
+  .orbit-dot {
+    position: absolute; top: 20px; left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+  }
+
+  /* STATS */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    background: var(--black); color: var(--white);
+    padding: 50px 6vw;
+    gap: 1px;
+  }
+  .stat {
+    text-align: center; padding: 20px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem; font-weight: 900; color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label { font-size: 0.82rem; color: rgba(255,255,255,0.5); margin-top: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* SERVICES */
+  .services {
+    padding: 100px 6vw;
+    background: var(--grey);
+  }
+  .section-label {
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 60px;
+  }
+  .services-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+  }
+  .service-card {
+    background: var(--white); border-radius: 20px;
+    padding: 36px 32px;
+    transition: transform 0.25s, box-shadow 0.25s;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .service-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
+  .service-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: var(--gold-light); display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; margin-bottom: 20px;
+  }
+  .service-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin-bottom: 12px; }
+  .service-card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.65; }
+
+  /* WHY US */
+  .why {
+    padding: 100px 6vw;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center;
+  }
+  .why-list { list-style: none; margin-top: 40px; }
+  .why-list li {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 20px 0; border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+  .why-list li:last-child { border-bottom: none; }
+  .why-check {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--gold); display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 0.75rem; margin-top: 2px;
+  }
+  .why-list h4 { font-weight: 500; margin-bottom: 4px; font-size: 0.98rem; }
+  .why-list p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; }
+
+  .why-visual {
+    background: var(--black); border-radius: 28px;
+    padding: 48px 40px; color: var(--white);
+    position: relative; overflow: hidden;
+  }
+  .why-visual::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 220px; height: 220px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,166,35,0.35) 0%, transparent 70%);
+  }
+  .why-visual-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem; line-height: 1.4; margin-bottom: 32px;
+  }
+  .why-phone {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.08); padding: 14px 20px; border-radius: 12px;
+    text-decoration: none; color: var(--white); font-size: 1rem; font-weight: 500;
+    transition: background 0.2s;
+  }
+  .why-phone:hover { background: var(--gold); color: var(--black); }
+
+  /* CTA SECTION */
+  .cta-section {
+    background: var(--gold);
+    padding: 80px 6vw; text-align: center;
+  }
+  .cta-section h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 4vw, 3rem); font-weight: 900;
+    letter-spacing: -0.02em; margin-bottom: 16px;
+  }
+  .cta-section p { font-size: 1.05rem; color: rgba(0,0,0,0.6); margin-bottom: 40px; }
+  .btn-dark {
+    background: var(--black); color: var(--white);
+    padding: 16px 40px; border-radius: 100px;
+    font-size: 1rem; font-weight: 500; text-decoration: none;
+    display: inline-block; transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-dark:hover { opacity: 0.85; transform: translateY(-2px); }
+
+  /* FOOTER */
+  footer {
+    background: var(--black); color: rgba(255,255,255,0.5);
+    padding: 40px 6vw; display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-brand { font-family: 'Cormorant Garamond', serif; color: var(--white); font-size: 1rem; }
+  .footer-phone { color: var(--gold); font-size: 0.9rem; letter-spacing: 0.05em; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 14px 5vw; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 100px 5vw 60px; text-align: center; }
+    .hero-sub { margin: 0 auto 40px; }
+    .hero-actions { justify-content: center; }
+    .hero-visual { order: -1; }
+    .logo-ring { width: 220px; height: 220px; }
+    .stats { grid-template-columns: 1fr; }
+    .stat { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .stat:last-child { border-bottom: none; }
+    .why { grid-template-columns: 1fr; gap: 40px; }
+    .why-visual { order: -1; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <img src="./grand-logo.jpg" alt="Grand Elevation Solar Logo">
+    Grand Elevation Solar
+  </div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#why">Why Us</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="tel:08107730018" class="nav-cta">Call Us</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="hero-badge"><span></span> Nigeria's Solar Experts</div>
+    <h1>Power Your World with <em>Solar Energy</em></h1>
+    <p class="hero-sub">Grand Elevation Solar LTD delivers reliable, affordable solar solutions — from installation to maintenance — so your home or business never loses power again.</p>
+    <div class="hero-actions">
+      <a href="tel:08107730018" class="btn-primary">☀ Get a Free Quote</a>
+      <a href="#services" class="btn-secondary">Our Services</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="logo-ring">
+      <div class="ring-orbit"><div class="orbit-dot"></div></div>
+      <img src="./grand-logo.jpg" alt="Grand Elevation Solar">
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stat">
+    <div class="stat-num">100+</div>
+    <div class="stat-label">Installations Done</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">5★</div>
+    <div class="stat-label">Customer Satisfaction</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">24/7</div>
+    <div class="stat-label">Support Available</div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <p class="section-label">What We Offer</p>
+  <h2 class="section-title">Our Solar Services</h2>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">🏠</div>
+      <h3>Residential Solar</h3>
+      <p>Custom solar panel systems designed for homes — reduce your electricity bill and gain energy independence with clean, sustainable power.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🏢</div>
+      <h3>Commercial Solar</h3>
+      <p>Scale up your business operations with high-capacity solar solutions. We handle design, installation, and grid integration end-to-end.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🔋</div>
+      <h3>Battery Storage</h3>
+      <p>Never worry about blackouts. Our battery backup systems store excess solar energy so you always have power when you need it most.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🔧</div>
+      <h3>Maintenance & Repair</h3>
+      <p>Keep your system running at peak performance with our professional maintenance, inspection, and repair services.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why" id="why">
+  <div class="why-content">
+    <p class="section-label">Why Choose Us</p>
+    <h2 class="section-title">Built on Trust &amp; Expertise</h2>
+    <ul class="why-list">
+      <li>
+        <div class="why-check">✓</div>
+        <div>
+          <h4>Certified & Experienced Technicians</h4>
+          <p>Our team is fully trained and certified to install and maintain all major solar panel brands safely.</p>
+        </div>
+      </li>
+      <li>
+        <div class="why-check">✓</div>
+        <div>
+          <h4>Quality Equipment Only</h4>
+          <p>We source only top-grade panels, inverters, and batteries to guarantee long-lasting performance for your investment.</p>
+        </div>
+      </li>
+      <li>
+        <div class="why-check">✓</div>
+        <div>
+          <h4>Transparent Pricing</h4>
+          <p>No hidden fees. We provide clear, honest quotes so you always know exactly what you're paying for.</p>
+        </div>
+      </li>
+      <li>
+        <div class="why-check">✓</div>
+        <div>
+          <h4>After-Sales Support</h4>
+          <p>Our relationship doesn't end at installation. We're always available to answer questions and resolve issues.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="why-visual">
+    <p class="why-visual-quote">Solar energy isn't the future — it's the smartest decision you can make today.</p>
+    <p style="color:rgba(255,255,255,0.45); font-size:0.85rem; margin-bottom: 24px;">Ready to make the switch? Call us directly.</p>
+    <a href="tel:08107730018" class="why-phone">📞 08107730018</a>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <h2>Ready to Go Solar?</h2>
+  <p>Contact us today for a free site assessment and customised quote.</p>
+  <a href="tel:08107730018" class="btn-dark">Call 08107730018</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Grand Elevation Solar LTD</div>
+  <div style="font-size:0.8rem;">© 2025 Grand Elevation Solar. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
