@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Buune</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;900&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5A623;
+    --gold-light: #FFD07A;
+    --black: #111111;
+    --white: #FAFAFA;
+    --grey: #F0EDE8;
+    --text-muted: #6B6558;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Outfit', sans-serif; background: var(--white); color: var(--black); overflow-x: hidden; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 6vw;
+    background: rgba(250,249,247,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-pill {
+    background: var(--black); border-radius: 100px;
+    padding: 6px 18px 6px 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-pill img { height: 28px; width: auto; filter: invert(1) brightness(2); }
+  .logo-pill span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-weight: 700; color: var(--white); letter-spacing: -0.01em;
+  }
+  .nav-back {
+    font-size: 0.875rem; font-weight: 500; color: var(--text-muted);
+    text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--gold); }
+
+  .layout {
+    max-width: 960px; margin: 0 auto;
+    padding: 120px 6vw 80px;
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 60px; align-items: start;
+  }
+
+  /* TOC */
+  .toc { position: sticky; top: 90px; }
+  .toc-label {
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+  }
+  .toc a {
+    display: block; font-size: 0.82rem; color: var(--text-muted);
+    text-decoration: none; padding: 5px 0 5px 12px;
+    border-left: 2px solid rgba(0,0,0,0.08);
+    transition: color 0.15s, border-color 0.15s; line-height: 1.4;
+  }
+  .toc a:hover, .toc a.active { color: var(--gold); border-left-color: var(--gold); }
+
+  /* content */
+  .eyebrow {
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 8px;
+  }
+  .effective { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 48px; }
+
+  section { margin-bottom: 44px; scroll-margin-top: 100px; }
+
+  h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 14px; padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  p { font-size: 0.92rem; color: var(--text-muted); line-height: 1.75; margin-bottom: 12px; }
+  p:last-child { margin-bottom: 0; }
+  ul, ol { padding-left: 1.2rem; margin-bottom: 12px; }
+  li { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 6px; line-height: 1.65; }
+  strong { font-weight: 500; color: var(--black); }
+
+  .highlight {
+    background: var(--gold-light); border-radius: 12px;
+    padding: 16px 20px; margin-bottom: 12px;
+    border: 1px solid rgba(245,166,35,0.25);
+  }
+  .highlight p { color: rgba(0,0,0,0.65); margin: 0; font-size: 0.9rem; }
+
+  .contact-card {
+    background: var(--black); border-radius: 16px;
+    padding: 24px 28px; color: var(--white);
+  }
+  .contact-card p { color: rgba(255,255,255,0.55); margin-bottom: 6px; font-size: 0.9rem; }
+  .contact-card p:first-child { color: var(--white); font-weight: 500; font-size: 0.95rem; }
+  .contact-card a { color: var(--gold); text-decoration: none; }
+  .contact-card a:hover { text-decoration: underline; }
+
+  footer {
+    background: var(--black); color: rgba(255,255,255,0.4);
+    padding: 32px 6vw; display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 12px; font-size: 0.8rem;
+  }
+  .footer-brand { font-family: 'Cormorant Garamond', serif; color: var(--white); }
+  footer a { color: rgba(255,255,255,0.4); text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; padding: 100px 5vw 60px; gap: 32px; }
+    .toc { display: none; }
+    nav { padding: 14px 5vw; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="logo-pill">
+      <img src="./buune.png" alt="Buune">
+      <span>Buune</span>
+    </div>
+  </a>
+  <a href="/" class="nav-back">← Grand Elevation Solar</a>
+</nav>
+
+<div class="layout">
+  <aside class="toc">
+    <p class="toc-label">Contents</p>
+    <a href="#intro">Introduction</a>
+    <a href="#who">Who this covers</a>
+    <a href="#collected">Data we collect</a>
+    <a href="#use">How we use it</a>
+    <a href="#sharing">Data sharing</a>
+    <a href="#clients">Client responsibilities</a>
+    <a href="#retention">Data retention</a>
+    <a href="#security">Security</a>
+    <a href="#rights">Your rights</a>
+    <a href="#children">Children</a>
+    <a href="#third-party">Third-party platforms</a>
+    <a href="#changes">Changes</a>
+    <a href="#contact">Contact us</a>
+  </aside>
+
+  <div class="content">
+    <p class="eyebrow">Legal</p>
+    <h1>Privacy Policy</h1>
+    <p class="effective">Effective Date: May 20, 2026 &nbsp;·&nbsp; Operated by Grand Elevation Solar</p>
+
+    <section id="intro">
+      <h2>1. Introduction</h2>
+      <p>Buune is an AI-powered customer support platform that enables businesses to deploy automated, domain-specific support agents on WhatsApp. This Privacy Policy explains how we collect, use, store, and protect information across two relationships: the businesses that use our platform (<strong>Clients</strong>) and the end users those businesses serve via WhatsApp (<strong>End Users</strong>).</p>
+      <p>By using Buune — whether as a Client or as an End User interacting with a Buune-powered assistant — you agree to the practices described in this policy.</p>
+    </section>
+
+    <section id="who">
+      <h2>2. Who this policy covers</h2>
+      <p><strong>Clients</strong> are businesses and organisations that integrate Buune into their customer support operations. They configure the assistant, provide knowledge bases, and are responsible for how Buune is deployed to their customers.</p>
+      <p><strong>End Users</strong> are individuals who interact with a Buune-powered assistant on WhatsApp, typically as customers of a Client's business.</p>
+    </section>
+
+    <section id="collected">
+      <h2>3. Information we collect</h2>
+      <p><strong>From Clients:</strong></p>
+      <ul>
+        <li>Business name, contact details, billing information, and account credentials</li>
+        <li>Support workflows, knowledge bases, and configuration content for the assistant</li>
+        <li>API usage metrics, session counts, and platform activity logs</li>
+      </ul>
+      <p><strong>From End Users (via WhatsApp conversations):</strong></p>
+      <ul>
+        <li>WhatsApp phone number (collected automatically when a conversation begins)</li>
+        <li>The text content of support conversations</li>
+        <li>Timestamps, message delivery status, and session identifiers</li>
+        <li>Any information voluntarily shared to resolve a support issue (e.g. order numbers, account details)</li>
+      </ul>
+      <p>We do <strong>not</strong> collect general profile data, location data, or any information beyond what is necessary to deliver customer support within the scope configured by the Client.</p>
+    </section>
+
+    <section id="use">
+      <h2>4. How we use this information</h2>
+      <p><strong>For Clients:</strong> to provision and maintain their Buune account, process billing, generate usage reports, and provide platform support.</p>
+      <p><strong>For End Users:</strong> to understand and respond to support queries within the scope the Client has defined, to maintain conversation context within a session, and to log interactions for quality assurance and debugging as directed by the Client.</p>
+      <p>We do <strong>not</strong> use End User conversation data to train general-purpose AI models, nor do we share data across different Clients.</p>
+    </section>
+
+    <section id="sharing">
+      <h2>5. Data sharing</h2>
+      <p>We do not sell personal data. We may share information only in these limited circumstances:</p>
+      <ul>
+        <li><strong>With Clients:</strong> End User conversation logs are accessible to the Client whose assistant was engaged, as they are the data controller for those interactions.</li>
+        <li><strong>With service providers:</strong> Trusted third parties (e.g. cloud hosting, WhatsApp Business API provider) who process data solely on our behalf under contractual data protection obligations.</li>
+        <li><strong>For legal compliance:</strong> If required by applicable law, court order, or regulatory authority.</li>
+        <li><strong>In a business transfer:</strong> If Buune or Grand Elevation Solar is acquired or merged, data may transfer as part of that transaction, with prior notice to affected parties.</li>
+      </ul>
+    </section>
+
+    <section id="clients">
+      <h2>6. Client responsibilities</h2>
+      <p>Clients using Buune act as data controllers for their End Users' information and are responsible for:</p>
+      <ul>
+        <li>Informing End Users that conversations are handled by an AI-powered assistant</li>
+        <li>Obtaining any legally required consents before deploying Buune to their customers</li>
+        <li>Ensuring their use of Buune complies with applicable data protection law (including the NDPR in Nigeria, GDPR where applicable, and any other relevant jurisdictions)</li>
+        <li>Configuring the assistant only for support purposes disclosed to their End Users</li>
+      </ul>
+    </section>
+
+    <section id="retention">
+      <h2>7. Data retention</h2>
+      <div class="highlight">
+        <p>All End User conversation data is automatically deleted within <strong>7 days</strong> via a scheduled purge. No manual action is required from End Users.</p>
+      </div>
+      <p>Client account data is retained for the duration of the Client relationship and for a reasonable period thereafter for legal and billing purposes. Clients may request earlier deletion of conversation logs at any time. Aggregate, non-identifiable usage data may be retained indefinitely for platform improvement.</p>
+    </section>
+
+    <section id="security">
+      <h2>8. Security</h2>
+      <p>We implement industry-standard security measures including encryption in transit (TLS), access controls, and regular security reviews. WhatsApp messages are transmitted via Meta's infrastructure and subject to their security standards.</p>
+      <p>No system is perfectly secure. In the event of a data breach affecting personal data, we will notify affected Clients promptly and assist with any required regulatory notifications.</p>
+    </section>
+
+    <section id="rights">
+      <h2>9. End Users' rights</h2>
+      <p>Subject to applicable law, End Users may request access to, correction of, or deletion of personal data held from their conversations. Because End Users interact with Buune through a Client's deployment, such requests should be directed to the relevant Client in the first instance.</p>
+      <p>You can also request immediate data deletion directly via our <a href="./buune-data-deletion.html" style="color: var(--gold); font-weight: 500;">Data Deletion page</a>.</p>
+    </section>
+
+    <section id="children">
+      <h2>10. Children's privacy</h2>
+      <p>Buune is not intended for use by individuals under the age of 13. We do not knowingly collect personal data from children. If a Client's use case may involve minors, it is the Client's responsibility to implement appropriate safeguards and obtain necessary parental consents.</p>
+    </section>
+
+    <section id="third-party">
+      <h2>11. Third-party platforms</h2>
+      <p>Buune operates over WhatsApp, which is owned by Meta Platforms, Inc. Use of WhatsApp is subject to Meta's own Terms of Service and Privacy Policy. We are not responsible for Meta's data practices.</p>
+    </section>
+
+    <section id="changes">
+      <h2>12. Changes to this policy</h2>
+      <p>We may update this Privacy Policy from time to time. Clients will be notified of material changes via email or in-platform notice. End Users are encouraged to review this page periodically. Continued use of a Buune-powered assistant after changes take effect constitutes acceptance of the updated policy.</p>
+    </section>
+
+    <section id="contact">
+      <h2>13. Contact us</h2>
+      <div class="contact-card">
+        <p>Buune — a product of Grand Elevation Solar</p>
+        <p>Email: <a href="mailto:david@grandelevationsolar.com">david@grandelevationsolar.com</a></p>
+        <p>Website: <a href="https://grandelevationsolar.com" target="_blank">grandelevationsolar.com</a></p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">Buune by Grand Elevation Solar</span>
+  <span>© 2026 Grand Elevation Solar. &nbsp;·&nbsp; <a href="./buune-data-deletion.html">Data Deletion</a> &nbsp;·&nbsp; <a href="/">Home</a></span>
+</footer>
+
+<script>
+  const links = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('.content section');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`.toc a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
