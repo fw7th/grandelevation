@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — Buune</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;900&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5A623;
+    --gold-light: #FFD07A;
+    --black: #111111;
+    --white: #FAFAFA;
+    --grey: #F0EDE8;
+    --text-muted: #6B6558;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Outfit', sans-serif; background: var(--white); color: var(--black); overflow-x: hidden; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 6vw;
+    background: rgba(250,249,247,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-pill {
+    background: var(--black); border-radius: 100px;
+    padding: 6px 18px 6px 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-pill img { height: 28px; width: auto; filter: invert(1) brightness(2); }
+  .logo-pill span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-weight: 700; color: var(--white); letter-spacing: -0.01em;
+  }
+  .nav-back {
+    font-size: 0.875rem; font-weight: 500; color: var(--text-muted);
+    text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--gold); }
+
+  .layout {
+    max-width: 960px; margin: 0 auto;
+    padding: 120px 6vw 80px;
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 60px; align-items: start;
+  }
+
+  .toc { position: sticky; top: 90px; }
+  .toc-label {
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+  }
+  .toc a {
+    display: block; font-size: 0.82rem; color: var(--text-muted);
+    text-decoration: none; padding: 5px 0 5px 12px;
+    border-left: 2px solid rgba(0,0,0,0.08);
+    transition: color 0.15s, border-color 0.15s; line-height: 1.4;
+  }
+  .toc a:hover, .toc a.active { color: var(--gold); border-left-color: var(--gold); }
+
+  .eyebrow {
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 8px;
+  }
+  .effective { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 48px; }
+
+  section { margin-bottom: 44px; scroll-margin-top: 100px; }
+  h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 14px; padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  p { font-size: 0.92rem; color: var(--text-muted); line-height: 1.75; margin-bottom: 12px; }
+  p:last-child { margin-bottom: 0; }
+  ul, ol { padding-left: 1.2rem; margin-bottom: 12px; }
+  li { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 6px; line-height: 1.65; }
+  strong { font-weight: 500; color: var(--black); }
+
+  .warning-box {
+    background: var(--black); border-radius: 16px;
+    padding: 24px 28px; margin-bottom: 16px;
+  }
+  .warning-box p { color: rgba(255,255,255,0.55); margin-bottom: 6px; font-size: 0.9rem; }
+  .warning-box p:first-child { color: var(--gold); font-weight: 500; font-size: 0.88rem; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; }
+
+  .highlight {
+    background: var(--gold-light); border-radius: 12px;
+    padding: 16px 20px; margin-bottom: 12px;
+    border: 1px solid rgba(245,166,35,0.25);
+  }
+  .highlight p { color: rgba(0,0,0,0.65); margin: 0; font-size: 0.9rem; }
+
+  .contact-card {
+    background: var(--black); border-radius: 16px;
+    padding: 24px 28px; color: var(--white);
+  }
+  .contact-card p { color: rgba(255,255,255,0.55); margin-bottom: 6px; font-size: 0.9rem; }
+  .contact-card p:first-child { color: var(--white); font-weight: 500; font-size: 0.95rem; }
+  .contact-card a { color: var(--gold); text-decoration: none; }
+  .contact-card a:hover { text-decoration: underline; }
+
+  footer {
+    background: var(--black); color: rgba(255,255,255,0.4);
+    padding: 32px 6vw; display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 12px; font-size: 0.8rem;
+  }
+  .footer-brand { font-family: 'Cormorant Garamond', serif; color: var(--white); }
+  footer a { color: rgba(255,255,255,0.4); text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; padding: 100px 5vw 60px; gap: 32px; }
+    .toc { display: none; }
+    nav { padding: 14px 5vw; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="logo-pill">
+      <img src="./buune.png" alt="Buune">
+      <span>Buune</span>
+    </div>
+  </a>
+  <a href="/" class="nav-back">← Grand Elevation Solar</a>
+</nav>
+
+<div class="layout">
+  <aside class="toc">
+    <p class="toc-label">Contents</p>
+    <a href="#intro">Introduction</a>
+    <a href="#definitions">Definitions</a>
+    <a href="#service">The service</a>
+    <a href="#acceptable">Acceptable use</a>
+    <a href="#subscriptions">Subscriptions</a>
+    <a href="#numbers">WhatsApp numbers</a>
+    <a href="#termination">Termination</a>
+    <a href="#data">Data & ownership</a>
+    <a href="#disclaimers">Disclaimers</a>
+    <a href="#liability">Liability</a>
+    <a href="#changes">Changes</a>
+    <a href="#law">Governing law</a>
+    <a href="#contact">Contact</a>
+  </aside>
+
+  <div class="content">
+    <p class="eyebrow">Legal</p>
+    <h1>Terms of Service</h1>
+    <p class="effective">Effective Date: May 20, 2026 &nbsp;·&nbsp; Operated by Grand Elevation Solar</p>
+
+    <section id="intro">
+      <h2>1. Introduction</h2>
+      <p>These Terms of Service ("Terms") govern your access to and use of Buune, an AI-powered WhatsApp customer support platform operated by Grand Elevation Solar ("we," "us," or "our") under Nigerian law.</p>
+      <p>By signing up for, accessing, or using Buune, you ("User") agree to be bound by these Terms. If you do not agree, do not use the service.</p>
+    </section>
+
+    <section id="definitions">
+      <h2>2. Definitions</h2>
+      <ul>
+        <li><strong>Buune</strong> — the AI-powered WhatsApp customer support platform operated by Grand Elevation Solar.</li>
+        <li><strong>User</strong> — a business or organisation that subscribes to Buune to deploy a customer support assistant.</li>
+        <li><strong>End User</strong> — a customer of the User who interacts with the Buune-powered assistant via WhatsApp.</li>
+        <li><strong>Assistant</strong> — the AI agent deployed on a specific WhatsApp number, configured to handle support for a User's business only.</li>
+        <li><strong>WhatsApp Number</strong> — the dedicated phone number assigned to a User's Assistant on the Buune platform.</li>
+      </ul>
+    </section>
+
+    <section id="service">
+      <h2>3. The service</h2>
+      <p>Buune provides businesses with a dedicated AI assistant that handles customer support enquiries via WhatsApp. Each Assistant is configured specifically for the User's business — its scope, knowledge, and responses are limited to that business's support context.</p>
+      <p>Buune is <strong>not</strong> a general-purpose AI chatbot. The Assistant is intentionally restricted to customer support tasks relevant to the User's configured use case and will not respond to requests outside that scope. This is a feature, not a limitation.</p>
+      <p>Buune operates on top of the WhatsApp Business API and is subject to Meta's Platform Policies in addition to these Terms.</p>
+    </section>
+
+    <section id="acceptable">
+      <h2>4. Acceptable use</h2>
+      <p>By using Buune, you agree to use it solely for legitimate customer support purposes. You may <strong>not</strong> use Buune to:</p>
+      <ul>
+        <li>Attempt to use the Assistant for general AI tasks outside your configured support scope</li>
+        <li>Provide false or misleading information during onboarding or configuration</li>
+        <li>Harass, deceive, or harm your End Users through the platform</li>
+        <li>Violate any applicable Nigerian law or regulation</li>
+        <li>Attempt to reverse-engineer, scrape, or otherwise extract Buune's underlying systems</li>
+        <li>Use Buune in any way that violates Meta's WhatsApp Business Policy</li>
+      </ul>
+      <p>We reserve the right to investigate suspected violations and take appropriate action, including suspension or termination of your account.</p>
+    </section>
+
+    <section id="subscriptions">
+      <h2>5. Subscriptions & billing</h2>
+      <p>Access to Buune is provided on a subscription basis. Your subscription grants you access to one or more WhatsApp Numbers and their associated Assistants for the duration of the billing period.</p>
+      <p>Subscriptions must be renewed to maintain continued access. If a subscription is not renewed by its expiry date, access to the associated Assistant(s) will be suspended and may eventually be terminated. We are not liable for any disruption to your customer support operations resulting from a lapsed subscription.</p>
+      <p>Pricing, billing cycles, and payment terms are communicated at the time of signup and may be updated with reasonable notice.</p>
+    </section>
+
+    <section id="numbers">
+      <h2>6. WhatsApp numbers</h2>
+      <p>Each WhatsApp Number on the Buune platform is assigned to a single User. One number corresponds to one Assistant for one business — this is fundamental to how Buune works.</p>
+      <p>You may acquire additional WhatsApp Numbers under your account, each billed separately as an additional subscription. Numbers cannot be shared, transferred, or assigned to third parties outside your business.</p>
+      <div class="warning-box">
+        <p>Prohibited conduct</p>
+        <p>Attempting to claim, spoof, or reassign WhatsApp Numbers that are not allocated to your account — including attempting to register numbers belonging to other Users — is strictly prohibited and will result in immediate termination of your account without refund.</p>
+      </div>
+    </section>
+
+    <section id="termination">
+      <h2>7. Termination</h2>
+      <p>We may suspend or terminate your access to Buune immediately and without prior notice if:</p>
+      <ul>
+        <li>Your subscription has lapsed and has not been renewed</li>
+        <li>You are found to be attempting to claim, game, or misuse WhatsApp Numbers on the platform</li>
+        <li>You violate any provision of these Terms or Meta's WhatsApp Business Policy</li>
+        <li>Your use of Buune poses a legal, reputational, or technical risk to the platform or other Users</li>
+      </ul>
+      <p>You may terminate your account at any time by contacting us. Termination does not entitle you to a refund of any prepaid subscription fees unless otherwise agreed in writing.</p>
+    </section>
+
+    <section id="data">
+      <h2>8. Data & ownership</h2>
+      <p>Conversation data generated through Buune — including messages exchanged between End Users and the Assistant — belongs to the User and their End Users. Buune does not claim ownership of any conversation content.</p>
+      <div class="highlight">
+        <p>All conversation data is automatically and permanently deleted from Buune's servers within <strong>7 days</strong>. We do not retain, sell, or use conversation data for any purpose beyond delivering the service during that window.</p>
+      </div>
+      <p>Users are responsible for ensuring their End Users are aware of how their data is handled. By deploying Buune, Users represent that they have the appropriate basis to process their End Users' data in line with our <a href="./buune-privacy-policy.html" style="color: var(--gold); font-weight: 500;">Privacy Policy</a>.</p>
+      <p>Any content, configurations, or knowledge bases you provide to train or scope your Assistant remain your intellectual property. You grant us a limited licence to use that content solely for the purpose of operating your Assistant.</p>
+    </section>
+
+    <section id="disclaimers">
+      <h2>9. Disclaimers</h2>
+      <p>Buune is provided "as is" and "as available." We make no warranties, express or implied, regarding the accuracy, completeness, reliability, or fitness for a particular purpose of the service.</p>
+      <p><strong>AI limitations:</strong> The Assistant is powered by artificial intelligence and may occasionally produce incorrect, incomplete, or inappropriate responses. We do not guarantee that the Assistant will correctly handle every customer enquiry. Users are responsible for monitoring their Assistant's performance and ensuring their End Users have alternative support channels available.</p>
+      <p><strong>WhatsApp dependency:</strong> Buune operates on Meta's WhatsApp Business API. We are not responsible for any downtime, policy changes, or restrictions imposed by Meta that affect the availability of the service.</p>
+      <p><strong>No professional advice:</strong> Nothing the Assistant says constitutes legal, financial, medical, or any other form of professional advice.</p>
+    </section>
+
+    <section id="liability">
+      <h2>10. Limitation of liability</h2>
+      <p>To the fullest extent permitted by Nigerian law, Grand Elevation Solar shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of — or inability to use — Buune, including but not limited to:</p>
+      <ul>
+        <li>Loss of revenue or business resulting from Assistant downtime or incorrect responses</li>
+        <li>Damage to your reputation arising from End User interactions with the Assistant</li>
+        <li>Any loss arising from a lapsed subscription or account termination</li>
+        <li>Actions taken by Meta that affect WhatsApp availability</li>
+      </ul>
+      <p>Our total liability to you for any claim arising out of or relating to these Terms or the service shall not exceed the total subscription fees paid by you in the three months preceding the claim.</p>
+    </section>
+
+    <section id="changes">
+      <h2>11. Changes to these terms</h2>
+      <p>We may update these Terms from time to time. Where changes are material, we will notify Users via email or in-platform notice at least 7 days before the changes take effect. Continued use of Buune after the effective date of any update constitutes acceptance of the revised Terms.</p>
+    </section>
+
+    <section id="law">
+      <h2>12. Governing law</h2>
+      <p>These Terms are governed by and construed in accordance with the laws of the Federal Republic of Nigeria. Any disputes arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the Nigerian courts.</p>
+      <p>Buune is currently operated for Users based in Nigeria. We make no representation that the service is appropriate or available for use in other jurisdictions.</p>
+    </section>
+
+    <section id="contact">
+      <h2>13. Contact us</h2>
+      <div class="contact-card">
+        <p>Buune — a product of Grand Elevation Solar</p>
+        <p>Email: <a href="mailto:legal@buune.com">legal@buune.com</a></p>
+        <p>Website: <a href="https://grandelevationsolar.com" target="_blank">grandelevationsolar.com</a></p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <span class="footer-brand">Buune by Grand Elevation Solar</span>
+  <span>© 2026 Grand Elevation Solar. &nbsp;·&nbsp; <a href="./buune-privacy-policy.html">Privacy Policy</a> &nbsp;·&nbsp; <a href="./buune-data-deletion.html">Data Deletion</a> &nbsp;·&nbsp; <a href="/">Home</a></span>
+</footer>
+
+<script>
+  const links = document.querySelectorAll('.toc a');
+  const sections = document.querySelectorAll('.content section');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`.toc a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
