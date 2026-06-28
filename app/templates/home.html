@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main>
+        <h1>{{ title }}</h1>
+        <p>If you can see this, FastAPI + Jinja2 is rendering correctly.</p>
+
+        <!--
+            This button is the smallest possible htmx demo:
+            - hx-post: where to send the request (no JS needed)
+            - hx-target: which element on the page gets replaced
+            - hx-swap: how it gets replaced (innerHTML = put response inside the target)
+        -->
+        <button hx-post="/api/ping" hx-target="#result" hx-swap="innerHTML">
+            Test htmx round-trip
+        </button>
+        <div id="result"></div>
+    </main>
+</body>
+</html>

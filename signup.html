@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create account — Grand Elevation Solar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0A0A;
+    --bg: #FAF8F3;
+    --gold: #F2A623;
+    --gold-light: #FBDFA8;
+    --gold-deep: #E8651C;
+    --green: #3D5C3A;
+    --gray-mid: #6B6B6B;
+    --border: rgba(10,10,10,0.1);
+    --error: #B3261E;
+  }
+
+  html[data-theme="dark"] {
+    --ink: #F4F1EA;
+    --bg: #14130F;
+    --gold: #F2A623;
+    --gold-light: #4A3A1A;
+    --gold-deep: #FFB648;
+    --green: #7FA87A;
+    --gray-mid: #9B968A;
+    --border: rgba(244,241,234,0.12);
+    --error: #FF8A80;
+  }
+
+  html, body {
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .display {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+    width: 100%;
+  }
+
+  /* ---------- NAV (shared) ---------- */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-brand img {
+    height: 38px;
+    width: auto;
+    display: block;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo-spinner {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-spinner::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px dashed var(--gold);
+    opacity: 0.5;
+  }
+
+  .logo-spinner .orbit-dot {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    animation: spin 16s linear infinite;
+  }
+
+  .logo-spinner .orbit-dot::before {
+    content: '';
+    position: absolute;
+    top: -2.5px;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    margin-left: -2.5px;
+    border-radius: 50%;
+    background: var(--gold-deep);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .nav-brand span {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-cta {
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .nav-cta:hover {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .nav-cta:focus-visible, .btn-primary:focus-visible, .theme-toggle:focus-visible, .field input:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--ink);
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  .theme-toggle .icon-moon { display: none; }
+
+  html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+  /* ---------- AUTH CARD ---------- */
+  .auth-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0 80px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .auth-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gold-light);
+    color: var(--ink);
+    padding: 7px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+
+  .auth-eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold-deep);
+    flex-shrink: 0;
+  }
+
+  .auth-card h1 {
+    font-size: 32px;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
+  .auth-card .sub {
+    font-size: 15px;
+    color: var(--gray-mid);
+    margin-bottom: 32px;
+    line-height: 1.55;
+  }
+
+  .auth-banner {
+    display: none;
+    background: var(--gold-light);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .auth-banner.is-error {
+    background: transparent;
+    border-color: var(--error);
+    color: var(--error);
+  }
+
+  .auth-banner.is-visible { display: block; }
+
+  form { display: flex; flex-direction: column; gap: 18px; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .field label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .field input {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    transition: border-color 0.15s ease;
+  }
+
+  .field input::placeholder {
+    color: var(--gray-mid);
+    opacity: 0.7;
+  }
+
+  .field input:focus {
+    border-color: var(--ink);
+  }
+
+  .field-error {
+    font-size: 13px;
+    color: var(--error);
+    display: none;
+  }
+
+  .field.has-error input {
+    border-color: var(--error);
+  }
+
+  .field.has-error .field-error {
+    display: block;
+  }
+
+  .row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+  }
+
+  .remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray-mid);
+  }
+
+  .remember input { accent-color: var(--ink); }
+
+  .link {
+    font-weight: 600;
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 1px;
+    transition: border-color 0.15s ease;
+  }
+
+  .link:hover { border-color: var(--ink); }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 999px;
+    padding: 15px 30px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+    margin-top: 6px;
+  }
+
+  .btn-primary:hover {
+    background: var(--gold-deep);
+    transform: translateY(-1px);
+  }
+
+  .auth-switch {
+    text-align: center;
+    font-size: 14px;
+    color: var(--gray-mid);
+    margin-top: 28px;
+  }
+
+  /* ---------- FOOTER (shared) ---------- */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--gray-mid);
+  }
+
+  .footer .nav-brand img { height: 22px; }
+
+  .footer .logo-spinner::before,
+  .footer .logo-spinner .orbit-dot {
+    inset: -4px;
+  }
+
+  .footer .nav-brand span { font-size: 14px; color: var(--ink); }
+
+  @media (max-width: 760px) {
+    .wrap { padding: 0 20px; }
+    .footer { flex-direction: column; gap: 12px; text-align: center; }
+    .auth-main { padding: 16px 0 64px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <a href="index.html" class="nav-brand">
+      <div class="logo-spinner">
+        <div class="orbit-dot"></div>
+      </div>
+      <span>Grand Elevation Solar</span>
+    </a>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <a href="signin.html" class="nav-cta">Sign in</a>
+    </div>
+  </nav>
+</div>
+
+<main class="auth-main">
+  <div class="wrap">
+    <div class="auth-card">
+      <div class="auth-eyebrow">Get started</div>
+      <h1 class="display">Create your account</h1>
+      <p class="sub">Save your system configuration, track orders, and pick up where you left off.</p>
+
+      <div class="auth-banner is-error" id="authBanner" role="alert"></div>
+
+      <!--
+        FastAPI wiring (later):
+        - method="post" action="/auth/signup"
+        - server validates, hashes password (passlib/bcrypt), creates User row
+          with role="customer", sets session cookie, redirects to /account
+        - on failure (e.g. email already registered), re-render this
+          template with auth_error set instead of a 200 JSON response
+        For now this form is intercepted by the demo script below so the
+        button has somewhere believable to go before the backend exists.
+      -->
+      <form id="signupForm" novalidate>
+        <div class="field" id="nameField">
+          <label for="name">Full name</label>
+          <input type="text" id="name" name="name" placeholder="Jane Rivera" autocomplete="name" required>
+          <span class="field-error">Enter your name.</span>
+        </div>
+
+        <div class="field" id="emailField">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+          <span class="field-error">Enter a valid email address.</span>
+        </div>
+
+        <div class="field" id="passwordField">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" required>
+          <span class="field-error">Password must be at least 8 characters.</span>
+        </div>
+
+        <div class="field" id="confirmField">
+          <label for="confirm">Confirm password</label>
+          <input type="password" id="confirm" name="confirm" placeholder="••••••••" autocomplete="new-password" required>
+          <span class="field-error">Passwords don't match.</span>
+        </div>
+
+        <button type="submit" class="btn-primary">Create account</button>
+      </form>
+
+      <div class="auth-switch">
+        Already have an account? <a href="signin.html" class="link">Sign in</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="wrap">
+  <footer class="footer">
+    <div class="nav-brand">
+      <div class="logo-spinner">
+        <div class="orbit-dot"></div>
+      </div>
+      <span>Grand Elevation Solar</span>
+    </div>
+    <div>&copy; 2026 Grand Elevation Solar</div>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        root.setAttribute('data-theme', 'dark');
+        toggle.setAttribute('aria-pressed', 'true');
+      } else {
+        root.removeAttribute('data-theme');
+        toggle.setAttribute('aria-pressed', 'false');
+      }
+    }
+
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+
+    toggle.addEventListener('click', function () {
+      var isDark = root.getAttribute('data-theme') === 'dark';
+      applyTheme(isDark ? 'light' : 'dark');
+    });
+  })();
+
+  // ---- DEMO ONLY: stands in for the future POST /auth/signup route. ----
+  // Real version: a plain <form method="post" action="/auth/signup"> with
+  // no JS needed at all -- FastAPI hashes the password, creates the User
+  // row, sets a session cookie, and redirects. This client-side check
+  // just gives the button something to do today.
+  (function () {
+    var form = document.getElementById('signupForm');
+    var banner = document.getElementById('authBanner');
+    var nameField = document.getElementById('nameField');
+    var emailField = document.getElementById('emailField');
+    var passwordField = document.getElementById('passwordField');
+    var confirmField = document.getElementById('confirmField');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = document.getElementById('name').value.trim();
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      var confirm = document.getElementById('confirm').value;
+      var valid = true;
+
+      nameField.classList.remove('has-error');
+      emailField.classList.remove('has-error');
+      passwordField.classList.remove('has-error');
+      confirmField.classList.remove('has-error');
+      banner.classList.remove('is-visible');
+
+      if (!name) {
+        nameField.classList.add('has-error');
+        valid = false;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailField.classList.add('has-error');
+        valid = false;
+      }
+      if (password.length < 8) {
+        passwordField.classList.add('has-error');
+        valid = false;
+      }
+      if (confirm !== password) {
+        confirmField.classList.add('has-error');
+        valid = false;
+      }
+      if (!valid) return;
+
+      // Placeholder "success" -- a real backend would hash the password,
+      // create the User row, set a session cookie, and redirect. For now
+      // just show where the user would land.
+      banner.classList.remove('is-error');
+      banner.classList.add('is-visible');
+      banner.textContent = 'Account created (demo only -- no backend yet). This is where you\'d land on /account.';
+    });
+  })();
+</script>
+
+</body>
+</html>
