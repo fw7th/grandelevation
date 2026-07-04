@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Form, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -38,6 +38,19 @@ async def signin():
 @app.get("/signup")
 async def signup():
     return FileResponse("app/static/signup.html")
+
+
+@app.post("/signup_post")
+async def signup_post(
+    username: str = Form(),
+    email: str = Form(),
+    password: str = Form(),
+):
+    print(username)
+    print(email)
+    print(password)
+
+    return {"status": "ok"}
 
 
 @app.post("/api/ping", response_class=HTMLResponse)

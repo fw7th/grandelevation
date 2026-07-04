@@ -146,7 +146,7 @@
     color: var(--bg);
   }
 
-  .nav-cta:focus-visible, .btn-primary:focus-visible, .theme-toggle:focus-visible, .field input:focus-visible {
+  .nav-cta:focus-visible, .btn-primary:focus-visible, .theme-toggle:focus-visible, .field input:focus-visible, .pw-toggle:focus-visible {
     outline: 3px solid var(--gold);
     outline-offset: 2px;
   }
@@ -281,6 +281,7 @@
     background: var(--bg);
     color: var(--ink);
     transition: border-color 0.15s ease;
+    width: 100%;
   }
 
   .field input::placeholder {
@@ -291,6 +292,49 @@
   .field input:focus {
     border-color: var(--ink);
   }
+
+  /* password field + reveal button wrapper */
+  .pw-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .pw-wrap input {
+    padding-right: 44px;
+  }
+
+  .pw-toggle {
+    position: absolute;
+    right: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--gray-mid);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .pw-toggle:hover {
+    color: var(--ink);
+    background: var(--gold-light);
+  }
+
+  .pw-toggle svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  .pw-toggle .icon-eye-off { display: none; }
+  .pw-toggle[aria-pressed="true"] .icon-eye { display: none; }
+  .pw-toggle[aria-pressed="true"] .icon-eye-off { display: block; }
 
   .field-error {
     font-size: 13px;
@@ -431,10 +475,10 @@
         For now this form is intercepted by the demo script below so the
         button has somewhere believable to go before the backend exists.
       -->
-      <form id="signupForm" novalidate>
+      <form action="/signup_post" method="post" id="signupForm" novalidate>
         <div class="field" id="nameField">
-          <label for="name">Full name</label>
-          <input type="text" id="name" name="name" placeholder="Jane Rivera" autocomplete="name" required>
+          <label for="name">Username</label>
+          <input type="text" id="name" name="username" placeholder="talknojutsu123" autocomplete="name" required>
           <span class="field-error">Enter your name.</span>
         </div>
 
@@ -446,14 +490,14 @@
 
         <div class="field" id="passwordField">
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" required>
+          <div class="pw-wrap">
+            <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" required>
+            <button type="button" class="pw-toggle" data-target="password" aria-label="Show password" aria-pressed="false">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a20.4 20.4 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a20.4 20.4 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+            </button>
+          </div>
           <span class="field-error">Password must be at least 8 characters.</span>
-        </div>
-
-        <div class="field" id="confirmField">
-          <label for="confirm">Confirm password</label>
-          <input type="password" id="confirm" name="confirm" placeholder="••••••••" autocomplete="new-password" required>
-          <span class="field-error">Passwords don't match.</span>
         </div>
 
         <button type="submit" class="btn-primary">Create account</button>
@@ -502,6 +546,23 @@
     });
   })();
 
+  // ---- Password reveal toggles ----
+  // Purely a display convenience -- toggles the input's type between
+  // "password" and "text". Doesn't touch the value, doesn't log it,
+  // doesn't affect what gets submitted. Each field's eye is independent.
+  (function () {
+    var toggles = document.querySelectorAll('.pw-toggle');
+    toggles.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var input = document.getElementById(btn.getAttribute('data-target'));
+        var showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        btn.setAttribute('aria-pressed', showing ? 'false' : 'true');
+        btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      });
+    });
+  })();
+
   // ---- DEMO ONLY: stands in for the future POST /auth/signup route. ----
   // Real version: a plain <form method="post" action="/auth/signup"> with
   // no JS needed at all -- FastAPI hashes the password, creates the User
@@ -513,20 +574,17 @@
     var nameField = document.getElementById('nameField');
     var emailField = document.getElementById('emailField');
     var passwordField = document.getElementById('passwordField');
-    var confirmField = document.getElementById('confirmField');
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var name = document.getElementById('name').value.trim();
       var email = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value;
-      var confirm = document.getElementById('confirm').value;
       var valid = true;
 
       nameField.classList.remove('has-error');
       emailField.classList.remove('has-error');
       passwordField.classList.remove('has-error');
-      confirmField.classList.remove('has-error');
       banner.classList.remove('is-visible');
 
       if (!name) {
@@ -539,10 +597,6 @@
       }
       if (password.length < 8) {
         passwordField.classList.add('has-error');
-        valid = false;
-      }
-      if (confirm !== password) {
-        confirmField.classList.add('has-error');
         valid = false;
       }
       if (!valid) return;

@@ -122,3 +122,19 @@ solar-site/
    knowledge too (or paste it for that one chat if it's still in flux).
 3. After a chat changes anything in this file's scope, update this file
    directly so the next chat starts accurate.
+
+## Signup form security notes (deferred to auth build)
+
+- Signup form (`signup.html`) uses a single password field + reveal
+  (eye) toggle — no confirm-password field. Client-side JS validation
+  in this file is cosmetic only; do not treat it as real validation.
+- Server-side, when `/auth/signup` is built: all validation (email
+  format, password strength, username/email uniqueness) must be
+  re-enforced with Pydantic/SQLModel. Never trust client input.
+- CSRF protection needed once the route is live — either a CSRF token
+  in the form or reliance on `SameSite=Lax/Strict` on the session
+  cookie (consistent with the session-based auth design already locked
+  in).
+- Rate limiting / brute-force protection on `/auth/signup` (and later
+  `/auth/signin`) is not yet designed — revisit during route
+  implementation.
