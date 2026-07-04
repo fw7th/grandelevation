@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -25,13 +25,19 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="home.html",
-        context={"title": "Solar Site"},
-    )
+@app.get("/")
+async def home():
+    return FileResponse("app/static/index.html")
+
+
+@app.get("/signin")
+async def signin():
+    return FileResponse("app/static/signin.html")
+
+
+@app.get("/signup")
+async def signup():
+    return FileResponse("app/static/signup.html")
 
 
 @app.post("/api/ping", response_class=HTMLResponse)
