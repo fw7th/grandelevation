@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create account — Grand Elevation Solar</title>
+<title>Sign in — Grand Elevation Solar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -146,7 +146,7 @@
     color: var(--bg);
   }
 
-  .nav-cta:focus-visible, .btn-primary:focus-visible, .theme-toggle:focus-visible, .field input:focus-visible, .pw-toggle:focus-visible {
+  .nav-cta:focus-visible, .btn-primary:focus-visible, .theme-toggle:focus-visible, .field input:focus-visible {
     outline: 3px solid var(--gold);
     outline-offset: 2px;
   }
@@ -281,7 +281,6 @@
     background: var(--bg);
     color: var(--ink);
     transition: border-color 0.15s ease;
-    width: 100%;
   }
 
   .field input::placeholder {
@@ -292,49 +291,6 @@
   .field input:focus {
     border-color: var(--ink);
   }
-
-  /* password field + reveal button wrapper */
-  .pw-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  .pw-wrap input {
-    padding-right: 44px;
-  }
-
-  .pw-toggle {
-    position: absolute;
-    right: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: var(--gray-mid);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: color 0.15s ease, background 0.15s ease;
-  }
-
-  .pw-toggle:hover {
-    color: var(--ink);
-    background: var(--gold-light);
-  }
-
-  .pw-toggle svg {
-    width: 18px;
-    height: 18px;
-    display: block;
-  }
-
-  .pw-toggle .icon-eye-off { display: none; }
-  .pw-toggle[aria-pressed="true"] .icon-eye { display: none; }
-  .pw-toggle[aria-pressed="true"] .icon-eye-off { display: block; }
 
   .field-error {
     font-size: 13px;
@@ -440,7 +396,7 @@
 
 <div class="wrap">
   <nav class="nav">
-    <a href="index.html" class="nav-brand">
+    <a href="/" class="nav-brand">
       <div class="logo-spinner">
         <div class="orbit-dot"></div>
       </div>
@@ -451,7 +407,7 @@
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
       </button>
-      <a href="/signin" class="nav-cta">Sign in</a>
+      <a href="/signup" class="nav-cta">Create account</a>
     </div>
   </nav>
 </div>
@@ -459,29 +415,21 @@
 <main class="auth-main">
   <div class="wrap">
     <div class="auth-card">
-      <div class="auth-eyebrow">Get started</div>
-      <h1 class="display">Create your account</h1>
-      <p class="sub">Save your system configuration, track orders, and pick up where you left off.</p>
+      <div class="auth-eyebrow">Account access</div>
+      <h1 class="display">Sign in</h1>
+      <p class="sub">Pick up an order, check compatibility history, or get back to your cart.</p>
 
       <div class="auth-banner is-error" id="authBanner" role="alert"></div>
 
       <!--
         FastAPI wiring (later):
-        - method="post" action="/auth/signup"
-        - server validates, hashes password (passlib/bcrypt), creates User row
-          with role="customer", sets session cookie, redirects to /account
-        - on failure (e.g. email already registered), re-render this
-          template with auth_error set instead of a 200 JSON response
+        - method="post" action="/auth/signin"
+        - server validates, sets session cookie, redirects to /account or next= param
+        - on failure, re-render this template with auth_error set instead of a 200 JSON response
         For now this form is intercepted by the demo script below so the
         button has somewhere believable to go before the backend exists.
       -->
-      <form action="/signup_post" method="post" id="signupForm" novalidate>
-        <div class="field" id="nameField">
-          <label for="name">Username</label>
-          <input type="text" id="name" name="username" placeholder="talknojutsu123" autocomplete="name" required>
-          <span class="field-error">Enter your name.</span>
-        </div>
-
+      <form id="signinForm" novalidate>
         <div class="field" id="emailField">
           <label for="email">Email</label>
           <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
@@ -490,21 +438,23 @@
 
         <div class="field" id="passwordField">
           <label for="password">Password</label>
-          <div class="pw-wrap">
-            <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" required>
-            <button type="button" class="pw-toggle" data-target="password" aria-label="Show password" aria-pressed="false">
-              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a20.4 20.4 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a20.4 20.4 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>
-            </button>
-          </div>
-          <span class="field-error">Password must be at least 8 characters.</span>
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+          <span class="field-error">Enter your password.</span>
         </div>
 
-        <button type="submit" class="btn-primary">Create account</button>
+        <div class="row-between">
+          <label class="remember">
+            <input type="checkbox" name="remember">
+            Remember me
+          </label>
+          <a href="#" class="link">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Sign in</button>
       </form>
 
       <div class="auth-switch">
-        Already have an account? <a href="signin/" class="link">Sign in</a>
+        New to Grand Elevation Solar? <a href="/signup" class="link">Create an account</a>
       </div>
     </div>
   </div>
@@ -546,67 +496,42 @@
     });
   })();
 
-  // ---- Password reveal toggles ----
-  // Purely a display convenience -- toggles the input's type between
-  // "password" and "text". Doesn't touch the value, doesn't log it,
-  // doesn't affect what gets submitted. Each field's eye is independent.
+  // ---- DEMO ONLY: stands in for the future POST /auth/signin route. ----
+  // Real version: a plain <form method="post" action="/auth/signin"> with
+  // no JS needed at all -- FastAPI redirects on success/failure. This
+  // client-side check just gives the button something to do today.
   (function () {
-    var toggles = document.querySelectorAll('.pw-toggle');
-    toggles.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var input = document.getElementById(btn.getAttribute('data-target'));
-        var showing = input.type === 'text';
-        input.type = showing ? 'password' : 'text';
-        btn.setAttribute('aria-pressed', showing ? 'false' : 'true');
-        btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
-      });
-    });
-  })();
-
-  // ---- DEMO ONLY: stands in for the future POST /auth/signup route. ----
-  // Real version: a plain <form method="post" action="/auth/signup"> with
-  // no JS needed at all -- FastAPI hashes the password, creates the User
-  // row, sets a session cookie, and redirects. This client-side check
-  // just gives the button something to do today.
-  (function () {
-    var form = document.getElementById('signupForm');
+    var form = document.getElementById('signinForm');
     var banner = document.getElementById('authBanner');
-    var nameField = document.getElementById('nameField');
     var emailField = document.getElementById('emailField');
     var passwordField = document.getElementById('passwordField');
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var name = document.getElementById('name').value.trim();
       var email = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value;
       var valid = true;
 
-      nameField.classList.remove('has-error');
       emailField.classList.remove('has-error');
       passwordField.classList.remove('has-error');
       banner.classList.remove('is-visible');
 
-      if (!name) {
-        nameField.classList.add('has-error');
-        valid = false;
-      }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         emailField.classList.add('has-error');
         valid = false;
       }
-      if (password.length < 8) {
+      if (!password) {
         passwordField.classList.add('has-error');
         valid = false;
       }
       if (!valid) return;
 
-      // Placeholder "success" -- a real backend would hash the password,
-      // create the User row, set a session cookie, and redirect. For now
-      // just show where the user would land.
+      // Placeholder "success" -- a real backend would set a session
+      // cookie here and redirect. For now just show where the user
+      // would land.
       banner.classList.remove('is-error');
       banner.classList.add('is-visible');
-      banner.textContent = 'Account created (demo only -- no backend yet). This is where you\'d land on /account.';
+      banner.textContent = 'Signed in (demo only -- no backend yet). This is where you\'d land on /account.';
     });
   })();
 </script>

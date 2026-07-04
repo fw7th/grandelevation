@@ -1,11 +1,15 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import Depends, FastAPI, Form, Request
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .database import init_db
+from .database import get_session, init_db
+from .models import User
+from .security import password_hash
 
 
 @asynccontextmanager
@@ -30,27 +34,85 @@ async def home():
     return FileResponse("app/static/index.html")
 
 
-@app.get("/signin")
-async def signin():
-    return FileResponse("app/static/signin.html")
+@app.get("/signup", response_class=HTMLResponse)
+async def signup(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="signup.html",
+        context={
+            "errors": {},
+            "username": "",
+            "email": "",
+        },
+    )
 
 
-@app.get("/signup")
-async def signup():
-    return FileResponse("app/static/signup.html")
-
-
-@app.post("/signup_post")
+@app.post("/signup", response_class=HTMLResponse)
 async def signup_post(
-    username: str = Form(),
-    email: str = Form(),
-    password: str = Form(),
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    username: str | None = Form(default=None),
+    email: str | None = Form(default=None),
+    password: str | None = Form(default=None),
 ):
-    print(username)
-    print(email)
-    print(password)
+    errors = {}
 
-    return {"status": "ok"}
+    username = (username or "").strip()
+    email = (email or "").strip()
+    password = password or ""
+
+    if not username:
+        errors["username"] = "Username is required."
+
+    if not email:
+        errors["email"] = "Email is required."
+    elif "@" not in email or "." not in email.split("@")[-1]:
+        errors["email"] = "Enter a valid email address."
+
+    if len(password) < 8:
+        errors["password"] = "Password must be at least 8 characters."
+
+    if errors:
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={
+                "errors": errors,
+                "username": username,
+                "email": email,
+            },
+        )
+
+    statement = select(User).where(User.email == email)
+    result = await session.exec(statement)
+    existing_user = result.first()
+
+    if existing_user:
+        errors["email"] = "An account with this email already exists."
+
+    user = User(
+        username=username,
+        email=email,
+        password_hash=password_hash.hash(password),
+    )
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    return RedirectResponse(
+        url="/catalog",
+        status_code=303,
+    )
+
+
+@app.get("/signin", response_class=HTMLResponse)
+async def signin(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="signin.html",
+        context={},
+    )
 
 
 @app.post("/api/ping", response_class=HTMLResponse)
