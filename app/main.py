@@ -2,8 +2,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from models.user_models import create_db
 
 app = FastAPI(title="Solar Ordering Site")
+
+
+@app.on_event("startup")
+def startup():
+    create_db()
+
 
 # Static files (CSS, htmx.js) served from app/static at /static/*
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
