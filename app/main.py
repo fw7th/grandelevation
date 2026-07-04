@@ -1,15 +1,21 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from models.user_models import create_db
 
-app = FastAPI(title="Solar Ordering Site")
+from .database import init_db
 
 
-@app.on_event("startup")
-def startup():
-    create_db()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 # Static files (CSS, htmx.js) served from app/static at /static/*
