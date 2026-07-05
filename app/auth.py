@@ -8,31 +8,34 @@ from .database import get_session
 from .models import Session, Users
 
 
-async def get_current_user(
+async def authenticate(
     request: Request,
-    session: AsyncSession = Depends(get_session),
-) -> Users:
+    session: AsyncSession,
+) -> Users | None:
     token = request.cookies.get("session_token")
 
     if token is None:
-        raise HTTPException(status_code=401)
+        return None
 
     statement = select(Session).where(Session.token == token)
     result = await session.exec(statement)
     db_session = result.first()
 
     if db_session is None:
-        raise HTTPException(status_code=401)
+        return None
 
     if db_session.expires_at < datetime.utcnow():
-        raise HTTPException(status_code=401)
+        await session.delete(db_session)
+        await session.commit()
+        return None
 
     statement = select(Users).where(Users.id == db_session.user_id)
     result = await session.exec(statement)
-
     user = result.first()
 
     if user is None:
-        raise HTTPException(status_code=401)
+        await session.delete(db_session)
+        await session.commit()
+        return None
 
     return user
