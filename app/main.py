@@ -61,17 +61,35 @@ async def signup_post(
     email = (email or "").strip()
     password = password or ""
 
+    # ---------- Validation ----------
     if not username:
         errors["username"] = "Username is required."
 
     if not email:
         errors["email"] = "Email is required."
-    elif "@" not in email or "." not in email.split("@")[-1]:
+    elif "@" not in email:
+        errors["email"] = "Enter a valid email address."
+    elif "." not in email.rsplit("@", 1)[1]:
         errors["email"] = "Enter a valid email address."
 
     if len(password) < 8:
         errors["password"] = "Password must be at least 8 characters."
 
+    # ---------- Username uniqueness ----------
+    if username:
+        statement = select(User).where(User.username == username)
+        result = await session.exec(statement)
+        if result.first():
+            errors["username"] = "This username is already taken."
+
+    # ---------- Email uniqueness ----------
+    if email:
+        statement = select(User).where(User.email == email)
+        result = await session.exec(statement)
+        if result.first():
+            errors["email"] = "An account with this email already exists."
+
+    # ---------- Validation failed ----------
     if errors:
         return templates.TemplateResponse(
             request=request,
@@ -83,13 +101,7 @@ async def signup_post(
             },
         )
 
-    statement = select(User).where(User.email == email)
-    result = await session.exec(statement)
-    existing_user = result.first()
-
-    if existing_user:
-        errors["email"] = "An account with this email already exists."
-
+    # ---------- Create user ----------
     user = User(
         username=username,
         email=email,
@@ -97,11 +109,29 @@ async def signup_post(
     )
 
     session.add(user)
-    await session.commit()
-    await session.refresh(user)
+
+    try:
+        await session.commit()
+        await session.refresh(user)
+    except Exception:
+        # Safety net in case another request inserts the same
+        # username/email between our checks and commit.
+        await session.rollback()
+
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={
+                "errors": {
+                    "username": "Username or email has just been taken. Please try again."
+                },
+                "username": username,
+                "email": email,
+            },
+        )
 
     return RedirectResponse(
-        url="/catalog",
+        url=f"/catalog/{user.username}",
         status_code=303,
     )
 
@@ -112,6 +142,17 @@ async def signin(request: Request):
         request=request,
         name="signin.html",
         context={},
+    )
+
+
+@app.get("/catalog/{username}", response_class=HTMLResponse)
+async def catalog(request: Request, username: str):
+    return templates.TemplateResponse(
+        request=request,
+        name="catalog.html",
+        context={
+            "username": username,
+        },
     )
 
 

@@ -475,7 +475,7 @@
         For now this form is intercepted by the demo script below so the
         button has somewhere believable to go before the backend exists.
       -->
-      <form action="/signup" method="post" id="signupForm" >
+      <form action="/signup" method="post" id="signupForm" novalidate>
         <div class="field {% if errors.get('username') %}has-error{% endif %}" id="nameField">
           <label for="name">Username</label>
           <input type="text" id="name" name="username" value="{{ username }}" placeholder="talknojutsu123" autocomplete="name" novalidate>
