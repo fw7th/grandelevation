@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from .auth import get_current_user
 from .database import get_session, init_db
 from .models import Session, Users
 from .security import create_session_token, password_hash
@@ -168,13 +169,16 @@ async def signin(request: Request):
     )
 
 
-@app.get("/catalog/{username}", response_class=HTMLResponse)
-async def catalog(request: Request, username: str):
+@app.get("/catalog", response_class=HTMLResponse)
+async def catalog(
+    request: Request,
+    current_user: Users = Depends(get_current_user),
+):
     return templates.TemplateResponse(
         request=request,
         name="catalog.html",
         context={
-            "username": username,
+            "username": current_user.username,
         },
     )
 
