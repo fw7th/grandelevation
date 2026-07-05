@@ -10,7 +10,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .database import get_session, init_db
-from .models import Users
+from .models import Session, Users
 from .security import create_session_token, password_hash
 
 
@@ -131,10 +131,32 @@ async def signup_post(
             },
         )
 
-    return RedirectResponse(
-        url=f"/catalog/{user.username}",
+    token = create_session_token()
+
+    session_obj = Session(
+        token=token,
+        user_id=user.id,
+        expires_at=datetime.utcnow() + timedelta(days=30),
+    )
+
+    session.add(session_obj)
+    await session.commit()
+
+    response = RedirectResponse(
+        url="/catalog",
         status_code=303,
     )
+
+    response.set_cookie(
+        key="session_token",
+        value=token,
+        max_age=60 * 60 * 24 * 30,  # 30 days
+        httponly=True,
+        secure=False,  # True in production
+        samesite="lax",
+    )
+
+    return response
 
 
 @app.get("/signin", response_class=HTMLResponse)
