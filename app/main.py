@@ -1,15 +1,17 @@
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 
 from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .database import get_session, init_db
-from .models import User
-from .security import password_hash
+from .models import Users
+from .security import create_session_token, password_hash
 
 
 @asynccontextmanager
@@ -77,14 +79,14 @@ async def signup_post(
 
     # ---------- Username uniqueness ----------
     if username:
-        statement = select(User).where(User.username == username)
+        statement = select(Users).where(Users.username == username)
         result = await session.exec(statement)
         if result.first():
             errors["username"] = "This username is already taken."
 
     # ---------- Email uniqueness ----------
     if email:
-        statement = select(User).where(User.email == email)
+        statement = select(Users).where(Users.email == email)
         result = await session.exec(statement)
         if result.first():
             errors["email"] = "An account with this email already exists."
@@ -102,7 +104,7 @@ async def signup_post(
         )
 
     # ---------- Create user ----------
-    user = User(
+    user = Users(
         username=username,
         email=email,
         password_hash=password_hash.hash(password),
@@ -113,9 +115,8 @@ async def signup_post(
     try:
         await session.commit()
         await session.refresh(user)
-    except Exception:
-        # Safety net in case another request inserts the same
-        # username/email between our checks and commit.
+
+    except IntegrityError:
         await session.rollback()
 
         return templates.TemplateResponse(
