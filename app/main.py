@@ -178,8 +178,111 @@ async def signin(
     return templates.TemplateResponse(
         request=request,
         name="signin.html",
-        context={},
+        context={
+            "errors": {},
+            "email": "",
+        },
     )
+
+
+@app.post("/signin", response_class=HTMLResponse)
+async def signin_post(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    email: str | None = Form(default=None),
+    password: str | None = Form(default=None),
+    remember_me: bool = Form(False),
+):
+    errors = {}
+
+    email = (email or "").strip()
+    password = password or ""
+
+    # ---------- Validation ----------
+    if not email:
+        errors["email"] = "Email is required."
+    elif "@" not in email:
+        errors["email"] = "Enter a valid email address."
+    elif "." not in email.rsplit("@", 1)[1]:
+        errors["email"] = "Enter a valid email address."
+
+    if not password:
+        errors["password"] = "Password is required."
+
+    statement = select(Users).where(Users.email == email)
+    result = await session.exec(statement)
+    user = result.first()
+
+    if user is None:
+        errors["email"] = "Invalid email or password."
+
+    elif not password_hash.verify(password, user.password_hash):
+        errors["email"] = "Invalid email or password."
+
+    # ---------- Validation failed ----------
+    if errors:
+        return templates.TemplateResponse(
+            request=request,
+            name="signin.html",
+            context={
+                "errors": errors,
+                "email": email,
+            },
+        )
+
+    # ---------- Create session ----------
+    token = create_session_token()
+
+    try:
+        ttl = timedelta(days=30) if remember_me else timedelta(hours=3)
+        session.add(
+            Session(
+                token=token,
+                user_id=user.id,
+                expires_at=datetime.utcnow() + ttl,
+            )
+        )
+
+        await session.commit()
+
+    except IntegrityError:
+        await session.rollback()
+
+        return templates.TemplateResponse(
+            request=request,
+            name="signin.html",
+            context={
+                "errors": {
+                    "email": "There was an issue while logging in. Please contact us."
+                },
+                "email": email,
+            },
+        )
+
+    response = RedirectResponse(
+        url="/catalog",
+        status_code=303,
+    )
+
+    if remember_me:
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            max_age=60 * 60 * 24 * 30,  # 30 days
+            httponly=True,
+            secure=False,  # True in production
+            samesite="lax",
+        )
+    else:
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+        )
+
+    return response
 
 
 @app.get("/catalog")

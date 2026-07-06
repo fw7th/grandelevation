@@ -429,22 +429,26 @@
         For now this form is intercepted by the demo script below so the
         button has somewhere believable to go before the backend exists.
       -->
-      <form id="signinForm" novalidate>
-        <div class="field" id="emailField">
+      <form action="/signin" method="post" id="signinForm" novalidate>
+        <div class="field {% if errors.get('email') %}has-error{% endif %}" id="emailField">
           <label for="email">Email</label>
-          <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
-          <span class="field-error">Enter a valid email address.</span>
+          <input type="email" id="email" name="email" value="{{ email }}" placeholder="you@example.com" autocomplete="email">
+          <span class="field-error">
+            {{ errors.get("email", "") }}
+          </span>
         </div>
 
-        <div class="field" id="passwordField">
+        <div class="field {% if errors.get('password') %}has-error{% endif %}" id="passwordField">
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
-          <span class="field-error">Enter your password.</span>
+          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password">
+          <span class="field-error">
+            {{ errors.get("password", "") }}
+          </span>
         </div>
 
         <div class="row-between">
           <label class="remember">
-            <input type="checkbox" name="remember">
+            <input type="checkbox" id="remember" name="remember">
             Remember me
           </label>
           <a href="#" class="link">Forgot password?</a>
@@ -493,45 +497,6 @@
     toggle.addEventListener('click', function () {
       var isDark = root.getAttribute('data-theme') === 'dark';
       applyTheme(isDark ? 'light' : 'dark');
-    });
-  })();
-
-  // ---- DEMO ONLY: stands in for the future POST /auth/signin route. ----
-  // Real version: a plain <form method="post" action="/auth/signin"> with
-  // no JS needed at all -- FastAPI redirects on success/failure. This
-  // client-side check just gives the button something to do today.
-  (function () {
-    var form = document.getElementById('signinForm');
-    var banner = document.getElementById('authBanner');
-    var emailField = document.getElementById('emailField');
-    var passwordField = document.getElementById('passwordField');
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var email = document.getElementById('email').value.trim();
-      var password = document.getElementById('password').value;
-      var valid = true;
-
-      emailField.classList.remove('has-error');
-      passwordField.classList.remove('has-error');
-      banner.classList.remove('is-visible');
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        emailField.classList.add('has-error');
-        valid = false;
-      }
-      if (!password) {
-        passwordField.classList.add('has-error');
-        valid = false;
-      }
-      if (!valid) return;
-
-      // Placeholder "success" -- a real backend would set a session
-      // cookie here and redirect. For now just show where the user
-      // would land.
-      banner.classList.remove('is-error');
-      banner.classList.add('is-visible');
-      banner.textContent = 'Signed in (demo only -- no backend yet). This is where you\'d land on /account.';
     });
   })();
 </script>
