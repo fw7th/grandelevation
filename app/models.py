@@ -18,7 +18,7 @@ class Session(SQLModel, table=True):
     __tablename__ = "sessions"
 
     id: int | None = Field(default=None, primary_key=True)
-    token: str = Field(index=True, unique=True)
+    token: str = Field(index=True, unique=True, max_length=64)
     user_id: int = Field(foreign_key="users.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: datetime

@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from .auth import authenticate
 from .database import get_session, init_db
 from .models import Session, Users
 from .security import create_session_token, password_hash
@@ -37,7 +38,12 @@ async def home():
 
 
 @app.get("/signup", response_class=HTMLResponse)
-async def signup(request: Request):
+async def signup(request: Request, session: AsyncSession = Depends(get_session)):
+    user = await authenticate(request, session)
+
+    if user:
+        return RedirectResponse("/catalog")
+
     return templates.TemplateResponse(
         request=request,
         name="signup.html",
@@ -103,16 +109,27 @@ async def signup_post(
             },
         )
 
-    # ---------- Create user ----------
+    # ---------- Create user and session ----------
     user = Users(
         username=username,
         email=email,
         password_hash=password_hash.hash(password),
     )
 
-    session.add(user)
+    token = create_session_token()
 
     try:
+        session.add(user)
+        await session.flush()
+
+        session.add(
+            Session(
+                token=token,
+                user_id=user.id,
+                expires_at=datetime.utcnow() + timedelta(days=30),
+            )
+        )
+
         await session.commit()
         await session.refresh(user)
 
@@ -131,17 +148,6 @@ async def signup_post(
             },
         )
 
-    token = create_session_token()
-
-    session_obj = Session(
-        token=token,
-        user_id=user.id,
-        expires_at=datetime.utcnow() + timedelta(days=30),
-    )
-
-    session.add(session_obj)
-    await session.commit()
-
     response = RedirectResponse(
         url="/catalog",
         status_code=303,
@@ -159,8 +165,16 @@ async def signup_post(
     return response
 
 
-@app.get("/signin", response_class=HTMLResponse)
-async def signin(request: Request):
+@app.get("/signin")
+async def signin(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+
+    if user:
+        return RedirectResponse("/catalog")
+
     return templates.TemplateResponse(
         request=request,
         name="signin.html",
@@ -168,13 +182,21 @@ async def signin(request: Request):
     )
 
 
-@app.get("/catalog/{username}", response_class=HTMLResponse)
-async def catalog(request: Request, username: str):
+@app.get("/catalog")
+async def catalog(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+
+    if user is None:
+        return RedirectResponse("/signin")
+
     return templates.TemplateResponse(
         request=request,
         name="catalog.html",
         context={
-            "username": username,
+            "username": user.username,
         },
     )
 
