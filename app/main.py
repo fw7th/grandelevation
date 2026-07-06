@@ -304,6 +304,33 @@ async def catalog(
     )
 
 
+@app.post("/logout")
+async def logout(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    token = request.cookies.get("session_token")
+
+    if token:
+        statement = select(Session).where(Session.token == token)
+        result = await session.exec(statement)
+
+        db_session = result.first()
+
+        if db_session:
+            await session.delete(db_session)
+            await session.commit()
+
+    response = RedirectResponse(
+        url="/",
+        status_code=303,
+    )
+
+    response.delete_cookie("session_token")
+
+    return response
+
+
 @app.post("/api/ping", response_class=HTMLResponse)
 def ping(request: Request):
     """
