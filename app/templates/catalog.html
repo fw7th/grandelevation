@@ -4,8 +4,51 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Catalog</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: sans-serif;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .logout-btn {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+
+    main {
+      padding: 2rem;
+    }
+  </style>
 </head>
 <body>
+
+<nav>
+  <h2>Grand Elevation Solar</h2>
+
+  <form action="/logout" method="post">
+    <button class="logout-btn" type="submit">
+      Logout
+    </button>
+  </form>
+</nav>
+
+<main>
   <h1>Hey, {{ username }}</h1>
+</main>
+
 </body>
 </html>
