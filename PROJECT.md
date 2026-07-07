@@ -96,21 +96,54 @@ solar-site/
 ├── .env.example
 ├── pyproject.toml / uv.lock
 └── vercel.json                       # Untested against a real deployment
+
+NEW STRUCTURE (I removed dirs I don't fully get the use of.) 
+grandelevation/
+├── alembic  # NOT INITIALIZED
+├── api
+│   └── index.py  # Vercel entrypoint shim, imports `app` from app/main.py
+├── app
+│   ├── auth.py
+│   ├── database.py
+│   ├── __init__.py
+│   ├── main.py  # Real FastAPI() app, routes mounted here
+│   ├── models.py
+│   ├── security.py
+│   ├── static
+│   │   ├── buune-data-deletion.html
+│   │   ├── buune.png
+│   │   ├── buune-privacy-policy.html
+│   │   ├── buune-terms.html
+│   │   ├── favicon.ico
+│   │   ├── grand_logo.png
+│   │   ├── index.html
+│   │   └── style.css
+│   └── templates
+│       ├── catalog.html
+│       ├── home.html
+│       ├── _ping_result.html
+│       ├── signin.html
+│       └── signup.html
+├── PROJECT.md
+├── pyproject.toml
+├── README.md
+├── uv.lock
+└── vercel.json  # Untested against a real deployment
+
+
 ```
 
 ## Current status
 
 **Backend skeleton:** boots locally via `uv run uvicorn app.main:app --reload`. Jinja2 rendering, one htmx round-trip (`POST /api/ping`), static files, 3 passing tests -- all confirmed working.
 
-**Landing page** (`grand-elevation-landing.html`): built as a **standalone HTML file**, not yet merged into `app/templates/`. Self-contained, real brand tokens, light/dark toggle, circular logo with orbit ring (nav + footer), eyebrow pill badge, hero with ray-burst motif, three value props (compatibility checking / on-demand sourcing / order history), closing CTA, footer.
-
-**Not yet done:** merging the landing page into the real FastAPI project (swap hardcoded anchors/asset paths for `{{ url_for(...) }}` and real routes), plus everything below.
+**Landing page** (`index.html`): built as a **standalone HTML file**, not to be merged into `app/templates/`. Self-contained, real brand tokens, light/dark toggle, circular logo with orbit ring (nav + footer), eyebrow pill badge, hero with ray-burst motif, three value props (compatibility checking / on-demand sourcing / order history), closing CTA, footer.
 
 ## What's not built yet (by section, for future chats)
 
 - **B. Domain modeling** -- Product/spec schema per category, Order/Cart/OrderItem, User/Role.
 - **C. Compatibility engine** -- rule definitions, validation function, unit tests.
-- **D. Backend API/routes** -- product listing, cart + live compatibility check endpoint, auth, admin CRUD, Stripe session + webhook.
+- **D. Backend API/routes** -- product listing, cart + live compatibility check endpoint, auth, admin CRUD, Stripe session + webhook. -> /signin, /logout, /signup, all working properly. Current main.py is given.
 - **E. Frontend templates** -- integrate the landing page; then product browsing, cart/configurator (main htmx-heavy page), checkout, admin dashboard, customer account pages.
 - **F. Deployment/ops** -- real Vercel deploy, Neon provisioning, Alembic workflow, Stripe webhook (needs a public URL, likely Stripe CLI for local forwarding).
 
