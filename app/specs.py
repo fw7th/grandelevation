@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 
 class PanelSpecs(BaseModel):
@@ -52,3 +52,27 @@ DISPLAY_FIELDS = {
     "battery": ["nominal_voltage", "capacity_ah", "chemistry"],
     "accessory": [],
 }
+
+
+def validate_specs(category: str, raw_specs: dict) -> dict:
+    """
+    Validate raw specs data against the Pydantic model for the given
+    category. Returns a clean dict ready to store in Product.specs.
+    Raises ValueError (with a readable message) if category is unknown
+    or specs data doesn't match the required shape.
+
+    This is the single choke point both the admin create/edit routes
+    and any future bulk-import path should call before writing to the
+    DB -- specs should never reach Product.specs unvalidated.
+    """
+    model = SPEC_MODELS.get(category)
+
+    if model is None:
+        raise ValueError(f"Unknown product category: {category!r}")
+
+    try:
+        validated = model(**raw_specs)
+    except ValidationError as e:
+        raise ValueError(f"Invalid specs for category {category!r}: {e}")
+
+    return validated.model_dump()

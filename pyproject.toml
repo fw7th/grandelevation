@@ -11,6 +11,7 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "psycopg[binary]>=3.3.4",
     "pwdlib[argon2]>=0.3.0",
+    "pydantic[dotenv,email]>=2.13.4",
     "python-multipart>=0.0.32",
     "sqlalchemy>=2.0.51",
     "sqlmodel>=0.0.39",

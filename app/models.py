@@ -12,6 +12,7 @@ class Users(SQLModel, table=True):
     username: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
     password_hash: str
+    role: str = Field(default="customer")  # "customer" | "admin"
 
 
 class Session(SQLModel, table=True):
