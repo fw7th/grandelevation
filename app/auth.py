@@ -39,3 +39,12 @@ async def authenticate(
         return None
 
     return user
+
+
+async def require_admin(
+    request: Request, session: AsyncSession = Depends(get_session)
+) -> Users:
+    user = await authenticate(request, session)
+    if user is None or user.role != "admin":
+        raise HTTPException(status_code=404)  # see note below on 404 vs 403
+    return user
