@@ -12,6 +12,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from .auth import authenticate
 from .database import get_session, init_db
 from .models import Session, Users
+from .routers import admin as admin_router
 from .security import create_session_token, password_hash
 
 
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(admin_router.router)
 
 
 # Static files (CSS, htmx.js) served from app/static at /static/*
