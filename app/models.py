@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import JSON, Column, Field, SQLModel
 
 
 class Users(SQLModel, table=True):
@@ -22,3 +22,15 @@ class Session(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: datetime
+
+
+class Product(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    category: str  # "panel" | "inverter" | "battery" | "accessory"
+    name: str
+    price: float
+    description: str
+    image_url: str | None = None
+    specs: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

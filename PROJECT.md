@@ -33,7 +33,7 @@ voltage), not a forbidden-pairs list.
 | Frontend | Jinja2 + htmx (not React/Next.js) | Zero JS-framework learning curve |
 | Styling | Custom CSS, token-based (see Brand tokens) | No build step |
 | ORM | SQLModel | Bridges Pydantic + SQLAlchemy, no duplicate schemas |
-| Database | Postgres via **Neon** | Serverless-friendly; auth built custom, so no bundled extras needed |
+| Database | Postgres via **Neon** | Serverless-friendly; auth built custom, so no bundled extras needed | -> still on local for dev
 | Dependency manager | **uv** | Fast, modern, replaces pip+venv |
 | Hosting | **Vercel**, Python/FastAPI runtime | Developer has prior experience with this combo |
 | Auth | `customer` + `admin` roles, custom-built in FastAPI | Brother + developer = admin |
@@ -171,3 +171,28 @@ grandelevation/
 - Rate limiting / brute-force protection on `/auth/signup` (and later
   `/auth/signin`) is not yet designed — revisit during route
   implementation.
+
+## Product data model (decided)
+
+- **Single `Product` table**, not per-category tables. Category-specific
+  fields live in a `specs` JSON column, not as real DB columns — validated
+  at the application layer via per-category Pydantic models (`app/specs.py`),
+  not enforced by the database schema itself.
+- Categories in v1: `panel`, `inverter`, `battery` (compat-engine-aware),
+  plus `accessory` (catalog-only, no compat rules).
+- Each category's Pydantic model splits fields into compat-relevant vs.
+  customer-facing via a separate `DISPLAY_FIELDS` lookup (e.g. a panel's
+  `voc` is compat-only, never shown on the product page).
+- **Pricing is static and admin-editable** — no negotiate-then-send-a-link
+  flow. Confirmed against the brother's explicit goal: "customers should
+  buy from the site, not text me for a price." A dynamic/negotiated-price
+  flow was considered and rejected as reintroducing the dependency he
+  wants removed.
+
+## Image storage (decided)
+
+- **Option A chosen:** product images live in `app/static/`, referenced by
+  path in `Product.image_url`. No external storage service (S3, Cloudinary,
+  Vercel Blob) for now.
+- **Why this has a real constraint, not just a preference:** Vercel's
+  Python runtime is stateless/serverless (see
