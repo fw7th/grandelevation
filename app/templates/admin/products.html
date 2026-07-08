@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Products — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
+    --gold-light: #FBDFA8; --gold-deep: #E8651C;
+    --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1); --error: #B3261E;
+  }
+  html[data-theme="dark"] {
+    --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
+    --gold-deep: #FFB648; --gray-mid: #9B968A; --border: rgba(244,241,234,0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif; }
+  .display { font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .topbar h1 { font-size: 22px; }
+  .btn-primary {
+    background: var(--ink); color: var(--bg); border: none; border-radius: 999px;
+    padding: 11px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--gold-deep); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--gray-mid); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.04em; }
+  .category-tag {
+    display: inline-block; background: var(--gold-light); padding: 3px 10px;
+    border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .row-actions a, .row-actions button {
+    font-size: 13px; font-weight: 600; border: none; background: none;
+    cursor: pointer; color: var(--ink); margin-right: 12px;
+  }
+  .row-actions button { color: var(--error); }
+  a { text-decoration: none; color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1 class="display">Products</h1>
+    <a href="/admin/products/new" class="btn-primary">+ Add product</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Category</th><th>Price</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td>{{ product.name }}</td>
+        <td><span class="category-tag">{{ product.category }}</span></td>
+        <td>₦{{ "%.2f"|format(product.price) }}</td>
+        <td class="row-actions">
+          <a href="/admin/products/{{ product.id }}/edit">Edit</a>
+          <form action="/admin/products/{{ product.id }}/delete" method="post" style="display:inline">
+            <button type="submit" onclick="return confirm('Delete this product?')">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">No products yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

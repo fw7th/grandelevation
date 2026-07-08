@@ -1,0 +1,22 @@
+{% if fields %}
+  {% for name, label, input_type, required in fields %}
+  <div class="field">
+    <label for="spec_{{ name }}">{{ label }}{% if required %} *{% endif %}</label>
+    {% if input_type == "select" %}
+    <select id="spec_{{ name }}" name="{{ name }}" {% if required %}required{% endif %}>
+      <option value="">Select...</option>
+      {% for choice in choices.get(name, []) %}
+      <option value="{{ choice }}" {% if values.get(name) == choice %}selected{% endif %}>{{ choice }}</option>
+      {% endfor %}
+    </select>
+    {% else %}
+    <input type="{{ input_type }}"
+           {% if input_type == "number" %}step="any"{% endif %}
+           id="spec_{{ name }}" name="{{ name }}"
+           value="{{ values.get(name, '') }}" {% if required %}required{% endif %}>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+  <p class="empty-note">No specs for this category.</p>
+{% endif %}
