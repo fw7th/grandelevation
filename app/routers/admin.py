@@ -7,7 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from ..auth import authenticate
 from ..database import get_session
 from ..models import Product, Users
-from ..specs import validate_specs
+from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="app/templates")
@@ -43,7 +43,28 @@ async def admin_product_new(request: Request, admin: Users = Depends(require_adm
     return templates.TemplateResponse(
         request=request,
         name="admin/product_form.html",
-        context={"errors": {}, "product": None},
+        context={
+            "errors": {},
+            "product": None,
+            "form_values": {},
+            "values": {},
+            "choices": FIELD_CHOICES,
+            "fields": [],
+        },
+    )
+
+
+@router.get("/products/specs-fields")
+async def admin_specs_fields(
+    request: Request,
+    category: str = "",
+    admin: Users = Depends(require_admin),
+):
+    fields = ADMIN_FORM_FIELDS.get(category, [])
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/_specs_fields.html",
+        context={"fields": fields, "choices": FIELD_CHOICES, "values": {}},
     )
 
 
@@ -65,10 +86,25 @@ async def admin_product_create(
     try:
         specs = validate_specs(category, raw_specs)
     except ValueError as e:
+        # Re-render with everything they typed intact -- category, the
+        # top-level fields, AND the spec values -- so nothing is lost.
         return templates.TemplateResponse(
             request=request,
             name="admin/product_form.html",
-            context={"errors": {"specs": str(e)}, "product": None},
+            context={
+                "errors": {"specs": str(e)},
+                "product": None,
+                "form_values": {
+                    "category": category,
+                    "name": name,
+                    "price": price,
+                    "description": description,
+                    "image_url": image_url,
+                },
+                "values": raw_specs,
+                "choices": FIELD_CHOICES,
+                "fields": ADMIN_FORM_FIELDS.get(category, []),
+            },
         )
 
     product = Product(

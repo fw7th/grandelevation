@@ -30,10 +30,25 @@ class AccessorySpecs(BaseModel):
     pass  # no compat-relevant fields
 
 
+class GeneratorSpecs(BaseModel):
+    pass  # no compat-relevant fields
+
+
+class SSLSpecs(BaseModel):
+    pass  # no compat-relevant fields
+
+
+class FanSpecs(BaseModel):
+    pass  # no compat-relevant fields
+
+
 SPEC_MODELS = {
     "panel": PanelSpecs,
     "inverter": InverterSpecs,
     "battery": BatterySpecs,
+    "generator": GeneratorSpecs,
+    "solar_street_light": SSLSpecs,
+    "fan": FanSpecs,
     "accessory": AccessorySpecs,
 }
 
@@ -50,7 +65,54 @@ DISPLAY_FIELDS = {
         "output_voltage",
     ],
     "battery": ["nominal_voltage", "capacity_ah", "chemistry"],
+    "generator": [],
+    "solar_street_light": [],
+    "fan": [],
     "accessory": [],
+}
+
+# Field metadata for the ADMIN form. Unlike DISPLAY_FIELDS (customer-facing
+# subset), this lists EVERY field per category -- including compat-only
+# ones like voc, max_input_voltage -- since the admin is the one entering
+# raw spec-sheet numbers.
+#
+# Each entry: (field_name, label, input_type, required)
+# input_type is a plain HTML input type ("number", "text") or "select"
+# for fields with a fixed set of choices.
+
+ADMIN_FORM_FIELDS = {
+    "panel": [
+        ("wattage", "Wattage (W)", "number", True),
+        ("voc", "Open-circuit voltage — Voc (V)", "number", True),
+        ("vmp", "Voltage at max power — Vmp (V)", "number", True),
+        ("imp", "Current at max power — Imp (A)", "number", True),
+        ("panel_type", "Panel type", "select", True),
+        ("dimensions", "Dimensions", "text", False),
+    ],
+    "inverter": [
+        ("max_input_voltage", "Max input voltage (V)", "number", True),
+        ("mppt_range_min", "MPPT range — min (V)", "number", True),
+        ("mppt_range_max", "MPPT range — max (V)", "number", True),
+        ("max_input_current", "Max input current (A)", "number", True),
+        ("rated_output_power", "Rated output power (W)", "number", True),
+        ("output_voltage", "Output voltage (V)", "number", True),
+    ],
+    "battery": [
+        ("nominal_voltage", "Nominal voltage (V)", "number", True),
+        ("capacity_ah", "Capacity (Ah)", "number", True),
+        ("max_charge_current", "Max charge current (A)", "number", True),
+        ("chemistry", "Chemistry", "select", True),
+    ],
+    "generator": [],
+    "solar_street_light": [],
+    "fan": [],
+    "accessory": [],
+}
+
+# Choices for "select" type fields above.
+FIELD_CHOICES = {
+    "panel_type": ["monocrystalline", "polycrystalline"],
+    "chemistry": ["lithium", "lead_acid"],
 }
 
 
