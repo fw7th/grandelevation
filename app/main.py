@@ -13,7 +13,7 @@ from .auth import authenticate
 from .database import get_session, init_db
 from .models import Session, Users
 from .routers import admin as admin_router
-from .security import create_session_token, password_hash
+from .security import PageException, create_session_token, password_hash
 
 
 @asynccontextmanager
@@ -333,16 +333,20 @@ async def logout(
     return response
 
 
-@app.post("/api/ping", response_class=HTMLResponse)
-def ping(request: Request):
-    """
-    A tiny htmx demo endpoint: returns a fragment of HTML, not a full page.
-    This is the core pattern we'll reuse for the real compatibility checker:
-    htmx sends a request, FastAPI returns a small chunk of rendered HTML,
-    htmx swaps it into the page. No JSON, no client-side JS framework.
-    """
-    return templates.TemplateResponse(
-        request=request,
-        name="_ping_result.html",
-        context={},
-    )
+@app.exception_handler(PageException)
+async def page_exception_handler(request: Request, exc: PageException):
+    # Craft your custom HTML error layout
+    if exc.message is not None:
+        html_content = f"""
+        <html>
+            <head><title>Error Occurred</title></head>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+                <h1 style="color: #ff4d4d;">Oops! Something went wrong</h1>
+                <p style="font-size: 18px;">{exc.message}</p>
+                <a href="/" style="color: #0066cc; text-decoration: none;">Return Home</a>
+            </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content, status_code=exc.status_code)
+    else:
+        return FileResponse("app/static/404.html")

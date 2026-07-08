@@ -7,6 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from ..auth import authenticate
 from ..database import get_session
 from ..models import Product, Users
+from ..security import PageException
 from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -18,7 +19,7 @@ async def require_admin(
 ) -> Users:
     user = await authenticate(request, session)
     if user is None or user.role != "admin":
-        raise HTTPException(status_code=404)
+        raise PageException(message=None, status_code=404)
     return user
 
 

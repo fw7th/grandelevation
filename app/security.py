@@ -16,6 +16,12 @@ def create_session_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+class PageException(Exception):
+    def __init__(self, message: str | None, status_code: int = 400):
+        self.message = message
+        self.status_code = status_code
+
+
 async def make_admin_async(identifier: str):
     # Use AsyncSession instead of Session for async engines
     async with AsyncSession(engine) as session:
