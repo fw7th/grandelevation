@@ -30,31 +30,46 @@ class AccessorySpecs(BaseModel):
     pass  # no compat-relevant fields
 
 
-class GeneratorSpecs(BaseModel):
-    pass  # no compat-relevant fields
+class SolarGeneratorSpecs(BaseModel):
+    capacity_wh: float  # total energy storage, Wh
+    rated_output_power: float  # continuous output, W
+    peak_output_power: float  # surge rating, W -- compat only
+    max_input_charging_watts: float  # solar input limit, W
+    output_voltage: float  # V, e.g. 220
+    battery_chemistry: str  # "lithium" | "lead_acid"
 
 
-class SSLSpecs(BaseModel):
-    pass  # no compat-relevant fields
+class SolarStreetLightSpecs(BaseModel):
+    panel_wattage: float  # attached panel rating, W
+    lumen_output: float
+    battery_capacity_ah: float
+    battery_voltage: float  # V -- compat only
+    lighting_mode: str  # "dusk_to_dawn" | "motion_sensor" | "timer"
+    pole_height_m: float | None = None
 
 
 class FanSpecs(BaseModel):
-    pass  # no compat-relevant fields
+    wattage: float
+    voltage: float  # V -- compat only, must match battery/inverter output
+    airflow_cfm: float | None = None
+    noise_level_db: float | None = None
+    blade_span_cm: float | None = None
 
 
 SPEC_MODELS = {
     "panel": PanelSpecs,
     "inverter": InverterSpecs,
     "battery": BatterySpecs,
-    "generator": GeneratorSpecs,
-    "solar_street_light": SSLSpecs,
-    "fan": FanSpecs,
     "accessory": AccessorySpecs,
+    "solar_generator": SolarGeneratorSpecs,
+    "solar_street_light": SolarStreetLightSpecs,
+    "fan": FanSpecs,
 }
 
 # Fields shown on the customer-facing product page, per category.
 # Anything compat-relevant but not listed here (e.g. voc, max_input_voltage,
 # max_charge_current) is used by the compatibility engine only.
+
 DISPLAY_FIELDS = {
     "panel": ["wattage", "vmp", "imp", "panel_type", "dimensions"],
     "inverter": [
@@ -65,11 +80,22 @@ DISPLAY_FIELDS = {
         "output_voltage",
     ],
     "battery": ["nominal_voltage", "capacity_ah", "chemistry"],
-    "generator": [],
-    "solar_street_light": [],
-    "fan": [],
     "accessory": [],
+    "solar_generator": [
+        "capacity_wh",
+        "rated_output_power",
+        "output_voltage",
+        "battery_chemistry",
+    ],
+    "solar_street_light": [
+        "panel_wattage",
+        "lumen_output",
+        "lighting_mode",
+        "pole_height_m",
+    ],
+    "fan": ["wattage", "airflow_cfm", "noise_level_db", "blade_span_cm"],
 }
+
 
 # Field metadata for the ADMIN form. Unlike DISPLAY_FIELDS (customer-facing
 # subset), this lists EVERY field per category -- including compat-only
@@ -79,7 +105,6 @@ DISPLAY_FIELDS = {
 # Each entry: (field_name, label, input_type, required)
 # input_type is a plain HTML input type ("number", "text") or "select"
 # for fields with a fixed set of choices.
-
 ADMIN_FORM_FIELDS = {
     "panel": [
         ("wattage", "Wattage (W)", "number", True),
@@ -103,16 +128,39 @@ ADMIN_FORM_FIELDS = {
         ("max_charge_current", "Max charge current (A)", "number", True),
         ("chemistry", "Chemistry", "select", True),
     ],
-    "generator": [],
-    "solar_street_light": [],
-    "fan": [],
     "accessory": [],
+    "solar_generator": [
+        ("capacity_wh", "Capacity (Wh)", "number", True),
+        ("rated_output_power", "Rated output power (W)", "number", True),
+        ("peak_output_power", "Peak/surge output power (W)", "number", True),
+        ("max_input_charging_watts", "Max solar input charging (W)", "number", True),
+        ("output_voltage", "Output voltage (V)", "number", True),
+        ("battery_chemistry", "Battery chemistry", "select", True),
+    ],
+    "solar_street_light": [
+        ("panel_wattage", "Panel wattage (W)", "number", True),
+        ("lumen_output", "Lumen output (lm)", "number", True),
+        ("battery_capacity_ah", "Battery capacity (Ah)", "number", True),
+        ("battery_voltage", "Battery voltage (V)", "number", True),
+        ("lighting_mode", "Lighting mode", "select", True),
+        ("pole_height_m", "Pole height (m)", "number", False),
+    ],
+    "fan": [
+        ("wattage", "Wattage (W)", "number", True),
+        ("voltage", "Voltage (V)", "number", True),
+        ("airflow_cfm", "Airflow (CFM)", "number", False),
+        ("noise_level_db", "Noise level (dB)", "number", False),
+        ("blade_span_cm", "Blade span (cm)", "number", False),
+    ],
 }
+
 
 # Choices for "select" type fields above.
 FIELD_CHOICES = {
     "panel_type": ["monocrystalline", "polycrystalline"],
     "chemistry": ["lithium", "lead_acid"],
+    "battery_chemistry": ["lithium", "lead_acid"],
+    "lighting_mode": ["dusk_to_dawn", "motion_sensor", "timer"],
 }
 
 

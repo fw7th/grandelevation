@@ -62,6 +62,9 @@
         <option value="panel" {% if form_values.get("category") == "panel" %}selected{% endif %}>Panel</option>
         <option value="inverter" {% if form_values.get("category") == "inverter" %}selected{% endif %}>Inverter</option>
         <option value="battery" {% if form_values.get("category") == "battery" %}selected{% endif %}>Battery</option>
+        <option value="solar_generator" {% if form_values.get("category") == "solar_generator" %}selected{% endif %}>Solar generator</option>
+        <option value="solar_street_light" {% if form_values.get("category") == "solar_street_light" %}selected{% endif %}>Solar street light</option>
+        <option value="fan" {% if form_values.get("category") == "fan" %}selected{% endif %}>Fan</option>
         <option value="accessory" {% if form_values.get("category") == "accessory" %}selected{% endif %}>Accessory</option>
       </select>
     </div>

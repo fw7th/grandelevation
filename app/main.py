@@ -121,9 +121,6 @@ async def signup_post(
     token = create_session_token()
 
     try:
-        session.add(user)
-        await session.flush()
-
         session.add(
             Session(
                 token=token,
@@ -131,6 +128,9 @@ async def signup_post(
                 expires_at=datetime.utcnow() + timedelta(days=30),
             )
         )
+
+        session.add(user)
+        await session.flush()
 
         await session.commit()
         await session.refresh(user)
