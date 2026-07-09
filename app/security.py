@@ -16,6 +16,10 @@ def create_session_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+def generate_csrf_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
 class PageException(Exception):
     def __init__(self, message: str | None, status_code: int = 400):
         self.message = message

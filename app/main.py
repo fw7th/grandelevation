@@ -10,6 +10,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .auth import authenticate
+from .csrf import get_csrf_token, verify_csrf
 from .database import get_session, init_db
 from .models import Session, Users
 from .routers import admin as admin_router
@@ -46,14 +47,11 @@ async def signup(request: Request, session: AsyncSession = Depends(get_session))
     if user:
         return RedirectResponse("/catalog")
 
+    csrf_token = await get_csrf_token(request, session)
     return templates.TemplateResponse(
         request=request,
         name="signup.html",
-        context={
-            "errors": {},
-            "username": "",
-            "email": "",
-        },
+        context={"errors": {}, "username": "", "email": "", "csrf_token": csrf_token},
     )
 
 
@@ -61,6 +59,7 @@ async def signup(request: Request, session: AsyncSession = Depends(get_session))
 async def signup_post(
     request: Request,
     session: AsyncSession = Depends(get_session),
+    _: None = Depends(verify_csrf),
     username: str | None = Form(default=None),
     email: str | None = Form(default=None),
     password: str | None = Form(default=None),
@@ -177,13 +176,11 @@ async def signin(
     if user:
         return RedirectResponse("/catalog")
 
+    csrf_token = await get_csrf_token(request, session)
     return templates.TemplateResponse(
         request=request,
         name="signin.html",
-        context={
-            "errors": {},
-            "email": "",
-        },
+        context={"errors": {}, "email": "", "csrf_token": csrf_token},
     )
 
 
@@ -191,6 +188,7 @@ async def signin(
 async def signin_post(
     request: Request,
     session: AsyncSession = Depends(get_session),
+    _: None = Depends(verify_csrf),
     email: str | None = Form(default=None),
     password: str | None = Form(default=None),
     remember_me: bool = Form(False),
@@ -297,12 +295,11 @@ async def catalog(
     if user is None:
         return RedirectResponse("/signin")
 
+    csrf_token = await get_csrf_token(request, session)
     return templates.TemplateResponse(
         request=request,
         name="catalog.html",
-        context={
-            "username": user.username,
-        },
+        context={"username": user.username, "csrf_token": csrf_token},
     )
 
 
@@ -310,6 +307,7 @@ async def catalog(
 async def logout(
     request: Request,
     session: AsyncSession = Depends(get_session),
+    _: None = Depends(verify_csrf),
 ):
     token = request.cookies.get("session_token")
 

@@ -493,6 +493,8 @@
         </div>
 
         <button type="submit" class="btn-primary">Sign in</button>
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       </form>
 
       <div class="auth-switch">

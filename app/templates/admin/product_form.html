@@ -99,6 +99,8 @@
     </div>
 
     <button type="submit" class="btn-primary">{{ "Save changes" if product else "Add product" }}</button>
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   </form>
 </div>
 </body>

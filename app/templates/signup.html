@@ -507,6 +507,8 @@
         </div>
 
         <button type="submit" class="btn-primary">Create account</button>
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       </form>
 
       <div class="auth-switch">
