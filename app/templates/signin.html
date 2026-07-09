@@ -62,6 +62,38 @@
     padding: 0 32px;
     width: 100%;
   }
+    .pw-wrap {
+      position: relative;
+    }
+
+    .pw-wrap input {
+      width: 100%;
+      padding-right: 46px;
+    }
+
+    .pw-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--gray-mid);
+      font-size: 18px;
+      padding: 0;
+    }
+
+    .pw-toggle:hover {
+      color: var(--ink);
+    }
+
+.pw-toggle{display:flex;align-items:center;justify-content:center}
+.pw-toggle svg{width:20px;height:20px}
+.pw-toggle .icon-eye-off{display:none}
+.pw-toggle.is-visible .icon-eye{display:none}
+.pw-toggle.is-visible .icon-eye-off{display:block}
+
 
   /* ---------- NAV (shared) ---------- */
   .nav {
@@ -440,7 +472,13 @@
 
         <div class="field {% if errors.get('password') %}has-error{% endif %}" id="passwordField">
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password">
+          <div class="pw-wrap">
+            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="pw-toggle" data-target="password" aria-label="Show password" aria-pressed="false">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a20.4 20.4 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a20.4 20.4 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+            </button>
+          </div>
           <span class="field-error">
             {{ errors.get("password", "") }}
           </span>
@@ -477,6 +515,16 @@
 </div>
 
 <script>
+    document.querySelectorAll(".pw-toggle").forEach(button => {
+      const input = document.getElementById(button.dataset.target);
+      button.addEventListener("click", () => {
+        const visible = input.type === "password";
+        input.type = visible ? "text" : "password";
+        button.classList.toggle("is-visible", visible);
+        button.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+        button.setAttribute("aria-pressed", visible ? "true" : "false");
+      });
+    });
   (function () {
     var root = document.documentElement;
     var toggle = document.getElementById('themeToggle');
