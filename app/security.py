@@ -1,22 +1,16 @@
-import asyncio
 import secrets
-import sys
+from datetime import datetime, timedelta
 
 from pwdlib import PasswordHash
-from sqlmodel import select
+from sqlmodel import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .database import engine
-from .models import Users
+from .models import LoginAttempt
 
 password_hash = PasswordHash.recommended()
 
 
 def create_session_token() -> str:
-    return secrets.token_urlsafe(32)
-
-
-def generate_csrf_token() -> str:
     return secrets.token_urlsafe(32)
 
 
@@ -26,33 +20,28 @@ class PageException(Exception):
         self.status_code = status_code
 
 
-async def make_admin_async(identifier: str):
-    # Use AsyncSession instead of Session for async engines
-    async with AsyncSession(engine) as session:
-        statement = select(Users).where(
-            (Users.username == identifier) | (Users.email == identifier)
+MAX_ATTEMPTS = 5
+LOCKOUT_WINDOW = timedelta(minutes=15)
+
+
+async def is_locked_out(email: str, session: AsyncSession) -> bool:
+    cutoff = datetime.utcnow() - LOCKOUT_WINDOW
+    statement = (
+        select(func.count())
+        .select_from(LoginAttempt)
+        .where(
+            LoginAttempt.email == email,
+            LoginAttempt.succeeded == False,
+            LoginAttempt.attempted_at >= cutoff,
         )
-        result = await session.exec(statement)
-        user = result.first()
-
-        if not user:
-            print(f"Error: User '{identifier}' not found.")
-            return
-
-        # Update the role
-        user.role = "admin"
-        session.add(user)
-
-        # Await the commit to avoid the MissingGreenlet exception
-        await session.commit()
-        print(f"Success: User '{user.username}' is now an admin!")
-
-    await engine.dispose()
+    )
+    result = await session.exec(statement)
+    failed_count = result.one()
+    return failed_count >= MAX_ATTEMPTS
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: uv run python -m app.security <username_or_email>")
-    else:
-        # Run the async loop
-        asyncio.run(make_admin_async(sys.argv[1]))
+async def record_attempt(
+    email: str, ip_address: str, succeeded: bool, session: AsyncSession
+):
+    session.add(LoginAttempt(email=email, ip_address=ip_address, succeeded=succeeded))
+    await session.commit()

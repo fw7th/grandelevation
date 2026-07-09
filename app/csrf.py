@@ -17,6 +17,9 @@ async def get_csrf_token(
     GET routes that render a form -- doesn't require the user to be
     authenticated as admin, since signup/signin forms are pre-auth.
     """
+
+    from .models import Session
+
     token_cookie = request.cookies.get("session_token")
     if not token_cookie:
         # No session yet (e.g. first visit to /signup) -- CSRF isn't

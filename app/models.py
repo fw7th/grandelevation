@@ -4,6 +4,8 @@ from datetime import datetime
 
 from sqlmodel import JSON, Column, Field, SQLModel
 
+from .utils import generate_csrf_token
+
 
 class Users(SQLModel, table=True):
     __tablename__ = "users"
@@ -20,6 +22,7 @@ class Session(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     token: str = Field(index=True, unique=True, max_length=64)
+    csrf_token: str = Field(default_factory=generate_csrf_token)
     user_id: int = Field(foreign_key="users.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: datetime
@@ -35,3 +38,11 @@ class Product(SQLModel, table=True):
     specs: dict = Field(default_factory=dict, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class LoginAttempt(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    email: str
+    ip_address: str
+    succeeded: bool
+    attempted_at: datetime = Field(default_factory=datetime.utcnow)

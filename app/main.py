@@ -12,9 +12,15 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from .auth import authenticate
 from .csrf import get_csrf_token, verify_csrf
 from .database import get_session, init_db
-from .models import Session, Users
+from .models import Product, Session, Users
 from .routers import admin as admin_router
-from .security import PageException, create_session_token, password_hash
+from .security import (
+    PageException,
+    create_session_token,
+    is_locked_out,
+    password_hash,
+    record_attempt,
+)
 
 
 @asynccontextmanager
@@ -194,9 +200,18 @@ async def signin_post(
     remember_me: bool = Form(False),
 ):
     errors = {}
-
     email = (email or "").strip()
     password = password or ""
+    ip_address = request.client.host if request.client else "unknown"
+
+    # ---------- Lockout check (before touching the password at all) ----------
+    if email and await is_locked_out(email, session):
+        errors["email"] = "Too many failed attempts. Please try again in 15 minutes."
+        return templates.TemplateResponse(
+            request=request,
+            name="signin.html",
+            context={"errors": errors, "email": email},
+        )
 
     # ---------- Validation ----------
     if not email:
@@ -213,11 +228,16 @@ async def signin_post(
     result = await session.exec(statement)
     user = result.first()
 
-    if user is None:
+    login_ok = user is not None and password_hash.verify(password, user.password_hash)
+
+    if user is None or not login_ok:
         errors["email"] = "Invalid email or password."
 
-    elif not password_hash.verify(password, user.password_hash):
-        errors["email"] = "Invalid email or password."
+    # ---------- Record this attempt regardless of outcome ----------
+    if email:
+        await record_attempt(
+            email, ip_address, succeeded=bool(login_ok), session=session
+        )
 
     # ---------- Validation failed ----------
     if errors:
@@ -292,14 +312,19 @@ async def catalog(
 ):
     user = await authenticate(request, session)
 
-    if user is None:
-        return RedirectResponse("/signin")
+    statement = select(Product)
+    result = await session.exec(statement)
+    products = result.all()
 
     csrf_token = await get_csrf_token(request, session)
     return templates.TemplateResponse(
         request=request,
         name="catalog.html",
-        context={"username": user.username, "csrf_token": csrf_token},
+        context={
+            "products": products,
+            "username": user.username if user else None,
+            "csrf_token": csrf_token,
+        },
     )
 
 
