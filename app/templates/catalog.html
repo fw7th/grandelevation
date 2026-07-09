@@ -1,54 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catalog</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalog — Grand Elevation Solar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
+    --gold-light: #FBDFA8; --gold-deep: #E8651C; --green: #3D5C3A;
+    --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1);
+  }
+  html[data-theme="dark"] {
+    --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
+    --gold-deep: #FFB648; --green: #7FA87A; --gray-mid: #9B968A;
+    --border: rgba(244,241,234,0.12);
+  }
+  html, body { transition: background-color 0.25s ease, color 0.25s ease; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .display { font-family: 'Sora', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+/* ---------- NAV ---------- */
+  .nav {
+    display: flex; align-items: center; gap: 20px;
+    padding: 24px 0; border-bottom: 1px solid var(--border);
+  }
 
-    body {
-      font-family: sans-serif;
-    }
+  .nav-brand { display: flex; align-items: center; flex-shrink: 0; }
+  .logo-spinner {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .logo-spinner::before {
+    content: ''; position: absolute; inset: -6px; border-radius: 50%;
+    border: 1px dashed var(--gold); opacity: 0.5;
+  }
+  .logo-spinner .orbit-dot {
+    position: absolute; inset: -6px; border-radius: 50%; animation: spin 16s linear infinite;
+  }
+  .logo-spinner .orbit-dot::before {
+    content: ''; position: absolute; top: -2.5px; left: 50%; width: 5px; height: 5px;
+    margin-left: -2.5px; border-radius: 50%; background: var(--gold-deep);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .nav-brand img { height: 38px; width: auto; display: block; border-radius: 50%; position: relative; z-index: 1; }
 
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      border-bottom: 1px solid #ddd;
-    }
+  .fulfillment-pill {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    background: var(--gold-light); transition: border-color 0.15s ease;
+  }
+  .fulfillment-pill:hover { border-color: var(--gold-deep); }
+  .fulfillment-pill svg { width: 16px; height: 16px; color: var(--gold-deep); flex-shrink: 0; }
+  .fulfillment-pill .fp-label { color: var(--gray-mid); font-weight: 500; }
+  .fulfillment-pill .fp-value { color: var(--ink); }
 
-    .logout-btn {
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-    }
+  .search-bar {
+    flex: 1; position: relative; display: flex; align-items: center;
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 10px 56px 10px 20px;
+  }
+  .search-bar input {
+    flex: 1; border: none; background: none; outline: none;
+    font-family: 'Inter', sans-serif; font-size: 14px; color: var(--ink);
+  }
+  .search-submit {
+    position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+    width: 38px; height: 38px; border-radius: 50%; border: none;
+    background: var(--gold-deep); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .search-submit:hover { background: var(--ink); transform: translateY(-50%) scale(1.05); }
+  .search-submit svg { width: 17px; height: 17px; }
 
-    main {
-      padding: 2rem;
-    }
-  </style>
+  .nav-actions { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+  .nav-icon-link {
+    display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;
+  }
+  .nav-icon-link svg { width: 20px; height: 20px; }
+
+
+  /* ---------- PRODUCT GRID ---------- */
+  .product-grid {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    padding-bottom: 80px;
+  }
+
+  .product-card {
+    display: flex; gap: 20px; align-items: stretch;
+    border: 1.5px solid var(--border); border-radius: 16px;
+    overflow: hidden; background: var(--bg);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .product-card:hover { border-color: var(--ink); transform: translateY(-2px); }
+
+  .product-card-image {
+    width: 220px; flex-shrink: 0; background: var(--gold-light);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .product-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .product-card-image-placeholder { font-size: 13px; color: var(--gray-mid); }
+
+  .product-card-info {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    gap: 8px; padding: 20px 24px 20px 0;
+  }
+  .category-tag {
+    display: inline-flex; align-self: flex-start;
+    background: var(--gold-light); padding: 4px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .product-card-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 19px; }
+  .product-card-price { font-size: 17px; font-weight: 600; color: var(--gold-deep); }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty-state {
+    text-align: center; padding: 80px 20px; color: var(--gray-mid);
+  }
+  .empty-state h2 { font-family: 'Sora', sans-serif; color: var(--ink); font-size: 20px; margin-bottom: 8px; }
+
+  @media (min-width: 720px) {
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 0 20px; }
+    .nav { flex-wrap: wrap; }
+    .search-bar { order: 3; width: 100%; }
+    .product-card { flex-direction: column; }
+    .product-card-image { width: 100%; height: 160px; }
+    .product-card-info { padding: 16px 20px 20px; }
+  }
+</style>
 </head>
 <body>
 
-<nav>
-  <h2>Grand Elevation Solar</h2>
+<div class="wrap">
+  <nav class="nav">
+    <div class="nav-brand">
+      <div class="logo-spinner">
+        <img src="/static/grand_logo.png" alt="Grand Elevation Solar">
+        <div class="orbit-dot"></div>
+      </div>
+    </div>
 
-  <form action="/logout" method="post">
-    <button class="logout-btn" type="submit">
-      Logout
+    <button type="button" class="fulfillment-pill" id="fulfillmentPill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span class="fp-label">Pickup or delivery:</span>
+      <span class="fp-value" id="fulfillmentValue">Select location</span>
     </button>
-  </form>
-</nav>
 
-<main>
-  <h1>Hey, {{ username }}</h1>
-</main>
+    <div class="search-bar">
+      <input type="text" placeholder="Search panels, inverters, batteries...">
+      <button type="button" class="search-submit" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+
+    <div class="nav-actions">
+      {% if username %}
+      <a href="/account" class="nav-icon-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        {{ username }}
+      </a>
+      {% else %}
+      <a href="/signin" class="nav-icon-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        Sign in
+      </a>
+      {% endif %}
+      <a href="/cart" class="nav-icon-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+        Cart
+      </a>
+    </div>
+  </nav>
+</div>
+
+<div class="wrap">
+  <!-- Category pills/banner goes here — designing next session -->
+
+  {% if products %}
+  <div class="product-grid">
+    {% for product in products %}
+      {% include "_product_card.html" %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <h2>No products yet</h2>
+    <p>Check back soon — new equipment is added regularly.</p>
+  </div>
+  {% endif %}
+</div>
 
 </body>
 </html>
