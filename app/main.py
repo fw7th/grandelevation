@@ -340,6 +340,40 @@ async def catalog(
     )
 
 
+@app.get("/catalog/category/{category}")
+async def catalog_by_category(
+    request: Request,
+    category: str,
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+
+    if category not in SPEC_MODELS:
+        raise HTTPException(status_code=404, detail="Unknown category")
+
+    statement = select(Product).where(Product.category == category)
+    result = await session.exec(statement)
+    products = result.all()
+
+    favorite_ids: set[int] = set()
+    if user:
+        fav_statement = select(Favorite.product_id).where(Favorite.user_id == user.id)
+        fav_result = await session.exec(fav_statement)
+        favorite_ids = set(fav_result.all())
+
+    return templates.TemplateResponse(
+        request=request,
+        name="catalog.html",
+        context={
+            "products": products,
+            "username": user.username if user else None,
+            "favorite_ids": favorite_ids,
+            "categories": await get_active_categories(session),
+            "active_category": category,
+        },
+    )
+
+
 @app.post("/logout")
 async def logout(
     request: Request,
