@@ -1,6 +1,6 @@
 import secrets
 
-from fastapi import Depends, Form, HTTPException, Request
+from fastapi import Depends, Form, HTTPException, Request, Response
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -17,9 +17,6 @@ async def get_csrf_token(
     GET routes that render a form -- doesn't require the user to be
     authenticated as admin, since signup/signin forms are pre-auth.
     """
-
-    from .models import Session
-
     token_cookie = request.cookies.get("session_token")
     if not token_cookie:
         # No session yet (e.g. first visit to /signup) -- CSRF isn't
@@ -52,3 +49,34 @@ async def verify_csrf(
 
     if not db_session or not secrets.compare_digest(db_session.csrf_token, csrf_token):
         raise HTTPException(status_code=403, detail="Invalid CSRF token")
+
+
+async def get_or_set_anon_csrf(request: Request, response: Response) -> str:
+    """
+    Ensures an anonymous CSRF cookie exists, independent of login state.
+    Used for pre-auth forms (signup, signin) where no Session row exists
+    yet to tie a token to. Safe to call on every GET that renders a form.
+    """
+    existing = request.cookies.get("csrf_token")
+    print("existing", existing)
+    if existing:
+        return existing
+
+    token = secrets.token_urlsafe(32)
+
+    print("token", token)
+    response.set_cookie(
+        key="csrf_token",
+        value=token,
+        secure=False,  # True in production, same as session_token
+        samesite="lax",
+    )
+    return token
+
+
+async def verify_anon_csrf(request: Request, submitted_token: str) -> bool:
+    cookie_token = request.cookies.get("csrf_token")
+    print("Cookie token", cookie_token)
+    if not cookie_token:
+        return False
+    return secrets.compare_digest(cookie_token, submitted_token)

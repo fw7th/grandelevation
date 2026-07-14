@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlmodel import JSON, Column, Field, SQLModel
+from sqlmodel import JSON, Column, Field, SQLModel, UniqueConstraint
 
 from .utils import generate_csrf_token
 
@@ -46,3 +46,15 @@ class LoginAttempt(SQLModel, table=True):
     ip_address: str
     succeeded: bool
     attempted_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Favorite(SQLModel, table=True):
+    __tablename__ = "favorites"
+    __table_args__ = (
+        UniqueConstraint("user_id", "product_id", name="uq_favorite_user_product"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    product_id: int = Field(foreign_key="product.id", index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)

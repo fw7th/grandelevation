@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 
-from fastapi import Depends, FastAPI, Form, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10,7 +10,6 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .auth import authenticate
-from .csrf import get_csrf_token, verify_csrf
 from .database import get_session, init_db
 from .models import Product, Session, Users
 from .routers import admin as admin_router
@@ -47,17 +46,22 @@ async def home():
 
 
 @app.get("/signup", response_class=HTMLResponse)
-async def signup(request: Request, session: AsyncSession = Depends(get_session)):
+async def signup(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
     user = await authenticate(request, session)
-
     if user:
         return RedirectResponse("/catalog")
 
-    csrf_token = await get_csrf_token(request, session)
     return templates.TemplateResponse(
         request=request,
         name="signup.html",
-        context={"errors": {}, "username": "", "email": "", "csrf_token": csrf_token},
+        context={
+            "errors": {},
+            "username": "",
+            "email": "",
+        },
     )
 
 
@@ -65,7 +69,6 @@ async def signup(request: Request, session: AsyncSession = Depends(get_session))
 async def signup_post(
     request: Request,
     session: AsyncSession = Depends(get_session),
-    _: None = Depends(verify_csrf),
     username: str | None = Form(default=None),
     email: str | None = Form(default=None),
     password: str | None = Form(default=None),
@@ -126,6 +129,9 @@ async def signup_post(
     token = create_session_token()
 
     try:
+        session.add(user)
+        await session.flush()
+
         session.add(
             Session(
                 token=token,
@@ -134,11 +140,7 @@ async def signup_post(
             )
         )
 
-        session.add(user)
-        await session.flush()
-
         await session.commit()
-        await session.refresh(user)
 
     except IntegrityError:
         await session.rollback()
@@ -175,6 +177,7 @@ async def signup_post(
 @app.get("/signin")
 async def signin(
     request: Request,
+    response: Response,
     session: AsyncSession = Depends(get_session),
 ):
     user = await authenticate(request, session)
@@ -182,11 +185,13 @@ async def signin(
     if user:
         return RedirectResponse("/catalog")
 
-    csrf_token = await get_csrf_token(request, session)
     return templates.TemplateResponse(
         request=request,
         name="signin.html",
-        context={"errors": {}, "email": "", "csrf_token": csrf_token},
+        context={
+            "errors": {},
+            "email": "",
+        },
     )
 
 
@@ -194,7 +199,6 @@ async def signin(
 async def signin_post(
     request: Request,
     session: AsyncSession = Depends(get_session),
-    _: None = Depends(verify_csrf),
     email: str | None = Form(default=None),
     password: str | None = Form(default=None),
     remember_me: bool = Form(False),
@@ -316,14 +320,12 @@ async def catalog(
     result = await session.exec(statement)
     products = result.all()
 
-    csrf_token = await get_csrf_token(request, session)
     return templates.TemplateResponse(
         request=request,
         name="catalog.html",
         context={
             "products": products,
             "username": user.username if user else None,
-            "csrf_token": csrf_token,
         },
     )
 
@@ -332,7 +334,6 @@ async def catalog(
 async def logout(
     request: Request,
     session: AsyncSession = Depends(get_session),
-    _: None = Depends(verify_csrf),
 ):
     token = request.cookies.get("session_token")
 
