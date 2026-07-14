@@ -44,6 +44,18 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 
+async def get_active_categories(session: AsyncSession) -> list[str]:
+    """
+    Categories that actually have products right now, pulled live from
+    the DB -- not the static SPEC_MODELS list. This is what the admin
+    panel can create products in, and it grows/shrinks automatically as
+    products are added/removed, with no code change needed.
+    """
+    statement = select(Product.category).distinct()
+    result = await session.exec(statement)
+    return sorted(result.all())
+
+
 @app.get("/")
 async def home():
     return FileResponse("app/static/index.html")
@@ -370,6 +382,47 @@ async def catalog_by_category(
             "favorite_ids": favorite_ids,
             "categories": await get_active_categories(session),
             "active_category": category,
+        },
+    )
+
+
+@app.post("/favorites/{product_id}")
+async def toggle_favorite(
+    request: Request,
+    product_id: int,
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+
+    if not user:
+        # Plain RedirectResponse won't navigate the browser on an htmx
+        # request (htmx follows redirects via XHR). HX-Redirect is the
+        # header htmx checks for "navigate the whole page here instead".
+        response = Response(status_code=200)
+        response.headers["HX-Redirect"] = "/signup"
+        return response
+
+    statement = select(Favorite).where(
+        Favorite.user_id == user.id, Favorite.product_id == product_id
+    )
+    result = await session.exec(statement)
+    existing = result.first()
+
+    if existing:
+        await session.delete(existing)
+        is_favorited = False
+    else:
+        session.add(Favorite(user_id=user.id, product_id=product_id))
+        is_favorited = True
+
+    await session.commit()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="_favorite_button.html",
+        context={
+            "product_id": product_id,
+            "is_favorited": is_favorited,
         },
     )
 
