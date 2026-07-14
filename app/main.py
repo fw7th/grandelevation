@@ -11,7 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .auth import authenticate
 from .database import get_session, init_db
-from .models import Product, Session, Users
+from .models import Favorite, Product, Session, Users
 from .routers import admin as admin_router
 from .security import (
     PageException,
@@ -20,6 +20,10 @@ from .security import (
     password_hash,
     record_attempt,
 )
+from .services.featured import get_daily_featured
+from .specs import (
+    SPEC_MODELS,
+)  # still needed for /catalog/category/{category} validation
 
 
 @asynccontextmanager
@@ -316,9 +320,13 @@ async def catalog(
 ):
     user = await authenticate(request, session)
 
-    statement = select(Product)
-    result = await session.exec(statement)
-    products = result.all()
+    products = await get_daily_featured(session, count=15)
+
+    favorite_ids: set[int] = set()
+    if user:
+        fav_statement = select(Favorite.product_id).where(Favorite.user_id == user.id)
+        fav_result = await session.exec(fav_statement)
+        favorite_ids = set(fav_result.all())
 
     return templates.TemplateResponse(
         request=request,
@@ -326,6 +334,8 @@ async def catalog(
         context={
             "products": products,
             "username": user.username if user else None,
+            "favorite_ids": favorite_ids,
+            "categories": await get_active_categories(session),
         },
     )
 
