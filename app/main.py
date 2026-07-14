@@ -427,6 +427,36 @@ async def toggle_favorite(
     )
 
 
+@app.get("/favorites")
+async def favorites_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+
+    if not user:
+        return RedirectResponse(url="/signup", status_code=303)
+
+    statement = (
+        select(Product)
+        .join(Favorite, Favorite.product_id == Product.id)
+        .where(Favorite.user_id == user.id)
+        .order_by(Favorite.created_at.desc())
+    )
+    result = await session.exec(statement)
+    products = result.all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="favorites.html",
+        context={
+            "products": products,
+            "username": user.username,
+            "favorite_ids": {p.id for p in products},
+        },
+    )
+
+
 @app.post("/logout")
 async def logout(
     request: Request,
