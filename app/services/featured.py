@@ -19,6 +19,7 @@ This module has one public entrypoint: get_daily_featured().
 
 from datetime import date
 
+from sqlalchemy import text
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -47,10 +48,11 @@ def _seed_for_today() -> float:
 async def _seed_random(session: AsyncSession) -> None:
     """Seed this connection's random() so ORDER BY random() is stable today."""
     seed = _seed_for_today()
-    await session.exec(select(1))  # no-op keeps this awaitable-symmetrical
-    await session.connection()  # ensure a live connection before raw SQL
-    conn = await session.connection()
-    await conn.exec_driver_sql("SELECT setseed(:seed)", {"seed": seed})
+    # session.execute() (plain SQLAlchemy async, always available) rather
+    # than session.exec() (SQLModel's ORM-row-unwrapping wrapper, meant
+    # for Select statements) -- keeps this independent of SQLModel version
+    # quirks around raw text() handling.
+    await session.execute(text("SELECT setseed(:seed)"), {"seed": seed})
 
 
 async def get_daily_featured(
@@ -87,7 +89,7 @@ async def get_daily_featured(
         statement = (
             select(Product)
             .where(Product.category == category)
-            .order_by("random()")
+            .order_by(text("random()"))
             .limit(take)
         )
         result = await session.exec(statement)
