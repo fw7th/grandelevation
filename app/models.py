@@ -4,8 +4,6 @@ from datetime import datetime
 
 from sqlmodel import JSON, Column, Field, SQLModel, UniqueConstraint
 
-from .utils import generate_csrf_token
-
 
 class Users(SQLModel, table=True):
     __tablename__ = "users"
@@ -22,7 +20,6 @@ class Session(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     token: str = Field(index=True, unique=True, max_length=64)
-    csrf_token: str = Field(default_factory=generate_csrf_token)
     user_id: int = Field(foreign_key="users.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: datetime

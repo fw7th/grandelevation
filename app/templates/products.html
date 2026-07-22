@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalog — Grand Elevation Solar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
+<style>
+  :root {
+    --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
+    --gold-light: #FBDFA8; --gold-deep: #E8651C; --green: #3D5C3A;
+    --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1);
+  }
+  html[data-theme="dark"] {
+    --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
+    --gold-deep: #FFB648; --green: #7FA87A; --gray-mid: #9B968A;
+    --border: rgba(244,241,234,0.12);
+  }
+  html, body { transition: background-color 0.25s ease, color 0.25s ease; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .display { font-family: 'Sora', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+
+/* ---------- NAV ---------- */
+  .nav {
+    display: flex; align-items: center; gap: 20px;
+    padding: 24px 0; border-bottom: 1px solid var(--border);
+  }
+
+  .nav-brand { display: flex; align-items: center; flex-shrink: 0; }
+  .logo-spinner {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .logo-spinner::before {
+    content: ''; position: absolute; inset: -6px; border-radius: 50%;
+    border: 1px dashed var(--gold); opacity: 0.5;
+  }
+  .logo-spinner .orbit-dot {
+    position: absolute; inset: -6px; border-radius: 50%; animation: spin 16s linear infinite;
+  }
+  .logo-spinner .orbit-dot::before {
+    content: ''; position: absolute; top: -2.5px; left: 50%; width: 5px; height: 5px;
+    margin-left: -2.5px; border-radius: 50%; background: var(--gold-deep);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .nav-brand img { height: 38px; width: auto; display: block; border-radius: 50%; position: relative; z-index: 1; }
+
+  .fulfillment-pill {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+    background: var(--gold-light); transition: border-color 0.15s ease;
+  }
+  .fulfillment-pill:hover { border-color: var(--gold-deep); }
+  .fulfillment-pill svg { width: 18px; height: 18px; color: var(--gold-deep); flex-shrink: 0; }
+  .fulfillment-pill .fp-label { color: var(--gray-mid); font-weight: 500; }
+  .fulfillment-pill .fp-value { color: var(--ink); }
+
+  .search-bar {
+    flex: 1; position: relative; display: flex; align-items: center;
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 12px 56px 12px 22px;
+  }
+  .search-bar input {
+    flex: 1; border: none; background: none; outline: none;
+    font-family: 'Inter', sans-serif; font-size: 12px; color: var(--ink);
+  }
+  .search-submit {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%; border: none;
+    background: var(--gold-deep); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .search-submit:hover { background: var(--ink); transform: translateY(-50%) scale(1.05); }
+  .search-submit svg { width: 14px; height: 14px; }
+
+  .nav-actions { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+  .nav-icon-link {
+    display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;
+  }
+  .nav-icon-link svg { width: 20px; height: 20px; }
+
+
+  /* ---------- CATEGORY STRIP ---------- */
+  .category-strip {
+    display: flex; gap: 10px; overflow-x: auto; padding: 18px 0;
+  }
+  .category-strip::-webkit-scrollbar { display: none; }
+  .category-pill {
+    flex-shrink: 0; padding: 9px 18px; border-radius: 999px;
+    border: 1.5px solid var(--border); font-size: 13px; font-weight: 600;
+    text-transform: capitalize; white-space: nowrap;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .category-pill:hover { border-color: var(--gold-deep); }
+  .category-pill.is-active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+
+  /* ---------- SITE FOOTER ---------- */
+  .site-footer {
+    position: relative;
+    margin-top: 40px;
+    background: var(--gold);
+    border-radius: 32px 32px 0 0;
+    overflow: hidden;
+  }
+
+  .footer-rays {
+    position: absolute;
+    top: -140px;
+    right: -160px;
+    width: 520px;
+    height: 520px;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .footer-columns {
+    position: relative;
+    z-index: 1;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+    padding: 40px 0 28px;
+  }
+  .footer-col h4 {
+    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 12px; color: #1a1200;
+  }
+  .footer-col a, .footer-col p {
+    display: block; font-size: 12.5px; color: #1a1200;
+    opacity: 0.7;
+    margin-bottom: 8px; line-height: 1.55;
+  }
+  .footer-col a:hover { opacity: 1; }
+  .footer-bar {
+    position: relative;
+    z-index: 1;
+    padding: 14px 0;
+  }
+  .footer-bar .wrap {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #1a1200; opacity: 0.75;
+  }
+
+  @media (max-width: 640px) {
+    .footer-columns { grid-template-columns: 1fr; gap: 20px; }
+    .site-footer { border-radius: 20px 20px 0 0; }
+  }
+</style>
+</head>
+<body>
+    <!-- Change this text to whatever you want to display TEMP--> 
+    <div class="massive-text">{{ product }}</div>
+
+<div class="wrap">
+  <nav class="nav">
+    <a href="/catalog" class="nav-brand">
+      <div class="logo-spinner">
+        <img src="/static/grand_logo.png" alt="Grand Elevation Solar">
+        <div class="orbit-dot"></div>
+      </div>
+    </a>
+
+    <button type="button" class="fulfillment-pill" id="fulfillmentPill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span class="fp-label">Pickup or delivery:</span>
+      <span class="fp-value" id="fulfillmentValue">Select location</span>
+    </button>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Search panels, inverters, batteries...">
+      <button type="button" class="search-submit" aria-label="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+
+    <div class="nav-actions">
+      <a href="/favorites" class="nav-icon-link" aria-label="Favorites">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </a>
+      {% if username %}
+      <a href="/account" class="nav-icon-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        {{ username }}
+      </a>
+      {% else %}
+      <a href="/signin" class="nav-icon-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        Sign in
+      </a>
+      {% endif %}
+      <a href="/cart" class="nav-icon-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+        Cart
+      </a>
+    </div>
+  </nav>
+</div>
+
+<div class="wrap">
+  <div class="category-strip">
+    {% for cat in categories %}
+    <a href="/catalog/category/{{ cat }}" class="category-pill {% if active_category == cat %}is-active{% endif %}">
+      {{ cat.replace('_', ' ') }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<footer class="site-footer">
+  <svg class="footer-rays" viewBox="0 0 520 520" aria-hidden="true">
+    <g stroke="#0A0A0A" stroke-width="2" opacity="0.3">
+      <line x1="360" y1="140" x2="500" y2="30"/>
+      <line x1="360" y1="140" x2="510" y2="110"/>
+      <line x1="360" y1="140" x2="516" y2="180"/>
+      <line x1="360" y1="140" x2="500" y2="250"/>
+      <line x1="360" y1="140" x2="460" y2="310"/>
+      <line x1="360" y1="140" x2="400" y2="350"/>
+      <line x1="360" y1="140" x2="330" y2="10"/>
+      <line x1="360" y1="140" x2="260" y2="30"/>
+    </g>
+    <circle cx="360" cy="140" r="70" fill="#0A0A0A" opacity="0.08"/>
+  </svg>
+  <div class="wrap">
+    <div class="footer-columns">
+      <div class="footer-col">
+        <h4>Contact us</h4>
+        <p>PLACEHOLDER_PHONE</p>
+        <p>PLACEHOLDER_ADDRESS, Lagos, Nigeria</p>
+        <a href="PLACEHOLDER_WHATSAPP_LINK">WhatsApp us</a>
+        <a href="PLACEHOLDER_WHATSAPP_GROUP_LINK">Join our WhatsApp group</a>
+      </div>
+      <div class="footer-col">
+        <h4>Buune</h4>
+        <a href="/static/buune-privacy-policy.html">Privacy policy</a>
+        <a href="/static/buune-terms.html">Terms</a>
+        <a href="/static/buune-data-deletion.html">Data deletion</a>
+      </div>
+      <div class="footer-col">
+        <h4>General</h4>
+        <a href="/catalog">Catalog</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/signin">Sign in</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bar">
+    <div class="wrap">
+      <span>&copy; 2026 Grand Elevation Solar</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

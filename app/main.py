@@ -13,6 +13,7 @@ from .auth import authenticate
 from .database import get_session, init_db
 from .models import Favorite, Product, Session, Users
 from .routers import admin as admin_router
+from .routers import products as product_router
 from .security import (
     PageException,
     create_session_token,
@@ -24,6 +25,7 @@ from .services.featured import get_daily_featured
 from .specs import (
     SPEC_MODELS,
 )  # still needed for /catalog/category/{category} validation
+from .utils import get_active_categories
 
 
 @asynccontextmanager
@@ -35,6 +37,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(admin_router.router)
+app.include_router(product_router.router)
 
 
 # Static files (CSS, htmx.js) served from app/static at /static/*
@@ -42,18 +45,6 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Jinja2 looks for .html files in app/templates
 templates = Jinja2Templates(directory="app/templates")
-
-
-async def get_active_categories(session: AsyncSession) -> list[str]:
-    """
-    Categories that actually have products right now, pulled live from
-    the DB -- not the static SPEC_MODELS list. This is what the admin
-    panel can create products in, and it grows/shrinks automatically as
-    products are added/removed, with no code change needed.
-    """
-    statement = select(Product.category).distinct()
-    result = await session.exec(statement)
-    return sorted(result.all())
 
 
 @app.get("/")
