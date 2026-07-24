@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign in — Grand Elevation Solar</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
@@ -518,16 +525,17 @@
 </div>
 
 <script>
-    document.querySelectorAll(".pw-toggle").forEach(button => {
-      const input = document.getElementById(button.dataset.target);
-      button.addEventListener("click", () => {
-        const visible = input.type === "password";
-        input.type = visible ? "text" : "password";
-        button.classList.toggle("is-visible", visible);
-        button.setAttribute("aria-label", visible ? "Hide password" : "Show password");
-        button.setAttribute("aria-pressed", visible ? "true" : "false");
-      });
+  document.querySelectorAll(".pw-toggle").forEach(button => {
+    const input = document.getElementById(button.dataset.target);
+    button.addEventListener("click", () => {
+      const visible = input.type === "password";
+      input.type = visible ? "text" : "password";
+      button.classList.toggle("is-visible", visible);
+      button.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+      button.setAttribute("aria-pressed", visible ? "true" : "false");
     });
+  });
+
   (function () {
     var root = document.documentElement;
     var toggle = document.getElementById('themeToggle');
@@ -542,15 +550,23 @@
       }
     }
 
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
+    var stored = localStorage.getItem('theme');
+    if (stored) {
+      applyTheme(stored);
+    } else {
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = prefersDark ? 'dark' : 'light';
+      applyTheme(theme);
+      localStorage.setItem('theme', theme);
+    }
 
     toggle.addEventListener('click', function () {
       var isDark = root.getAttribute('data-theme') === 'dark';
-      applyTheme(isDark ? 'light' : 'dark');
+      var next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
     });
   })();
 </script>
-
 </body>
 </html>

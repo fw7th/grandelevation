@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Grand Elevation Solar</title>
+<script>
+(function() {
+  // 1. Check localStorage first
+  const stored = localStorage.getItem('theme');
+  
+  // 2. Default to dark if nothing is stored
+  const theme = stored || 'dark';
+  
+  // 3. Apply immediately to <html> before body renders
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -32,6 +44,8 @@
   }
 
   html, body {
+    background-color: var(--bg);
+    color: var(--text);
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 
@@ -534,15 +548,25 @@
       }
     }
 
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
+    // 1. Check localStorage first (already set by <head> script, but verify here)
+    var stored = localStorage.getItem('theme');
+    if (stored) {
+      applyTheme(stored);
+    } else {
+      // First visit: fall back to OS preference, then persist it
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = prefersDark ? 'dark' : 'light';
+      applyTheme(theme);
+      localStorage.setItem('theme', theme);
+    }
 
     toggle.addEventListener('click', function () {
       var isDark = root.getAttribute('data-theme') === 'dark';
-      applyTheme(isDark ? 'light' : 'dark');
+      var next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
     });
   })();
 </script>
-
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ product.name }} — Grand Elevation Solar</title>
+<title>450W Monocrystalline Solar Panel — Grand Elevation Solar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -417,17 +417,12 @@
       <a href="/favorites" class="nav-icon-link" aria-label="Favorites">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </a>
-      {% if username %}
-      <a href="/account" class="nav-icon-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
-        {{ username }}
-      </a>
-      {% else %}
+      
       <a href="/signin" class="nav-icon-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
         Sign in
       </a>
-      {% endif %}
+      
       <a href="/cart" class="nav-icon-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
         Cart
@@ -440,24 +435,20 @@
   <div class="breadcrumb">
     <a href="/catalog">Catalog</a>
     <span class="sep">/</span>
-    <a href="/catalog/category/{{ product.category }}">{{ product.category.replace('_', ' ')|capitalize }}</a>
+    <a href="/catalog/category/panel">Panel</a>
     <span class="sep">/</span>
-    <span class="current">{{ product.name }}</span>
+    <span class="current">450W Monocrystalline Solar Panel</span>
   </div>
 
   <div class="product-hero">
     <!-- ---------- GALLERY ---------- -->
     <div class="gallery" id="productGallery">
-      {% if product.image_url %}
-      <img src="{{ product.image_url }}" alt="{{ product.name }}" id="galleryImage">
-      {% else %}
-      <div class="gallery-placeholder">No image available</div>
-      {% endif %}
+      
+      <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800" alt="450W Monocrystalline Solar Panel" id="galleryImage">
+      
 
-      {# Nav arrow only renders when there's more than one image. `images`
-         is a list of URLs from the route; falls back to a single-image
-         list around product.image_url if the route only sends one. #}
-      {% if images and images|length > 1 %}
+      
+      
       <button type="button" class="gallery-nav prev" id="galleryPrev" aria-label="Previous image">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
@@ -465,23 +456,27 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
       <div class="gallery-dots">
-        {% for img in images %}
-        <div class="dot {% if loop.first %}is-active{% endif %}"></div>
-        {% endfor %}
+        
+        <div class="dot is-active"></div>
+        
+        <div class="dot "></div>
+        
+        <div class="dot "></div>
+        
       </div>
-      {% endif %}
+      
     </div>
 
     <!-- ---------- TITLE / DESCRIPTION ---------- -->
     <div class="product-info-col">
-      <span class="category-tag">{{ product.category.replace('_', ' ') }}</span>
-      <h1 class="product-title display">{{ product.name }}</h1>
-      <p class="product-desc">{{ product.description }}</p>
+      <span class="category-tag">panel</span>
+      <h1 class="product-title display">450W Monocrystalline Solar Panel</h1>
+      <p class="product-desc">High-efficiency monocrystalline panel built for Lagos rooftop conditions, with a durable anodized aluminum frame and tempered glass front.</p>
     </div>
 
     <!-- ---------- BUY RAIL ---------- -->
     <div class="buy-rail">
-      <div class="buy-price">₦{{ "{:,.2f}".format(product.price) }}</div>
+      <div class="buy-price">₦185,000.00</div>
 
       <div class="return-policy-row">
         <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
@@ -498,14 +493,14 @@
 
       <button
         type="button"
-        class="btn-pill btn-add-list {% if is_favorited %}is-favorited{% endif %}"
+        class="btn-pill btn-add-list "
         id="addToListBtn"
-        hx-post="/favorites/{{ product.id }}"
+        hx-post="/favorites/42"
         hx-target="this"
         hx-swap="outerHTML"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        {% if is_favorited %}Saved to list{% else %}Add to list{% endif %}
+        Add to list
       </button>
     </div>
   </div>
@@ -514,92 +509,263 @@
   <div class="specs-section">
     <h2 class="specs-heading display">Specifications</h2>
     <div class="specs-grid">
-      {% for label, value in product.specs.items() %}
+      
       <div class="spec-card">
         <div class="spec-icon">
-          {% include "_spec_icons.html" %}
+          
+
+
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+
+
         </div>
         <div>
-          <div class="spec-label">{{ label }}</div>
-          <div class="spec-value">{{ value }}</div>
+          <div class="spec-label">Wattage</div>
+          <div class="spec-value">450 W</div>
         </div>
       </div>
-      {% endfor %}
+      
+      <div class="spec-card">
+        <div class="spec-icon">
+          
+
+
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-6 4 12 2-6h4"/></svg>
+
+
+        </div>
+        <div>
+          <div class="spec-label">Voltage (Vmp)</div>
+          <div class="spec-value">41.2 V</div>
+        </div>
+      </div>
+      
+      <div class="spec-card">
+        <div class="spec-icon">
+          
+
+
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
+
+
+        </div>
+        <div>
+          <div class="spec-label">Current (Imp)</div>
+          <div class="spec-value">10.9 A</div>
+        </div>
+      </div>
+      
+      <div class="spec-card">
+        <div class="spec-icon">
+          
+
+
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v14M15 4v14"/></svg>
+
+
+        </div>
+        <div>
+          <div class="spec-label">Panel type</div>
+          <div class="spec-value">Monocrystalline</div>
+        </div>
+      </div>
+      
+      <div class="spec-card">
+        <div class="spec-icon">
+          
+
+
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 20h2M9 20h2M14 20h2M4 2v2M4 7v2"/></svg>
+
+
+        </div>
+        <div>
+          <div class="spec-label">Dimensions</div>
+          <div class="spec-value">2094 x 1038 x 35 mm</div>
+        </div>
+      </div>
+      
     </div>
   </div>
 
   <!-- ---------- BEST PAIRINGS ---------- -->
-  {# Populated by the compatibility engine once it's built: products from
-     other categories (e.g. an inverter for a panel) confirmed compatible
-     with this product's specs. Until then, `paired_products` can simply
-     be omitted or passed as an empty list -- the section renders a quiet
-     empty state rather than disappearing, since compat is a headline
-     feature of the site. #}
+  
   <div class="related-section">
     <div class="related-heading">
       <h2 class="display">Best pairings</h2>
     </div>
-    <p class="related-subtext">Confirmed compatible with this {{ product.category.replace('_', ' ') }}.</p>
+    <p class="related-subtext">Confirmed compatible with this panel.</p>
 
-    {% if paired_products %}
+    
     <div class="related-scroll">
-      {% for item in paired_products[:10] %}
+      
       <div class="related-card-wrap">
-        <a href="/products/{{ item.id }}" class="related-card">
+        <a href="/products/101" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}
-            <img src="{{ item.image_url }}" alt="{{ item.name }}">
-            {% else %}
-            <div class="related-card-image-placeholder">No image</div>
-            {% endif %}
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="5kVA Hybrid Inverter Model 1">
+            
           </div>
           <div class="related-card-info">
-            <span class="category-tag">{{ item.category.replace('_', ' ') }}</span>
-            <h3 class="related-card-name">{{ item.name }}</h3>
-            <p class="related-card-price">₦{{ "{:,.2f}".format(item.price) }}</p>
+            <span class="category-tag">inverter</span>
+            <h3 class="related-card-name">5kVA Hybrid Inverter Model 1</h3>
+            <p class="related-card-price">₦460,000.00</p>
           </div>
         </a>
       </div>
-      {% endfor %}
+      
+      <div class="related-card-wrap">
+        <a href="/products/102" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="5kVA Hybrid Inverter Model 2">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">inverter</span>
+            <h3 class="related-card-name">5kVA Hybrid Inverter Model 2</h3>
+            <p class="related-card-price">₦470,000.00</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="related-card-wrap">
+        <a href="/products/103" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="5kVA Hybrid Inverter Model 3">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">inverter</span>
+            <h3 class="related-card-name">5kVA Hybrid Inverter Model 3</h3>
+            <p class="related-card-price">₦480,000.00</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="related-card-wrap">
+        <a href="/products/104" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="5kVA Hybrid Inverter Model 4">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">inverter</span>
+            <h3 class="related-card-name">5kVA Hybrid Inverter Model 4</h3>
+            <p class="related-card-price">₦490,000.00</p>
+          </div>
+        </a>
+      </div>
+      
     </div>
-    {% else %}
-    <p class="related-empty">No confirmed pairings yet — check back once more compatible parts are listed.</p>
-    {% endif %}
+    
   </div>
 
   <!-- ---------- SIMILAR PRODUCTS ---------- -->
-  {# Same category, roughly similar specs -- route builds this list, this
-     template just renders whatever it's handed (capped at 10). #}
+  
   <div class="related-section">
     <div class="related-heading">
       <h2 class="display">Similar products</h2>
     </div>
-    <p class="related-subtext">Other {{ product.category.replace('_', ' ') }} options worth a look.</p>
+    <p class="related-subtext">Other panel options worth a look.</p>
 
-    {% if similar_products %}
+    
     <div class="related-scroll">
-      {% for item in similar_products[:10] %}
+      
       <div class="related-card-wrap">
-        <a href="/products/{{ item.id }}" class="related-card">
+        <a href="/products/1" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}
-            <img src="{{ item.image_url }}" alt="{{ item.name }}">
-            {% else %}
-            <div class="related-card-image-placeholder">No image</div>
-            {% endif %}
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="320W Polycrystalline Panel">
+            
           </div>
           <div class="related-card-info">
-            <span class="category-tag">{{ item.category.replace('_', ' ') }}</span>
-            <h3 class="related-card-name">{{ item.name }}</h3>
-            <p class="related-card-price">₦{{ "{:,.2f}".format(item.price) }}</p>
+            <span class="category-tag">panel</span>
+            <h3 class="related-card-name">320W Polycrystalline Panel</h3>
+            <p class="related-card-price">₦125,000.00</p>
           </div>
         </a>
       </div>
-      {% endfor %}
+      
+      <div class="related-card-wrap">
+        <a href="/products/2" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="340W Polycrystalline Panel">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">panel</span>
+            <h3 class="related-card-name">340W Polycrystalline Panel</h3>
+            <p class="related-card-price">₦130,000.00</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="related-card-wrap">
+        <a href="/products/3" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="360W Polycrystalline Panel">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">panel</span>
+            <h3 class="related-card-name">360W Polycrystalline Panel</h3>
+            <p class="related-card-price">₦135,000.00</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="related-card-wrap">
+        <a href="/products/4" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="380W Polycrystalline Panel">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">panel</span>
+            <h3 class="related-card-name">380W Polycrystalline Panel</h3>
+            <p class="related-card-price">₦140,000.00</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="related-card-wrap">
+        <a href="/products/5" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="400W Polycrystalline Panel">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">panel</span>
+            <h3 class="related-card-name">400W Polycrystalline Panel</h3>
+            <p class="related-card-price">₦145,000.00</p>
+          </div>
+        </a>
+      </div>
+      
+      <div class="related-card-wrap">
+        <a href="/products/6" class="related-card">
+          <div class="related-card-image">
+            
+            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400" alt="420W Polycrystalline Panel">
+            
+          </div>
+          <div class="related-card-info">
+            <span class="category-tag">panel</span>
+            <h3 class="related-card-name">420W Polycrystalline Panel</h3>
+            <p class="related-card-price">₦150,000.00</p>
+          </div>
+        </a>
+      </div>
+      
     </div>
-    {% else %}
-    <p class="related-empty">No similar products found yet.</p>
-    {% endif %}
+    
   </div>
 </div>
 
@@ -621,15 +787,16 @@
     <div class="footer-columns">
       <div class="footer-col">
         <h4>Contact us</h4>
-        <p>ATT034, Yobe Plaza, Tradefair,<br> Lagos, Nigeria</p>
-        <a href="https://wa.me/2348107730018" target="_blank">WhatsApp us</a>
-        <a href="https://chat.whatsapp.com/LJQBZap6XOO7gQiTA24OOR?mode=ac_t" target="_blank">Join our WhatsApp group</a>
+        <p>PLACEHOLDER_PHONE</p>
+        <p>PLACEHOLDER_ADDRESS, Lagos, Nigeria</p>
+        <a href="PLACEHOLDER_WHATSAPP_LINK">WhatsApp us</a>
+        <a href="PLACEHOLDER_WHATSAPP_GROUP_LINK">Join our WhatsApp group</a>
       </div>
       <div class="footer-col">
         <h4>Buune</h4>
-        <a href="/static/buune-privacy-policy.html" target="_blank">Privacy policy </a>
-        <a href="/static/buune-terms.html" target="_blank">Terms</a>
-        <a href="/static/buune-data-deletion.html" target="_blank">Data deletion</a>
+        <a href="/static/buune-privacy-policy.html">Privacy policy</a>
+        <a href="/static/buune-terms.html">Terms</a>
+        <a href="/static/buune-data-deletion.html">Data deletion</a>
       </div>
       <div class="footer-col">
         <h4>General</h4>
@@ -652,7 +819,7 @@
     // gets passed from the route. Currently a no-op harness since the
     // template only receives a single product.image_url; swap the
     // IMAGES array below for a Jinja-rendered list once that field exists.
-    var IMAGES = [{% if images %}{% for img in images %}"{{ img }}"{% if not loop.last %},{% endif %}{% endfor %}{% endif %}];
+    var IMAGES = ["https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800","https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800","https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800"];
     var current = 0;
     var imgEl = document.getElementById('galleryImage');
     var dots = document.querySelectorAll('.gallery-dots .dot');

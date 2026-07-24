@@ -1,0 +1,62 @@
+{# 
+  Icon lookup for product spec cards, keyed on label (the raw field
+  name from specs.py, e.g. "wattage", "vmp", "chemistry"). One icon per
+  field across every category in DISPLAY_FIELDS so nothing renders blank.
+
+  Usage: {% include "_spec_icons.html" %} inside a loop where `label`
+  is set (see product.html's specs_grid loop -- the route needs to pass
+  display_specs as a list of {key, label, value} dicts).
+
+  All icons are stroke-only, 24x24 viewBox, sized via .spec-icon svg in
+  product.html (18x18, color: var(--gold-deep)).
+#}
+
+{% if label == "wattage" or label == "rated_output_power" or label == "panel_wattage" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+
+{% elif label == "vmp" or label == "nominal_voltage" or label == "output_voltage" or label == "voltage" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-6 4 12 2-6h4"/></svg>
+
+{% elif label == "imp" or label == "max_input_current" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
+
+{% elif label == "panel_type" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v14M15 4v14"/></svg>
+
+{% elif label == "dimensions" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 20h2M9 20h2M14 20h2M4 2v2M4 7v2"/></svg>
+
+{% elif label == "mppt_range_min" or label == "mppt_range_max" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 5-7 4 4"/><path d="M3 21h18"/></svg>
+
+{% elif label == "capacity_ah" or label == "battery_capacity_ah" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="16" height="10" rx="1.5"/><path d="M19 10v4M7 10v4M11 10v4"/></svg>
+
+{% elif label == "chemistry" or label == "battery_chemistry" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v5l-4.5 8A2 2 0 0 0 7.2 19h9.6a2 2 0 0 0 1.7-3l-4.5-8V3"/></svg>
+
+{% elif label == "capacity_wh" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="6" width="12" height="14" rx="1.5"/><path d="M17 10h2v6h-2"/><path d="M11 9l-2 4h3l-2 4"/></svg>
+
+{% elif label == "lumen_output" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+
+{% elif label == "lighting_mode" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-3.5 10.9c.4.3.5.7.5 1.1v1h6v-1c0-.4.1-.8.5-1.1A6 6 0 0 0 12 3z"/><path d="M9.5 19h5M10.5 21h3"/></svg>
+
+{% elif label == "pole_height_m" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v16M8 22h8M12 18l-3-3M12 18l3-3M12 6l-2.5-2.5M12 6l2.5-2.5"/></svg>
+
+{% elif label == "airflow_cfm" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9a3 3 0 1 0-3-3"/><path d="M3 16h13a3 3 0 1 1-3 3"/><path d="M3 12h6"/></svg>
+
+{% elif label == "noise_level_db" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>
+
+{% elif label == "blade_span_cm" %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.6"/><path d="M12 12c0-4 2-7 5-7 1 2-1 5-5 7z"/><path d="M12 12c-4 0-7-2-7-5 2-1 5 1 7 5z"/><path d="M12 12c0 4-2 7-5 7-1-2 1-5 5-7z"/></svg>
+
+{% else %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="10" x2="12" y2="16"/><circle cx="12" cy="7.2" r="0.9" fill="currentColor" stroke="none"/></svg>
+
+{% endif %}

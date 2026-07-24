@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Privacy Policy — Buune</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;900&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
@@ -15,6 +22,15 @@
     --white: #FAFAFA;
     --grey: #F0EDE8;
     --text-muted: #6B6558;
+  }
+
+  html[data-theme="dark"] {
+    --gold: #F5A623;
+    --gold-light: #4A3A1A;
+    --black: #FAFAFA;
+    --white: #14130F;
+    --grey: #1A1915;
+    --text-muted: #9B968A;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }

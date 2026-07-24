@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Create account — Grand Elevation Solar</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
@@ -546,19 +553,25 @@
       }
     }
 
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
+    var stored = localStorage.getItem('theme');
+    if (stored) {
+      applyTheme(stored);
+    } else {
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = prefersDark ? 'dark' : 'light';
+      applyTheme(theme);
+      localStorage.setItem('theme', theme);
+    }
 
     toggle.addEventListener('click', function () {
       var isDark = root.getAttribute('data-theme') === 'dark';
-      applyTheme(isDark ? 'light' : 'dark');
+      var next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
     });
   })();
 
   // ---- Password reveal toggles ----
-  // Purely a display convenience -- toggles the input's type between
-  // "password" and "text". Doesn't touch the value, doesn't log it,
-  // doesn't affect what gets submitted. Each field's eye is independent.
   (function () {
     var toggles = document.querySelectorAll('.pw-toggle');
     toggles.forEach(function (btn) {
@@ -572,6 +585,5 @@
     });
   })();
 </script>
-
 </body>
 </html>

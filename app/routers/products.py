@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, FastAPI, Form, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import select
@@ -9,6 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from ..auth import authenticate
 from ..database import get_session
 from ..models import Product
+from ..utils import get_active_categories
 
 router = APIRouter(prefix="/products", tags=["products"])
 templates = Jinja2Templates(directory="app/templates")
@@ -16,24 +15,21 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/{slug}")
 async def product_page(
-    slug: Annotated[
-        str,
-        Path(pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"),
-    ],
+    slug: int,
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
-    try:
-        statement = select(Product).where(Product.id == slug)
-        result = session.exec(statement).all()
+    statement = select(Product).where(Product.id == slug)
+    result = await session.exec(statement)
+    product = result.one()
 
-    except Exception as e:
-        pass
+    print("Product Specs: ", product.specs)
 
     return templates.TemplateResponse(
         request=request,
         name="/products.html",
         context={
-            "product": slug,
+            "product": product,
+            "categories": await get_active_categories(session),
         },
     )
