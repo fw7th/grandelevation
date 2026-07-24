@@ -4,7 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Warranty & Returns — Grand Elevation Solar</title>
-
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -19,6 +25,15 @@
     --gray:#6B6B6B;
     --border:rgba(10,10,10,.08);
 }
+
+  html[data-theme="dark"] {
+    --gold: #F5A623;
+    --gold-light: #4A3A1A;
+    --black: #FAFAFA;
+    --white: #14130F;
+    --grey: #1A1915;
+    --text-muted: #9B968A;
+  }
 
 *{
     margin:0;
