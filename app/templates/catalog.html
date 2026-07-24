@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catalog — Grand Elevation Solar</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,13 +21,17 @@
     --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
     --gold-light: #FBDFA8; --gold-deep: #E8651C; --green: #3D5C3A;
     --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1);
+    --footer-ray: #0A0A0A;
+    --footer-text: #1a1200;
   }
   html[data-theme="dark"] {
     --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
     --gold-deep: #FFB648; --green: #7FA87A; --gray-mid: #9B968A;
     --border: rgba(244,241,234,0.12);
+    --footer-ray: rgba(244,241,234,0.15);
+    --footer-text: #F4F1EA;
   }
-  html, body { transition: background-color 0.25s ease, color 0.25s ease; }
+  body { transition: background-color 0.25s ease, color 0.25s ease; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
@@ -88,6 +99,19 @@
   .nav-icon-link {
     display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;
   }
+  .theme-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 999px;
+      border: 1.5px solid var(--border); background: transparent;
+      color: var(--ink); cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+  }
+  .theme-toggle:hover { border-color: var(--ink); }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-moon { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
   .nav-icon-link svg { width: 20px; height: 20px; }
 
 
@@ -221,6 +245,10 @@
     font-size: 12px; color: #1a1200; opacity: 0.75;
   }
 
+  .footer-rays g { stroke: var(--footer-ray); }
+  .footer-rays circle { fill: var(--footer-ray); }
+  .footer-col h4, .footer-col a, .footer-col p, .footer-bar .wrap { color: var(--footer-text); }
+
   @media (max-width: 640px) {
     .footer-columns { grid-template-columns: 1fr; gap: 20px; }
     .site-footer { border-radius: 20px 20px 0 0; }
@@ -270,6 +298,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
         Cart
       </a>
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
     </div>
   </nav>
 </div>
@@ -345,5 +377,38 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      toggle.setAttribute('aria-pressed', 'true');
+    } else {
+      root.removeAttribute('data-theme');
+      toggle.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  var stored = localStorage.getItem('theme');
+  if (stored) {
+    applyTheme(stored);
+  } else {
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = prefersDark ? 'dark' : 'light';
+    applyTheme(theme);
+    localStorage.setItem('theme', theme);
+  }
+
+  toggle.addEventListener('click', function () {
+    var isDark = root.getAttribute('data-theme') === 'dark';
+    var next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('theme', next);
+  });
+})();
+</script>
 </body>
 </html>

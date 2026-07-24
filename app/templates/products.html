@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ product.name }} — Grand Elevation Solar</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +27,7 @@
     --gold-deep: #FFB648; --green: #7FA87A; --gray-mid: #9B968A;
     --border: rgba(244,241,234,0.12);
   }
-  html, body { transition: background-color 0.25s ease, color 0.25s ease; }
+  body { transition: background-color 0.25s ease, color 0.25s ease; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
@@ -30,7 +37,7 @@
   a { color: inherit; text-decoration: none; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
 
-  /* ---------- NAV (shared w/ catalog.html) ---------- */
+  /* ---------- NAV ---------- */
   .nav {
     display: flex; align-items: center; gap: 20px;
     padding: 24px 0; border-bottom: 1px solid var(--border);
@@ -86,6 +93,20 @@
   .nav-actions { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
   .nav-icon-link { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; }
   .nav-icon-link svg { width: 20px; height: 20px; }
+
+  .theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 999px;
+    border: 1.5px solid var(--border); background: transparent;
+    color: var(--ink); cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .theme-toggle:hover { border-color: var(--ink); }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-moon { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
 
   /* ---------- BREADCRUMB ---------- */
   .breadcrumb {
@@ -146,10 +167,11 @@
   }
   .gallery-dots .dot {
     width: 5px; height: 5px; border-radius: 50%;
-    background: rgba(10,10,10,0.25);
-    transition: background 0.15s ease, width 0.15s ease;
+    background: var(--ink);
+    opacity: 0.25;
+    transition: opacity 0.15s ease, width 0.15s ease;
   }
-  .gallery-dots .dot.is-active { background: var(--ink); width: 14px; border-radius: 3px; }
+  .gallery-dots .dot.is-active { opacity: 1; width: 14px; border-radius: 3px; }
 
   .category-tag {
     display: inline-flex; align-self: flex-start;
@@ -264,7 +286,7 @@
     text-transform: capitalize;
   }
 
-  /* ---------- RELATED ROWS (similar products / best pairings) ---------- */
+  /* ---------- RELATED ROWS ---------- */
   .related-section {
     padding: 12px 0 40px;
     border-top: 1px solid var(--border);
@@ -354,7 +376,7 @@
     .product-title { font-size: 22px; }
   }
 
-  /* ---------- SITE FOOTER (shared) ---------- */
+  /* ---------- SITE FOOTER ---------- */
   .site-footer {
     position: relative; margin-top: 40px; background: var(--gold);
     border-radius: 32px 32px 0 0; overflow: hidden;
@@ -432,6 +454,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
         Cart
       </a>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
     </div>
   </nav>
 </div>
@@ -454,9 +480,6 @@
       <div class="gallery-placeholder">No image available</div>
       {% endif %}
 
-      {# Nav arrow only renders when there's more than one image. `images`
-         is a list of URLs from the route; falls back to a single-image
-         list around product.image_url if the route only sends one. #}
       {% if images and images|length > 1 %}
       <button type="button" class="gallery-nav prev" id="galleryPrev" aria-label="Previous image">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -529,12 +552,6 @@
   </div>
 
   <!-- ---------- BEST PAIRINGS ---------- -->
-  {# Populated by the compatibility engine once it's built: products from
-     other categories (e.g. an inverter for a panel) confirmed compatible
-     with this product's specs. Until then, `paired_products` can simply
-     be omitted or passed as an empty list -- the section renders a quiet
-     empty state rather than disappearing, since compat is a headline
-     feature of the site. #}
   <div class="related-section">
     <div class="related-heading">
       <h2 class="display">Best pairings</h2>
@@ -568,8 +585,6 @@
   </div>
 
   <!-- ---------- SIMILAR PRODUCTS ---------- -->
-  {# Same category, roughly similar specs -- route builds this list, this
-     template just renders whatever it's handed (capped at 10). #}
   <div class="related-section">
     <div class="related-heading">
       <h2 class="display">Similar products</h2>
@@ -648,10 +663,38 @@
 
 <script>
   (function () {
-    // Gallery left/right nav -- wired up assuming `images` (list of URLs)
-    // gets passed from the route. Currently a no-op harness since the
-    // template only receives a single product.image_url; swap the
-    // IMAGES array below for a Jinja-rendered list once that field exists.
+    var root = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        root.setAttribute('data-theme', 'dark');
+        toggle.setAttribute('aria-pressed', 'true');
+      } else {
+        root.removeAttribute('data-theme');
+        toggle.setAttribute('aria-pressed', 'false');
+      }
+    }
+
+    var stored = localStorage.getItem('theme');
+    if (stored) {
+      applyTheme(stored);
+    } else {
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = prefersDark ? 'dark' : 'light';
+      applyTheme(theme);
+      localStorage.setItem('theme', theme);
+    }
+
+    toggle.addEventListener('click', function () {
+      var isDark = root.getAttribute('data-theme') === 'dark';
+      var next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
+    });
+  })();
+
+  (function () {
     var IMAGES = [{% if images %}{% for img in images %}"{{ img }}"{% if not loop.last %},{% endif %}{% endfor %}{% endif %}];
     var current = 0;
     var imgEl = document.getElementById('galleryImage');

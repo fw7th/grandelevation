@@ -22,6 +22,20 @@
     --white: #FAFAFA;
     --grey: #F0EDE8;
     --text-muted: #6B6558;
+    --nav-bg: rgba(250,249,247,0.92);
+    --nav-border: rgba(0,0,0,0.07);
+    --card-border: rgba(0,0,0,0.08);
+    --card-gold-text: rgba(0,0,0,0.6);
+    --card-gold-link-border: rgba(0,0,0,0.3);
+    --footer-text: rgba(255,255,255,0.4);
+    --step-bg: var(--black);
+    --step-color: var(--white);
+    --email-btn-bg: var(--black);
+    --email-btn-color: var(--white);
+    --data-list-border: rgba(0,0,0,0.06);
+    --auto-banner-p: rgba(255,255,255,0.55);
+    --auto-banner-bg: #111111;
+    --auto-banner-color: #FAFAFA;
   }
 
   html[data-theme="dark"] {
@@ -31,43 +45,71 @@
     --white: #14130F;
     --grey: #1A1915;
     --text-muted: #9B968A;
+    --nav-bg: rgba(20,19,15,0.92);
+    --nav-border: rgba(244,241,234,0.08);
+    --card-border: rgba(244,241,234,0.08);
+    --card-gold-text: rgba(244,241,234,0.6);
+    --card-gold-link-border: rgba(244,241,234,0.3);
+    --footer-text: rgba(244,241,234,0.4);
+    --step-bg: var(--white);
+    --step-color: var(--black);
+    --email-btn-bg: var(--white);
+    --email-btn-color: var(--black);
+    --data-list-border: rgba(244,241,234,0.08);
+    --auto-banner-p: rgba(244,241,234,0.55);
+    --auto-banner-bg: #1A1915;
+    --auto-banner-color: #F4F1EA;
   }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { font-family: 'Outfit', sans-serif; background: var(--white); color: var(--black); overflow-x: hidden; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--white);
+    color: var(--black);
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
 
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
     padding: 18px 6vw;
-    background: rgba(250,249,247,0.92);
+    background: var(--nav-bg);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(0,0,0,0.07);
+    border-bottom: 1px solid var(--nav-border);
   }
+
   .nav-logo {
     display: flex; align-items: center; gap: 12px;
     text-decoration: none;
   }
+
   .logo-pill {
     background: var(--black);
     border-radius: 100px;
     padding: 6px 18px 6px 8px;
     display: flex; align-items: center; gap: 10px;
   }
+
   .logo-pill img {
     height: 28px; width: auto;
-    filter: invert(1) brightness(2);
+    filter: none;
   }
+
   .logo-pill span {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.1rem; font-weight: 700;
     color: var(--white); letter-spacing: -0.01em;
   }
+
   .nav-back {
     font-size: 0.875rem; font-weight: 500; color: var(--text-muted);
     text-decoration: none; display: flex; align-items: center; gap: 6px;
     transition: color 0.2s;
   }
+
   .nav-back:hover { color: var(--gold); }
 
   main { max-width: 680px; margin: 0 auto; padding: 120px 6vw 80px; }
@@ -76,89 +118,118 @@
     font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--gold); margin-bottom: 12px;
   }
+
   h1 {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2.2rem, 5vw, 3.2rem);
     line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 12px;
   }
+
   .subtitle { font-size: 1rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 48px; }
 
   .auto-banner {
-    background: var(--black); border-radius: 20px;
+    background: var(--auto-banner-bg);
+    color: var(--auto-banner-color);
     padding: 28px 32px; display: flex; align-items: flex-start; gap: 20px;
     margin-bottom: 28px; color: var(--white);
   }
+
   .auto-icon {
     width: 44px; height: 44px; min-width: 44px; border-radius: 50%;
     background: var(--gold); display: flex; align-items: center; justify-content: center;
     font-size: 1.2rem;
   }
-  .auto-banner h3 { font-weight: 500; font-size: 1rem; margin-bottom: 6px; }
-  .auto-banner p { font-size: 0.9rem; color: rgba(255,255,255,0.55); line-height: 1.6; }
+
+.auto-banner h3 { 
+  color: var(--auto-banner-color); 
+  font-weight: 500; 
+  font-size: 1rem; 
+  margin-bottom: 6px; 
+}
+  .auto-banner p { font-size: 0.9rem; color: var(--auto-banner-p); line-height: 1.6; }
 
   .card {
-    border: 1px solid rgba(0,0,0,0.08); border-radius: 20px;
-    padding: 32px; margin-bottom: 20px; background: var(--white);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 32px; margin-bottom: 20px;
+    background: var(--white);
   }
+
   .card h2 {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.4rem; font-weight: 700; margin-bottom: 16px;
     letter-spacing: -0.02em;
   }
+
   .card p { font-size: 0.92rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 12px; }
   .card p:last-child { margin-bottom: 0; }
 
   .data-list { list-style: none; margin: 16px 0; }
+
   .data-list li {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06);
+    padding: 10px 0; border-bottom: 1px solid var(--data-list-border);
     font-size: 0.9rem; color: var(--text-muted);
   }
+
   .data-list li:last-child { border-bottom: none; }
+
   .dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; background: var(--gold); }
 
   .steps { list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 14px; margin: 20px 0; }
+
   .steps li {
     counter-increment: step;
     display: flex; align-items: flex-start; gap: 14px;
     font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;
   }
+
   .step-n {
     min-width: 28px; height: 28px; border-radius: 50%;
-    background: var(--black); color: var(--white);
+    background: var(--step-bg);
+    color: var(--step-color);
     font-size: 0.75rem; font-weight: 500;
     display: flex; align-items: center; justify-content: center; margin-top: 1px;
   }
+
   .step-n::before { content: counter(step); }
 
   .email-btn {
     display: inline-flex; align-items: center; gap: 8px;
-    background: var(--black); color: var(--white);
+    background: var(--email-btn-bg);
+    color: var(--email-btn-color);
     padding: 14px 28px; border-radius: 100px;
     font-size: 0.9rem; font-weight: 500; text-decoration: none;
     margin-top: 20px; transition: background 0.2s, transform 0.15s;
   }
+
   .email-btn:hover { background: var(--gold); color: var(--black); transform: translateY(-1px); }
 
   .card-gold {
     background: var(--gold-light); border: 1px solid rgba(245,166,35,0.3);
     border-radius: 20px; padding: 28px 32px; margin-bottom: 20px;
   }
+
   .card-gold h2 {
     font-family: 'Cormorant Garamond', serif;
     font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.02em;
   }
-  .card-gold p { font-size: 0.9rem; color: rgba(0,0,0,0.6); line-height: 1.7; margin-bottom: 8px; }
-  .card-gold a { color: var(--black); font-weight: 500; font-size: 0.9rem; text-decoration: none; border-bottom: 1px solid rgba(0,0,0,0.3); }
+
+  .card-gold p { font-size: 0.9rem; color: var(--card-gold-text); line-height: 1.7; margin-bottom: 8px; }
+
+  .card-gold a { color: var(--black); font-weight: 500; font-size: 0.9rem; text-decoration: none; border-bottom: 1px solid var(--card-gold-link-border); }
   .card-gold a:hover { border-color: var(--black); }
 
   footer {
-    background: var(--black); color: rgba(255,255,255,0.4);
+    background: var(--black);
+    color: var(--footer-text);
     padding: 32px 6vw; display: flex; justify-content: space-between;
     align-items: center; flex-wrap: wrap; gap: 12px; font-size: 0.8rem;
   }
+
   .footer-brand { font-family: 'Cormorant Garamond', serif; color: var(--white); }
-  footer a { color: rgba(255,255,255,0.4); text-decoration: none; }
+
+  footer a { color: var(--footer-text); text-decoration: none; }
   footer a:hover { color: var(--gold); }
 
   @media (max-width: 600px) {

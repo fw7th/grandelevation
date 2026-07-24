@@ -12,158 +12,111 @@
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-:root{
-    --ink:#0A0A0A;
-    --bg:#FAF8F3;
-    --gold:#F2A623;
-    --gold-light:#FBDFA8;
-    --gold-deep:#E8651C;
-    --gray:#6B6B6B;
-    --border:rgba(10,10,10,.08);
+:root {
+  --ink: #0A0A0A;
+  --bg: #FAF8F3;
+  --gold: #F2A623;
+  --gold-light: #FBDFA8;
+  --gold-deep: #E8651C;
+  --gray-mid: #6B6B6B;
+  --border: rgba(10,10,10,0.08);
+  --card-bg: #FFFFFF;
+  --body-text: #444444;
 }
 
-  html[data-theme="dark"] {
-    --gold: #F5A623;
-    --gold-light: #4A3A1A;
-    --black: #FAFAFA;
-    --white: #14130F;
-    --grey: #1A1915;
-    --text-muted: #9B968A;
-  }
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+html[data-theme="dark"] {
+  --ink: #F4F1EA;
+  --bg: #14130F;
+  --gold: #F2A623;
+  --gold-light: #4A3A1A;
+  --gold-deep: #FFB648;
+  --gray-mid: #9B968A;
+  --border: rgba(244,241,234,0.08);
+  --card-bg: #1A1915;
+  --body-text: #B8B3A8;
 }
 
-body{
-    font-family:'Inter',sans-serif;
-    background:var(--bg);
-    color:var(--ink);
-    line-height:1.7;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.7;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-.display{
-    font-family:'Sora',sans-serif;
-    font-weight:800;
+.display { font-family: 'Sora', sans-serif; font-weight: 800; }
+
+.wrap { width: min(900px, 92%); margin: auto; }
+
+header { padding: 80px 0 40px; }
+
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--gold-light); padding: 8px 18px;
+  border-radius: 999px; font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 22px;
 }
 
-.wrap{
-    width:min(900px,92%);
-    margin:auto;
+.eyebrow::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold-deep);
 }
 
-header{
-    padding:80px 0 40px;
+h1 { font-size: 3rem; margin-bottom: 14px; }
+
+.sub {
+  color: var(--gray-mid); max-width: 700px; font-size: 17px;
 }
 
-.eyebrow{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    background:var(--gold-light);
-    padding:8px 18px;
-    border-radius:999px;
-    font-size:13px;
-    font-weight:600;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    margin-bottom:22px;
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 42px;
+  margin: 30px 0;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
-.eyebrow::before{
-    content:"";
-    width:7px;
-    height:7px;
-    border-radius:50%;
-    background:var(--gold-deep);
+.section { margin-bottom: 38px; }
+.section:last-child { margin-bottom: 0; }
+
+h2 { font-family: 'Sora', sans-serif; font-size: 24px; margin-bottom: 14px; }
+
+p { color: var(--body-text); margin-bottom: 16px; }
+
+ul { padding-left: 22px; }
+li { margin: 10px 0; }
+
+.notice {
+  background: var(--gold-light);
+  border-left: 5px solid var(--gold-deep);
+  padding: 18px 20px;
+  border-radius: 12px;
+  margin-top: 20px;
 }
 
-h1{
-    font-size:3rem;
-    margin-bottom:14px;
+.effective-date {
+  margin-top: 20px; color: var(--gray-mid);
+  font-size: 14px; font-weight: 500; letter-spacing: 0.02em;
 }
 
-.sub{
-    color:var(--gray);
-    max-width:700px;
-    font-size:17px;
+footer {
+  text-align: center; color: var(--gray-mid);
+  padding: 50px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
 }
 
-.card{
-    background:white;
-    border:1px solid var(--border);
-    border-radius:22px;
-    padding:42px;
-    margin:30px 0;
-}
-
-.section{
-    margin-bottom:38px;
-}
-
-.section:last-child{
-    margin-bottom:0;
-}
-
-h2{
-    font-family:'Sora',sans-serif;
-    font-size:24px;
-    margin-bottom:14px;
-}
-
-p{
-    color:#444;
-    margin-bottom:16px;
-}
-
-ul{
-    padding-left:22px;
-}
-
-li{
-    margin:10px 0;
-}
-
-.notice{
-    background:var(--gold-light);
-    border-left:5px solid var(--gold-deep);
-    padding:18px 20px;
-    border-radius:12px;
-    margin-top:20px;
-}
-
-.effective-date{
-    margin-top:20px;
-    color:var(--gray);
-    font-size:14px;
-    font-weight:500;
-    letter-spacing:.02em;
-}
-
-footer{
-    text-align:center;
-    color:var(--gray);
-    padding:50px 0;
-    border-top:1px solid var(--border);
-    margin-top:40px;
-}
-
-@media(max-width:700px){
-
-    h1{
-        font-size:2.2rem;
-    }
-
-    .card{
-        padding:28px;
-    }
-
+@media(max-width: 700px) {
+  h1 { font-size: 2.2rem; }
+  .card { padding: 28px; }
 }
 </style>
 </head>
@@ -173,115 +126,62 @@ footer{
 <div class="wrap">
 
 <header>
-
-<div class="eyebrow">
-Warranty Information
-</div>
-
-<h1 class="display">
-Warranty & Returns Policy
-</h1>
-
-<p class="sub">
-At Grand Elevation Solar, we stand behind the quality of our products. If your product develops a fault during normal use, we'll work with you to repair or replace it in accordance with the policy below.
-</p>
-
-<p class="effective-date">
-    Effective Date: July 24, 2026
-</p>
-
+  <div class="eyebrow">Warranty Information</div>
+  <h1 class="display">Warranty & Returns Policy</h1>
+  <p class="sub">
+    At Grand Elevation Solar, we stand behind the quality of our products. If your product develops a fault during normal use, we'll work with you to repair or replace it in accordance with the policy below.
+  </p>
+  <p class="effective-date">Effective Date: July 24, 2026</p>
 </header>
 
 <div class="card">
 
-<div class="section">
+  <div class="section">
+    <h2>2-Year Warranty</h2>
+    <p>Every eligible Grand Elevation Solar product is covered by a <strong>2-year limited warranty</strong> from the original purchase date.</p>
+    <p>This warranty covers manufacturing defects and failures that occur during normal use.</p>
+  </div>
 
-<h2>2-Year Warranty</h2>
+  <div class="section">
+    <h2>Warranty Eligibility</h2>
+    <p>To qualify for warranty service, all of the following conditions must be met:</p>
+    <ul>
+      <li>The product was purchased less than <strong>2 years</strong> ago.</li>
+      <li>The customer can provide proof of purchase.</li>
+      <li>The customer can demonstrate that the product has been used correctly and has not been intentionally damaged, abused, modified, or misused.</li>
+      <li>The fault is not the result of accidental damage, neglect, improper installation, or unauthorized repairs.</li>
+    </ul>
+  </div>
 
-<p>
-Every eligible Grand Elevation Solar product is covered by a <strong>2-year limited warranty</strong> from the original purchase date.
-</p>
+  <div class="section">
+    <h2>Repair & Replacement</h2>
+    <p>If your warranty claim is approved, Grand Elevation Solar will first attempt to repair the product at <strong>no cost</strong> to you.</p>
+    <p>If the product cannot reasonably be repaired, we may provide a replacement product of the same model or an equivalent model at our discretion.</p>
+  </div>
 
-<p>
-This warranty covers manufacturing defects and failures that occur during normal use.
-</p>
+  <div class="section">
+    <h2>Refund Policy</h2>
+    <p>Grand Elevation Solar does <strong>not offer refunds</strong> for products covered under this warranty.</p>
+    <p>Our warranty remedy is limited to repair or replacement of eligible products.</p>
+  </div>
 
-</div>
-
-<div class="section">
-
-<h2>Warranty Eligibility</h2>
-
-<p>
-To qualify for warranty service, all of the following conditions must be met:
-</p>
-
-<ul>
-<li>The product was purchased less than <strong>2 years</strong> ago.</li>
-
-<li>The customer can provide proof of purchase.</li>
-
-<li>The customer can demonstrate that the product has been used correctly and has not been intentionally damaged, abused, modified, or misused.</li>
-
-<li>The fault is not the result of accidental damage, neglect, improper installation, or unauthorized repairs.</li>
-</ul>
-
-</div>
-
-<div class="section">
-
-<h2>Repair & Replacement</h2>
-
-<p>
-If your warranty claim is approved, Grand Elevation Solar will first attempt to repair the product at <strong>no cost</strong> to you.
-</p>
-
-<p>
-If the product cannot reasonably be repaired, we may provide a replacement product of the same model or an equivalent model at our discretion.
-</p>
-
-</div>
-
-<div class="section">
-
-<h2>Refund Policy</h2>
-
-<p>
-Grand Elevation Solar does <strong>not offer refunds</strong> for products covered under this warranty.
-</p>
-
-<p>
-Our warranty remedy is limited to repair or replacement of eligible products.
-</p>
-
-</div>
-
-<div class="section">
-
-<h2>How to Make a Warranty Claim</h2>
-
-<ul>
-<li>Contact our support team.</li>
-
-<li>Provide your proof of purchase.</li>
-
-<li>Describe the issue and, where requested, provide photos or videos showing the fault.</li>
-
-<li>Follow any return or inspection instructions provided by our support staff.</li>
-</ul>
-
-<div class="notice">
-<strong>Important:</strong> Products that show evidence of intentional damage, misuse, unauthorized modification, or improper handling are not covered by this warranty.
-</div>
-
-</div>
+  <div class="section">
+    <h2>How to Make a Warranty Claim</h2>
+    <ul>
+      <li>Contact our support team.</li>
+      <li>Provide your proof of purchase.</li>
+      <li>Describe the issue and, where requested, provide photos or videos showing the fault.</li>
+      <li>Follow any return or inspection instructions provided by our support staff.</li>
+    </ul>
+    <div class="notice">
+      <strong>Important:</strong> Products that show evidence of intentional damage, misuse, unauthorized modification, or improper handling are not covered by this warranty.
+    </div>
+  </div>
 
 </div>
 
 <footer>
-
-© 2026 Grand Elevation Solar. All rights reserved.
-
+  © 2026 Grand Elevation Solar. All rights reserved.
 </footer>
 
 </div>
