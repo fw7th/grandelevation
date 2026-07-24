@@ -376,39 +376,91 @@
     .product-title { font-size: 22px; }
   }
 
-  /* ---------- SITE FOOTER ---------- */
-  .site-footer {
-    position: relative; margin-top: 40px; background: var(--gold);
-    border-radius: 32px 32px 0 0; overflow: hidden;
-  }
-  .footer-rays {
-    position: absolute; top: -140px; right: -160px; width: 520px; height: 520px;
-    z-index: 0; pointer-events: none; opacity: 0.5;
-  }
+/* ---------- SITE FOOTER ---------- */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 48px 0 32px;
+  margin-top: 40px;
+}
+
+.footer-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  padding-bottom: 32px;
+}
+
+.footer-col h4 {
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+.footer-col a,
+.footer-col p {
+  display: block;
+  font-size: 13px;
+  color: var(--gray-mid);
+  margin-bottom: 8px;
+  line-height: 1.55;
+  text-decoration: none;
+}
+
+.footer-col a:hover {
+  color: var(--gold-deep);
+}
+
+.footer-bar {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--gray-mid);
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-brand .logo-spinner::before,
+.footer-brand .logo-spinner .orbit-dot {
+  inset: -4px;
+}
+
+.footer-brand img {
+  height: 22px;
+  width: auto;
+  display: block;
+  border-radius: 50%;
+}
+
+.footer-brand span {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
   .footer-columns {
-    position: relative; z-index: 1;
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
-    padding: 40px 0 28px;
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
-  .footer-col h4 {
-    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    margin-bottom: 12px; color: #1a1200;
+  .footer-bar {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
   }
-  .footer-col a, .footer-col p {
-    display: block; font-size: 12.5px; color: #1a1200; opacity: 0.7;
-    margin-bottom: 8px; line-height: 1.55;
-  }
-  .footer-col a:hover { opacity: 1; }
-  .footer-bar { position: relative; z-index: 1; padding: 14px 0; }
-  .footer-bar .wrap {
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; color: #1a1200; opacity: 0.75;
-  }
-  @media (max-width: 640px) {
-    .footer-columns { grid-template-columns: 1fr; gap: 20px; }
-    .site-footer { border-radius: 20px 20px 0 0; }
-  }
+}
+
 </style>
 </head>
 <body>
@@ -618,21 +670,8 @@
   </div>
 </div>
 
-<footer class="site-footer">
-  <svg class="footer-rays" viewBox="0 0 520 520" aria-hidden="true">
-    <g stroke="#0A0A0A" stroke-width="2" opacity="0.3">
-      <line x1="360" y1="140" x2="500" y2="30"/>
-      <line x1="360" y1="140" x2="510" y2="110"/>
-      <line x1="360" y1="140" x2="516" y2="180"/>
-      <line x1="360" y1="140" x2="500" y2="250"/>
-      <line x1="360" y1="140" x2="460" y2="310"/>
-      <line x1="360" y1="140" x2="400" y2="350"/>
-      <line x1="360" y1="140" x2="330" y2="10"/>
-      <line x1="360" y1="140" x2="260" y2="30"/>
-    </g>
-    <circle cx="360" cy="140" r="70" fill="#0A0A0A" opacity="0.08"/>
-  </svg>
-  <div class="wrap">
+<div class="wrap">
+  <footer class="site-footer">
     <div class="footer-columns">
       <div class="footer-col">
         <h4>Contact us</h4>
@@ -642,7 +681,7 @@
       </div>
       <div class="footer-col">
         <h4>Buune</h4>
-        <a href="/static/buune-privacy-policy.html" target="_blank">Privacy policy </a>
+        <a href="/static/buune-privacy-policy.html" target="_blank">Privacy policy</a>
         <a href="/static/buune-terms.html" target="_blank">Terms</a>
         <a href="/static/buune-data-deletion.html" target="_blank">Data deletion</a>
       </div>
@@ -653,13 +692,18 @@
         <a href="/signin">Sign in</a>
       </div>
     </div>
-  </div>
-  <div class="footer-bar">
-    <div class="wrap">
-      <span>&copy; 2026 Grand Elevation Solar</span>
+    <div class="footer-bar">
+      <div class="footer-brand">
+        <div class="logo-spinner">
+          <img src="/static/grand_logo.png" alt="Grand Elevation Solar">
+          <div class="orbit-dot"></div>
+        </div>
+        <span>Grand Elevation Solar</span>
+      </div>
+      <div>&copy; 2026 Grand Elevation Solar</div>
     </div>
-  </div>
-</footer>
+  </footer>
+</div>
 
 <script>
   (function () {

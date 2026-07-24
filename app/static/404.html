@@ -1,87 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Grand Elevation Solar</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0A0A;
+    --bg: #FAF8F3;
+    --gold: #F2A623;
+    --gold-light: #FBDFA8;
+    --gold-deep: #E8651C;
+    --gray-mid: #6B6B6B;
+    --border: rgba(10,10,10,0.1);
+  }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
+  html[data-theme="dark"] {
+    --ink: #F4F1EA;
+    --bg: #14130F;
+    --gold: #F2A623;
+    --gold-light: #4A3A1A;
+    --gold-deep: #FFB648;
+    --gray-mid: #9B968A;
+    --border: rgba(244,241,234,0.12);
+  }
 
-        .container {
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .error-code {
-            font-size: 8rem;
-            font-weight: 800;
-            line-height: 1;
-            color: #6366f1;
-            margin-bottom: 1rem;
-            letter-spacing: -0.05em;
-        }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
 
-        h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 1rem;
-        }
+  .wrap {
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+  }
 
-        p {
-            font-size: 1.125rem;
-            color: #64748b;
-            margin-bottom: 2.5rem;
-            line-height: 1.6;
-        }
+  .mascot {
+    width: 220px;
+    height: auto;
+    margin: 0 auto 32px;
+    display: block;
+    animation: float 4s ease-in-out infinite;
+  }
 
-        .btn {
-            display: inline-block;
-            background-color: #6366f1;
-            color: #ffffff;
-            font-weight: 600;
-            text-decoration: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
-        }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
 
-        .btn:hover {
-            background-color: #4f46e5;
-            transform: translateY(-1px);
-        }
+  .code {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 80px;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 12px;
+    color: var(--gold-deep);
+  }
 
-        .btn:active {
-            transform: translateY(0);
-        }
-    </style>
+  h1 {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--gray-mid);
+    margin-bottom: 32px;
+  }
+
+  .btn-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover {
+    background: var(--gold-deep);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--ink);
+  }
+
+  @media (max-width: 480px) {
+    .code { font-size: 64px; }
+    .mascot { width: 180px; }
+  }
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="error-code">404</div>
-        <h1>Page Not Found</h1>
-        <p>Oops! The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
-        <a href="/" class="btn">Back to Homepage</a>
-    </div>
+<div class="wrap">
+  <svg class="mascot" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- Solar panel body -->
+    <rect x="40" y="50" width="120" height="90" rx="14" fill="var(--gold-light)" stroke="var(--ink)" stroke-width="2.5"/>
+    
+    <!-- Panel grid lines -->
+    <line x1="40" y1="80" x2="160" y2="80" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    <line x1="40" y1="110" x2="160" y2="110" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    <line x1="80" y1="50" x2="80" y2="140" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    <line x1="120" y1="50" x2="120" y2="140" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    
+    <!-- Crack in corner -->
+    <polyline points="145,50 135,65 148,75 138,90 150,100" stroke="var(--gold-deep)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <line x1="142" y1="72" x2="152" y2="68" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="140" y1="85" x2="148" y2="88" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round"/>
+    
+    <!-- Eyes -->
+    <circle cx="78" cy="92" r="5" fill="var(--ink)"/>
+    <circle cx="122" cy="92" r="5" fill="var(--ink)"/>
+    
+    <!-- Sad mouth -->
+    <path d="M88 108 Q100 102 112 108" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    
+    <!-- Disconnected wire hanging -->
+    <path d="M60 140 Q60 165 50 170" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <circle cx="50" cy="172" r="3.5" fill="var(--gold-deep)"/>
+    <line x1="50" y1="175" x2="46" y2="182" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="50" y1="175" x2="54" y2="182" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round"/>
+    
+    <!-- Spark / broken connection hint -->
+    <path d="M44 158 L48 154 L46 160 L50 156" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+
+  <div class="code">404</div>
+  <h1>Page not found</h1>
+  <p>Looks like this panel got cracked and the wire came loose. The page you're looking for doesn't exist or has been moved.</p>
+
+  <div class="btn-row">
+    <a href="/" class="btn btn-primary">Back home</a>
+    <a href="/catalog" class="btn btn-secondary">Browse catalog</a>
+  </div>
+</div>
 
 </body>
 </html>
