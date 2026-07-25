@@ -18,3 +18,9 @@ wheels/
 # Vercel local config
 .vercel
 
+# Google config
+credentials.json
+token.json
+
+# Do not ignore
+!.env.example

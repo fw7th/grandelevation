@@ -377,6 +377,16 @@ async def catalog_by_category(
     )
 
 
+@app.get("/forgot-password")
+async def forgot_password():
+    return FileResponse("app/static/forgot-password.html")
+
+
+@app.get("/forgot-password")
+async def forgot_password_post():
+    pass
+
+
 @app.post("/favorites/{product_id}")
 async def toggle_favorite(
     request: Request,

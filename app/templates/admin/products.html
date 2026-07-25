@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Products — Admin</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -14,9 +22,13 @@
   html[data-theme="dark"] {
     --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
     --gold-deep: #FFB648; --gray-mid: #9B968A; --border: rgba(244,241,234,0.12);
+    --error: #FF8A80;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
   .display { font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -0.01em; }
   .wrap { max-width: 960px; margin: 0 auto; padding: 32px; }
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
@@ -24,6 +36,7 @@
   .btn-primary {
     background: var(--ink); color: var(--bg); border: none; border-radius: 999px;
     padding: 11px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+    text-decoration: none; display: inline-block;
   }
   .btn-primary:hover { background: var(--gold-deep); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }

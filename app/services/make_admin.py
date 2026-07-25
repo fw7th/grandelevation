@@ -4,8 +4,8 @@ import sys
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .database import engine
-from .models import Users
+from ..database import engine
+from ..models import Users
 
 
 async def make_admin_async(identifier: str):
