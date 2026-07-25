@@ -1,6 +1,7 @@
 # models.py
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Optional
 
 from sqlmodel import JSON, Column, Field, SQLModel, UniqueConstraint
 
@@ -55,3 +56,13 @@ class Favorite(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", index=True)
     product_id: int = Field(foreign_key="product.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PasswordResetToken(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    token_hash: str = Field(index=True, unique=True, max_length=64)
+    expires_at: datetime = Field(
+        default_factory=lambda: datetime.utcnow() + timedelta(hours=1)
+    )
+    used_at: datetime | None = Field(default=None)

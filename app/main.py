@@ -11,7 +11,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .auth import authenticate
 from .database import get_session, init_db
-from .models import Favorite, Product, Session, Users
+from .models import Favorite, PasswordResetToken, Product, Session, Users
 from .routers import admin as admin_router
 from .routers import products as product_router
 from .security import (
@@ -247,7 +247,10 @@ async def signin_post(
     # ---------- Record this attempt regardless of outcome ----------
     if email:
         await record_attempt(
-            email, ip_address, succeeded=bool(login_ok), session=session
+            email,
+            ip_address,
+            succeeded=bool(login_ok),
+            session=session,
         )
 
     # ---------- Validation failed ----------
@@ -382,8 +385,43 @@ async def forgot_password():
     return FileResponse("app/static/forgot-password.html")
 
 
-@app.get("/forgot-password")
-async def forgot_password_post():
+@app.post("/forgot-password")
+async def forgot_password_post(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    # ---------- Create token ----------
+    token = create_session_token()
+
+    session_token = request.cookies.get("session_token")
+
+    statement = select(Session.user_id).where(
+        Session.token == session_token,
+    )
+    result = await session.exec(statement)
+    user_id = result.all()
+
+    reset_token = PasswordResetToken(
+        user_id=user_id,
+        token_hash=password_hash.hash(token),
+    )
+
+    session.add(reset_token)
+    await session.commit()
+
+    reset_link = f"https://grandelevationsolar.com{reset_token}"
+
+    try:
+        pass
+
+    except ValueError as val_err:
+        raise HTTPException(status_code=500, detail=str(val_err))
+    except Exception as err:
+        raise HTTPException(
+            status_code=500, detail=f"Google API routing failure: {str(err)}"
+        )
+
+    # login_ok = user is not None and password_hash.verify(password, user.password_hash)
     pass
 
 
