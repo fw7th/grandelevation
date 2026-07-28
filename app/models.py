@@ -61,7 +61,7 @@ class Favorite(SQLModel, table=True):
 class PasswordResetToken(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
-    token_hash: str = Field(index=True, unique=True, max_length=64)
+    token_hash: str
     expires_at: datetime = Field(
         default_factory=lambda: datetime.utcnow() + timedelta(hours=1)
     )

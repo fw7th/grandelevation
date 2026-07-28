@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 
@@ -25,7 +26,10 @@ from .services.featured import get_daily_featured
 from .specs import (
     SPEC_MODELS,
 )  # still needed for /catalog/category/{category} validation
-from .utils import get_active_categories
+from .utils import (
+    get_active_categories,
+    sync_gmail_dispatch,
+)
 
 
 @asynccontextmanager
@@ -381,48 +385,102 @@ async def catalog_by_category(
 
 
 @app.get("/forgot-password")
-async def forgot_password():
-    return FileResponse("app/static/forgot-password.html")
+async def forgot_password(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="forgot-password.html",
+        context={
+            "errors": {},
+            "email": "",
+        },
+    )
 
 
-@app.post("/forgot-password")
+@app.post("/forgot-password", response_class=HTMLResponse)
 async def forgot_password_post(
     request: Request,
     session: AsyncSession = Depends(get_session),
+    email: str | None = Form(default=None),
 ):
+    # ---------- Validation ----------
+    errors = {}
+    email = (email or "").strip()
+
+    if not email:
+        errors["email"] = "Email is required."
+    elif "@" not in email:
+        errors["email"] = "Enter a valid email address."
+    elif "." not in email.rsplit("@", 1)[1]:
+        errors["email"] = "Enter a valid email address."
+
+    # ---------- Validation failed ----------
+    if errors:
+        return templates.TemplateResponse(
+            request=request,
+            name="forgot-password.html",
+            context={
+                "errors": errors,
+                "email": email,
+            },
+        )
+
+    statement = select(Users.id).where(
+        Users.email == email,
+    )
+    result = await session.exec(statement)
+    user_id = result.one_or_none()
+
+    necessary_checks = select(PasswordResetToken).where(
+        PasswordResetToken.user_id == user_id,
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > datetime.utcnow(),
+    )
+    result_checks = await session.exec(necessary_checks)
+    existing_token = result_checks.first()
+    # has available token
+    has_available_token = existing_token is not None
+
     # ---------- Create token ----------
     token = create_session_token()
 
-    session_token = request.cookies.get("session_token")
+    if user_id and not has_available_token:
+        try:
+            reset_token = PasswordResetToken(
+                user_id=user_id,
+                token_hash=password_hash.hash(token),
+            )
 
-    statement = select(Session.user_id).where(
-        Session.token == session_token,
+            session.add(reset_token)
+            await session.commit()
+
+            reset_link = (
+                f"https://grandelevationsolar.com/reset-password?token={reset_token}"
+            )
+
+            result = await asyncio.to_thread(
+                sync_gmail_dispatch,
+                email,
+                reset_link,
+            )
+
+        except ValueError as val_err:
+            raise HTTPException(status_code=500, detail=str(val_err))
+        except Exception as err:
+            raise HTTPException(
+                status_code=500, detail=f"Google API routing failure: {str(err)}"
+            )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="forgot-password.html",
+        context={
+            "errors": {},
+            "email": email,
+            "show_success": True,
+        },
     )
-    result = await session.exec(statement)
-    user_id = result.all()
-
-    reset_token = PasswordResetToken(
-        user_id=user_id,
-        token_hash=password_hash.hash(token),
-    )
-
-    session.add(reset_token)
-    await session.commit()
-
-    reset_link = f"https://grandelevationsolar.com{reset_token}"
-
-    try:
-        pass
-
-    except ValueError as val_err:
-        raise HTTPException(status_code=500, detail=str(val_err))
-    except Exception as err:
-        raise HTTPException(
-            status_code=500, detail=f"Google API routing failure: {str(err)}"
-        )
 
     # login_ok = user is not None and password_hash.verify(password, user.password_hash)
-    pass
 
 
 @app.post("/favorites/{product_id}")

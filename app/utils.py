@@ -5,11 +5,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from fastapi import FastAPI, HTTPException
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from pydantic import BaseModel, EmailStr
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -35,10 +33,6 @@ async def get_active_categories(session: AsyncSession) -> list[str]:
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
 
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
-
-
 def sync_gmail_dispatch(recipient_email: str, reset_link: str):
     """Synchronous executor block that interacts with the blocking Google SDK client."""
     creds = None
@@ -62,20 +56,70 @@ def sync_gmail_dispatch(recipient_email: str, reset_link: str):
     message = MIMEMultipart("alternative")
     message["To"] = recipient_email
     message["Subject"] = "Reset Your Password - GrandElevationSolar"
-
     html_content = f"""
     <html>
-        <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-                <h2 style="color: #f39c12;">Password Reset Link</h2>
-                <p>Hello,</p>
-                <p>We received an inquiry to reset your password. Use the verification checkpoint below:</p>
-                <p style="text-align: center; margin: 25px 0;">
-                    <a href="{reset_link}" style="background-color: #f39c12; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
-                </p>
-                <p>If you did not request a profile update, please drop this transmission.</p>
-            </div>
-        </body>
+    <body style="margin:0; padding:0; background-color:#FAF8F3;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#FAF8F3;">
+        <tr>
+          <td align="center" style="padding:48px 20px;">
+            <table role="presentation" width="100%" max-width="480" cellspacing="0" cellpadding="0" border="0" style="max-width:480px; width:100%; background:#ffffff; border-radius:20px; border:1px solid rgba(10,10,10,0.08); overflow:hidden;">
+              
+              <!-- Header -->
+              <tr>
+                <td style="padding:36px 36px 24px; text-align:center; border-bottom:1px solid rgba(10,10,10,0.06);">
+                  <img src="https://grandelevationsolar.com/grand-logo.png" alt="Grand Elevation Solar" width="42" height="42" style="border-radius:50%; display:block; margin:0 auto 14px;">
+                  <h1 style="margin:0; font-family:'Sora', Arial, Helvetica, sans-serif; font-size:20px; font-weight:700; color:#0A0A0A; letter-spacing:-0.01em;">Reset your password</h1>
+                </td>
+              </tr>
+
+              <!-- Body -->
+              <tr>
+                <td style="padding:32px 36px;">
+                  <p style="margin:0 0 16px; font-family:'Inter', Arial, Helvetica, sans-serif; font-size:15px; color:#444; line-height:1.6;">
+                    We received a request to reset the password for your account. Click the button below to choose a new one.
+                  </p>
+                  
+                  <p style="margin:0 0 28px; font-family:'Inter', Arial, Helvetica, sans-serif; font-size:15px; color:#444; line-height:1.6;">
+                    This link expires in <strong style="color:#0A0A0A;">1 hour</strong> and can only be used once.
+                  </p>
+
+                  <!-- CTA -->
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td align="center" style="padding:0 0 28px;">
+                        <a href="{reset_link}" style="display:inline-block; background-color:#0A0A0A; color:#FAF8F3; font-family:'Inter', Arial, Helvetica, sans-serif; font-size:15px; font-weight:600; text-decoration:none; padding:14px 32px; border-radius:999px;">
+                          Reset password
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin:0 0 12px; font-family:'Inter', Arial, Helvetica, sans-serif; font-size:13px; color:#6B6B6B; line-height:1.5;">
+                    If the button doesn't work, paste this link into your browser:
+                  </p>
+                  <p style="margin:0; font-family:'Inter', Arial, Helvetica, sans-serif; font-size:12px; color:#6B6B6B; line-height:1.5; word-break:break-all;">
+                    <a href="{reset_link}" style="color:#E8651C; text-decoration:underline;">{reset_link}</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="padding:24px 36px; background:#FAF8F3; text-align:center; border-top:1px solid rgba(10,10,10,0.06);">
+                  <p style="margin:0 0 6px; font-family:'Inter', Arial, Helvetica, sans-serif; font-size:12px; color:#9B9B9B; line-height:1.5;">
+                    Didn't request this? You can safely ignore this email.
+                  </p>
+                  <p style="margin:0; font-family:'Inter', Arial, Helvetica, sans-serif; font-size:12px; color:#9B9B9B; line-height:1.5;">
+                    &copy; 2026 Grand Elevation Solar
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
     </html>
     """
     message.attach(MIMEText(html_content, "html"))
@@ -87,26 +131,3 @@ def sync_gmail_dispatch(recipient_email: str, reset_link: str):
     return (
         service.users().messages().send(userId="me", body={"raw": raw_base64}).execute()
     )
-
-
-@app.post("/auth/forgot-password")
-async def forgot_password(payload: ForgotPasswordRequest):
-    """Non-blocking asynchronous target endpoint routing execution threads securely."""
-    # Generate unique mock security asset strings
-    mock_reset_token = "solar_token_xyz_987654321"
-    reset_link = f"https://grandelevationsolar.com{mock_reset_token}"
-
-    try:
-        # Offload the blocking Gmail client code to an asynchronous system thread pool
-        result = await asyncio.to_thread(sync_gmail_dispatch, payload.email, reset_link)
-        return {
-            "status": "success",
-            "message": f"Password reset email sent to {payload.email}",
-            "gmail_message_id": result.get("id"),
-        }
-    except ValueError as val_err:
-        raise HTTPException(status_code=500, detail=str(val_err))
-    except Exception as err:
-        raise HTTPException(
-            status_code=500, detail=f"Google API routing failure: {str(err)}"
-        )
