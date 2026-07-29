@@ -424,63 +424,204 @@ async def forgot_password_post(
             },
         )
 
-    statement = select(Users.id).where(
-        Users.email == email,
-    )
-    result = await session.exec(statement)
-    user_id = result.one_or_none()
+    try:
+        # ---------- Find user ----------
+        statement = select(Users.id).where(
+            Users.email == email,
+        )
 
-    necessary_checks = select(PasswordResetToken).where(
-        PasswordResetToken.user_id == user_id,
-        PasswordResetToken.used_at.is_(None),
-        PasswordResetToken.expires_at > datetime.utcnow(),
-    )
-    result_checks = await session.exec(necessary_checks)
-    existing_token = result_checks.first()
-    # has available token
-    has_available_token = existing_token is not None
+        result = await session.exec(statement)
+        user_id = result.one_or_none()
 
-    # ---------- Create token ----------
-    token = create_session_token()
+        # ---------- Check existing token ----------
+        necessary_checks = select(PasswordResetToken).where(
+            PasswordResetToken.user_id == user_id,
+            PasswordResetToken.used_at.is_(None),
+            PasswordResetToken.expires_at > datetime.utcnow(),
+        )
 
-    if user_id and not has_available_token:
-        try:
+        result_checks = await session.exec(necessary_checks)
+        existing_token = result_checks.first()
+
+        has_available_token = existing_token is not None
+
+        # ---------- Create token ----------
+        if user_id and not has_available_token:
+            token = create_session_token()
+            token_hash = password_hash.hash(token)
+
             reset_token = PasswordResetToken(
                 user_id=user_id,
-                token_hash=password_hash.hash(token),
+                token_hash=token_hash,
             )
 
             session.add(reset_token)
             await session.commit()
 
             reset_link = (
-                f"https://grandelevationsolar.com/reset-password?token={reset_token}"
+                f"https://grandelevationsolar.com/reset-password?token={token_hash}"
             )
 
-            result = await asyncio.to_thread(
+            await asyncio.to_thread(
                 sync_gmail_dispatch,
                 email,
                 reset_link,
             )
 
-        except ValueError as val_err:
-            raise HTTPException(status_code=500, detail=str(val_err))
-        except Exception as err:
-            raise HTTPException(
-                status_code=500, detail=f"Google API routing failure: {str(err)}"
-            )
+        return templates.TemplateResponse(
+            request=request,
+            name="forgot-password.html",
+            context={
+                "errors": {},
+                "email": email,
+                "show_success": True,
+            },
+        )
+
+    except ValueError:
+        await session.rollback()
+        return FileResponse(
+            "static/500.html",
+            status_code=500,
+        )
+
+    except SQLAlchemyError:
+        await session.rollback()
+        return FileResponse(
+            "static/500.html",
+            status_code=500,
+        )
+
+    except Exception:
+        await session.rollback()
+        return FileResponse(
+            "static/500.html",
+            status_code=500,
+        )
+
+
+@app.get("/reset-password", response_class=HTMLResponse)
+async def reset_password(
+    request: Request,
+    token: str,
+    session: AsyncSession = Depends(get_session),
+):
+    # login_ok = user is not None and password_hash.verify(password, user.password_hash)
+    statement = select(PasswordResetToken).where(
+        PasswordResetToken.token_hash == token,
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > datetime.utcnow(),
+    )
+    result = await session.exec(statement)
+    existing_token = result.first()
+
+    if existing_token is None:
+        return FileResponse(
+            "static/expired-link.html",
+            status_code=400,
+        )
 
     return templates.TemplateResponse(
-        request=request,
-        name="forgot-password.html",
+        request,
+        name="reset-password.html",
         context={
-            "errors": {},
-            "email": email,
-            "show_success": True,
+            "request": request,
+            "token": token,
         },
     )
 
-    # login_ok = user is not None and password_hash.verify(password, user.password_hash)
+
+@app.post("/reset-password")
+async def reset_password_post(
+    request: Request,
+    password: str | None = Form(default=None),
+    confirm: str | None = Form(default=None),
+    token: str = Form(...),
+    session: AsyncSession = Depends(get_session),
+):
+    errors = {}
+    password = password or ""
+    confirm = confirm or ""
+
+    if not password:
+        errors["password"] = "Password is required."
+
+    if len(password) < 8:
+        errors["password"] = "Password must be at least 8 characters."
+
+    if password != confirm:
+        errors["password"] = "Passwords must match."
+
+    # ---------- Validation failed ----------
+    if errors:
+        return templates.TemplateResponse(
+            request=request,
+            name="reset_password.html",
+            context={
+                "request": request,
+                "errors": errors,
+                "token": token,
+            },
+        )
+
+    try:
+        # --------------- Get user id -----------
+        statement = select(PasswordResetToken.user_id).where(
+            PasswordResetToken.token_hash == token,
+        )
+
+        user_id = (await session.exec(statement)).first()
+
+        if user_id is None:
+            return FileResponse(
+                "static/404.html",
+                status_code=400,
+            )
+
+        user = await session.get(Users, user_id)
+
+        if user is None:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found",
+            )
+
+        user.hashed_password = password_hash(password)
+
+        # ------------- Update token state -----------
+        reset_token = (
+            await session.exec(
+                select(PasswordResetToken).where(
+                    PasswordResetToken.token_hash == token,
+                )
+            )
+        ).one()
+
+        reset_token.used_at = datetime.utcnow()
+
+        await session.commit()
+
+        return RedirectResponse(
+            url="/signin",
+            status_code=303,
+        )
+
+    except HTTPException:
+        raise
+
+    except SQLAlchemyError:
+        await session.rollback()
+        return FileResponse(
+            "static/500.html",
+            status_code=500,
+        )
+
+    except Exception:
+        await session.rollback()
+        return FileResponse(
+            "static/500.html",
+            status_code=500,
+        )
 
 
 @app.post("/favorites/{product_id}")

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link expired — Grand Elevation Solar</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0A0A;
+    --bg: #FAF8F3;
+    --gold: #F2A623;
+    --gold-light: #FBDFA8;
+    --gold-deep: #E8651C;
+    --gray-mid: #6B6B6B;
+    --border: rgba(10,10,10,0.1);
+  }
+
+  html[data-theme="dark"] {
+    --ink: #F4F1EA;
+    --bg: #14130F;
+    --gold: #F2A623;
+    --gold-light: #4A3A1A;
+    --gold-deep: #FFB648;
+    --gray-mid: #9B968A;
+    --border: rgba(244,241,234,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  .wrap {
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+  }
+
+  .mascot {
+    width: 200px;
+    height: auto;
+    margin: 0 auto 32px;
+    display: block;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .code {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    font-size: 64px;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 12px;
+    color: var(--gold-deep);
+  }
+
+  h1 {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--gray-mid);
+    margin-bottom: 32px;
+  }
+
+  .btn-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover {
+    background: var(--gold-deep);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--ink);
+  }
+
+  @media (max-width: 480px) {
+    .code { font-size: 52px; }
+    .mascot { width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <svg class="mascot" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- Token body -->
+    <circle cx="100" cy="100" r="72" fill="var(--gold-light)" stroke="var(--ink)" stroke-width="2.5"/>
+    
+    <!-- Inner sun -->
+    <circle cx="100" cy="100" r="24" fill="var(--gold)" stroke="var(--ink)" stroke-width="1.5"/>
+    
+    <!-- Sun rays -->
+    <line x1="100" y1="62" x2="100" y2="52" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="100" y1="138" x2="100" y2="148" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="62" y1="100" x2="52" y2="100" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="138" y1="100" x2="148" y2="100" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="73" y1="73" x2="66" y2="66" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="127" y1="127" x2="134" y2="134" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="73" y1="127" x2="66" y2="134" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <line x1="127" y1="73" x2="134" y2="66" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Eyes -->
+    <circle cx="86" cy="96" r="4.5" fill="var(--ink)"/>
+    <circle cx="114" cy="96" r="4.5" fill="var(--ink)"/>
+    
+    <!-- Sad mouth -->
+    <path d="M93 112 Q100 108 107 112" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    
+    
+    <!-- Small broken piece falling -->
+    <polygon points="142,60 148,64 144,70" fill="var(--gold-deep)" opacity="0.8"/>
+  </svg>
+
+  <div class="code">Oh no</div>
+  <h1>Link expired</h1>
+  <p>This password reset link has already been used or has expired. You can request another by visiting forgot password.</p>
+
+  <div class="btn-row">
+    <a href="/forgot-password" class="btn btn-primary">Request new link</a>
+    <a href="/signin" class="btn btn-secondary">Sign in</a>
+  </div>
+</div>
+
+</body>
+</html>
