@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 
@@ -6,7 +7,8 @@ from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import delete
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -445,28 +447,35 @@ async def forgot_password_post(
 
         has_available_token = existing_token is not None
 
+        if user_id and has_available_token:
+            return FileResponse(
+                "app/static/rate-limited.html",
+                status_code=429,
+            )
+
         # ---------- Create token ----------
         if user_id and not has_available_token:
             token = create_session_token()
-            token_hash = password_hash.hash(token)
 
             reset_token = PasswordResetToken(
                 user_id=user_id,
-                token_hash=token_hash,
+                token_hash=token,
             )
 
             session.add(reset_token)
             await session.commit()
 
-            reset_link = (
-                f"https://grandelevationsolar.com/reset-password?token={token_hash}"
-            )
+            reset_link = f"https://grandelevationsolar.com/reset-password?token={token}"
 
+            print("Reset Link: ", reset_link)
+
+            """
             await asyncio.to_thread(
                 sync_gmail_dispatch,
                 email,
                 reset_link,
             )
+            """
 
         return templates.TemplateResponse(
             request=request,
@@ -481,21 +490,21 @@ async def forgot_password_post(
     except ValueError:
         await session.rollback()
         return FileResponse(
-            "static/500.html",
+            "app/static/500.html",
             status_code=500,
         )
 
     except SQLAlchemyError:
         await session.rollback()
         return FileResponse(
-            "static/500.html",
+            "app/static/500.html",
             status_code=500,
         )
 
     except Exception:
         await session.rollback()
         return FileResponse(
-            "static/500.html",
+            "app/static/500.html",
             status_code=500,
         )
 
@@ -503,10 +512,10 @@ async def forgot_password_post(
 @app.get("/reset-password", response_class=HTMLResponse)
 async def reset_password(
     request: Request,
-    token: str,
     session: AsyncSession = Depends(get_session),
 ):
-    # login_ok = user is not None and password_hash.verify(password, user.password_hash)
+    token = request.query_params.get("token")
+    print("Token: ", token)
     statement = select(PasswordResetToken).where(
         PasswordResetToken.token_hash == token,
         PasswordResetToken.used_at.is_(None),
@@ -517,7 +526,7 @@ async def reset_password(
 
     if existing_token is None:
         return FileResponse(
-            "static/expired-link.html",
+            "app/static/expired-link.html",
             status_code=400,
         )
 
@@ -525,7 +534,6 @@ async def reset_password(
         request,
         name="reset-password.html",
         context={
-            "request": request,
             "token": token,
         },
     )
@@ -534,11 +542,12 @@ async def reset_password(
 @app.post("/reset-password")
 async def reset_password_post(
     request: Request,
+    token: str | None = Form(default=None),
     password: str | None = Form(default=None),
     confirm: str | None = Form(default=None),
-    token: str = Form(...),
     session: AsyncSession = Depends(get_session),
 ):
+    print("Token: ", token)
     errors = {}
     password = password or ""
     confirm = confirm or ""
@@ -546,7 +555,7 @@ async def reset_password_post(
     if not password:
         errors["password"] = "Password is required."
 
-    if len(password) < 8:
+    elif len(password) < 8:
         errors["password"] = "Password must be at least 8 characters."
 
     if password != confirm:
@@ -556,7 +565,7 @@ async def reset_password_post(
     if errors:
         return templates.TemplateResponse(
             request=request,
-            name="reset_password.html",
+            name="reset-password.html",
             context={
                 "request": request,
                 "errors": errors,
@@ -566,39 +575,41 @@ async def reset_password_post(
 
     try:
         # --------------- Get user id -----------
-        statement = select(PasswordResetToken.user_id).where(
+        statement = select(PasswordResetToken).where(
             PasswordResetToken.token_hash == token,
+            PasswordResetToken.used_at.is_(None),
+            PasswordResetToken.expires_at > datetime.utcnow(),
         )
+        reset_token = (await session.exec(statement)).first()
+        print("Reset Token:", reset_token)
 
-        user_id = (await session.exec(statement)).first()
-
-        if user_id is None:
+        if reset_token is None:
             return FileResponse(
-                "static/404.html",
+                "app/static/expired-link.html",
                 status_code=400,
             )
 
-        user = await session.get(Users, user_id)
+        user = await session.get(Users, reset_token.user_id)
 
+        print("mipa")
         if user is None:
-            raise HTTPException(
-                status_code=404,
-                detail="User not found",
+            return FileResponse(
+                "app/static/404.html",
+                status_code=400,
             )
 
-        user.hashed_password = password_hash(password)
-
+        user.password_hash = password_hash.hash(password)
+        print("Iska")
         # ------------- Update token state -----------
-        reset_token = (
-            await session.exec(
-                select(PasswordResetToken).where(
-                    PasswordResetToken.token_hash == token,
-                )
-            )
-        ).one()
 
         reset_token.used_at = datetime.utcnow()
+        print("Muska")
 
+        #  Delete User Open Sessions
+        await session.exec(delete(Session).where(Session.user_id == user.id))
+        print("micky mouse")
+        session.add(user)
+        session.add(reset_token)
         await session.commit()
 
         return RedirectResponse(
@@ -607,19 +618,22 @@ async def reset_password_post(
         )
 
     except HTTPException:
+        await session.rollback()
+        traceback.print_exc()
         raise
 
     except SQLAlchemyError:
         await session.rollback()
         return FileResponse(
-            "static/500.html",
+            "app/static/500.html",
             status_code=500,
         )
 
-    except Exception:
+    except Exception as e:
         await session.rollback()
+        print(e)
         return FileResponse(
-            "static/500.html",
+            "app/static/500.html",
             status_code=500,
         )
 

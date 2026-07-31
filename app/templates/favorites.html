@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catalog — Grand Elevation Solar</title>
+<title>Your Favorites — Grand Elevation Solar</title>
 <script>
 (function() {
   const stored = localStorage.getItem('theme');
@@ -21,8 +21,7 @@
     --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
     --gold-light: #FBDFA8; --gold-deep: #E8651C; --green: #3D5C3A;
     --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1);
-    --footer-ray: #0A0A0A;
-    --footer-text: #1a1200;
+    --footer-ray: #0A0A0A; --footer-text: #1a1200;
   }
   html[data-theme="dark"] {
     --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
@@ -41,12 +40,11 @@
   a { color: inherit; text-decoration: none; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
 
-/* ---------- NAV ---------- */
+  /* ---------- NAV ---------- */
   .nav {
     display: flex; align-items: center; gap: 20px;
     padding: 24px 0; border-bottom: 1px solid var(--border);
   }
-
   .nav-brand { display: flex; align-items: center; flex-shrink: 0; }
   .logo-spinner {
     position: relative; display: inline-flex; align-items: center; justify-content: center;
@@ -65,16 +63,16 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .nav-brand img { height: 38px; width: auto; display: block; border-radius: 50%; position: relative; z-index: 1; }
 
-  .fulfillment-pill {
-    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
-    border: 1.5px solid var(--border); border-radius: 999px;
-    padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: var(--gold-light); transition: border-color 0.15s ease;
+  .nav-build-link {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: 999px;
+    border: 1.5px solid var(--gold-deep);
+    color: var(--gold-deep); font-size: 14px; font-weight: 600;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
   }
-  .fulfillment-pill:hover { border-color: var(--gold-deep); }
-  .fulfillment-pill svg { width: 18px; height: 18px; color: var(--gold-deep); flex-shrink: 0; }
-  .fulfillment-pill .fp-label { color: var(--gray-mid); font-weight: 500; }
-  .fulfillment-pill .fp-value { color: var(--ink); }
+  .nav-build-link:hover { background: var(--gold-deep); color: var(--bg); }
+  .nav-build-link svg { width: 18px; height: 18px; flex-shrink: 0; }
 
   .search-bar {
     flex: 1; position: relative; display: flex; align-items: center;
@@ -100,12 +98,12 @@
     display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;
   }
   .theme-toggle {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 40px; height: 40px; border-radius: 999px;
-      border: 1.5px solid var(--border); background: transparent;
-      color: var(--ink); cursor: pointer;
-      transition: border-color 0.15s ease, background 0.15s ease;
-      -webkit-tap-highlight-color: transparent;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 999px;
+    border: 1.5px solid var(--border); background: transparent;
+    color: var(--ink); cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
   }
   .theme-toggle:hover { border-color: var(--ink); }
   .theme-toggle svg { width: 18px; height: 18px; display: block; }
@@ -114,20 +112,10 @@
   html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
   .nav-icon-link svg { width: 20px; height: 20px; }
 
-
-  /* ---------- CATEGORY STRIP ---------- */
-  .category-strip {
-    display: flex; gap: 10px; overflow-x: auto; padding: 18px 0;
-  }
-  .category-strip::-webkit-scrollbar { display: none; }
-  .category-pill {
-    flex-shrink: 0; padding: 9px 18px; border-radius: 999px;
-    border: 1.5px solid var(--border); font-size: 13px; font-weight: 600;
-    text-transform: capitalize; white-space: nowrap;
-    transition: border-color 0.15s ease, background 0.15s ease;
-  }
-  .category-pill:hover { border-color: var(--gold-deep); }
-  .category-pill.is-active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  /* ---------- PAGE HEADER ---------- */
+  .page-header { padding: 36px 0 28px; }
+  .page-header h1 { font-size: 32px; line-height: 1.15; }
+  .page-header p { font-size: 15px; color: var(--gray-mid); margin-top: 6px; }
 
   /* ---------- FAVORITE BUTTON ---------- */
   .product-card-wrap { position: relative; }
@@ -149,9 +137,8 @@
   /* ---------- PRODUCT GRID ---------- */
   .product-grid {
     display: grid; grid-template-columns: 1fr; gap: 18px;
-    padding-bottom: 80px;
+    padding-bottom: 40px;
   }
-
   .product-card {
     display: flex; gap: 20px; align-items: stretch;
     border: 1.5px solid var(--border); border-radius: 16px;
@@ -159,14 +146,12 @@
     transition: border-color 0.15s ease, transform 0.15s ease;
   }
   .product-card:hover { border-color: var(--ink); transform: translateY(-2px); }
-
   .product-card-image {
     width: 220px; height: 220px; flex-shrink: 0; background: var(--gold-light);
     display: flex; align-items: center; justify-content: center;
   }
   .product-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .product-card-image-placeholder { font-size: 13px; color: var(--gray-mid); }
-
   .product-card-info {
     flex: 1; display: flex; flex-direction: column; justify-content: center;
     gap: 8px; padding: 20px 24px 20px 0;
@@ -184,11 +169,52 @@
     text-align: center; padding: 80px 20px; color: var(--gray-mid);
   }
   .empty-state h2 { font-family: 'Sora', sans-serif; color: var(--ink); font-size: 20px; margin-bottom: 8px; }
+  .empty-state .btn-pill {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    border-radius: 999px; padding: 14px 28px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent; margin-top: 20px;
+    background: var(--ink); color: var(--bg);
+    transition: transform 0.15s ease, background 0.15s ease;
+    font-family: 'Inter', sans-serif;
+  }
+  .empty-state .btn-pill:hover { background: var(--gold-deep); }
+  .empty-state .btn-pill:active { transform: translateY(1px); }
+
+  /* ---------- FOOTER ---------- */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0 32px;
+    margin-top: 40px;
+  }
+  .footer-columns {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+    padding-bottom: 32px;
+  }
+  .footer-col h4 {
+    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 12px; color: var(--ink);
+  }
+  .footer-col a, .footer-col p {
+    display: block; font-size: 13px; color: var(--gray-mid);
+    margin-bottom: 8px; line-height: 1.55; text-decoration: none;
+  }
+  .footer-col a:hover { color: var(--gold-deep); }
+  .footer-bar {
+    border-top: 1px solid var(--border); padding-top: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; color: var(--gray-mid);
+  }
+  .footer-brand { display: flex; align-items: center; gap: 12px; }
+  .footer-brand .logo-spinner::before,
+  .footer-brand .logo-spinner .orbit-dot { inset: -4px; }
+  .footer-brand img { height: 22px; width: auto; display: block; border-radius: 50%; }
+  .footer-brand span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); }
 
   @media (min-width: 720px) {
     .product-grid { grid-template-columns: repeat(2, 1fr); }
   }
-
   @media (max-width: 640px) {
     .wrap { padding: 0 20px; }
     .nav { flex-wrap: wrap; }
@@ -196,104 +222,10 @@
     .product-card { flex-direction: column; }
     .product-card-image { width: 100%; height: 160px; }
     .product-card-info { padding: 16px 20px 20px; }
+    .footer-columns { grid-template-columns: 1fr; gap: 24px; }
+    .footer-bar { flex-direction: column; gap: 8px; text-align: center; }
+    .page-header h1 { font-size: 26px; }
   }
-
-/* ---------- SITE FOOTER ---------- */
-.site-footer {
-  border-top: 1px solid var(--border);
-  padding: 48px 0 32px;
-  margin-top: 40px;
-}
-
-.footer-columns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  padding-bottom: 32px;
-}
-
-.footer-col h4 {
-  font-family: 'Sora', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-  color: var(--ink);
-}
-
-.footer-col a,
-.footer-col p {
-  display: block;
-  font-size: 13px;
-  color: var(--gray-mid);
-  margin-bottom: 8px;
-  line-height: 1.55;
-  text-decoration: none;
-}
-
-.footer-col a:hover {
-  color: var(--gold-deep);
-}
-
-.footer-bar {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--gray-mid);
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-brand .logo-spinner::before,
-.footer-brand .logo-spinner .orbit-dot {
-  inset: -4px;
-}
-
-.footer-brand img {
-  height: 22px;
-  width: auto;
-  display: block;
-  border-radius: 50%;
-}
-
-.footer-brand span {
-  font-family: 'Sora', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--ink);
-}
-
-@media (max-width: 640px) {
-  .footer-columns {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  .footer-bar {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-}
-.nav-build-link {
-  display: flex; align-items: center; gap: 7px;
-  padding: 9px 16px; border-radius: 999px;
-  border: 1.5px solid var(--gold-deep);
-  color: var(--gold-deep); font-size: 14px; font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  flex-shrink: 0;
-}
-.nav-build-link:hover {
-  background: var(--gold-deep); color: var(--bg);
-}
-.nav-build-link svg { width: 18px; height: 18px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -303,12 +235,9 @@
 </div>
 
 <div class="wrap">
-  <div class="category-strip">
-    {% for cat in categories %}
-    <a href="/catalog/category/{{ cat }}" class="category-pill {% if active_category == cat %}is-active{% endif %}">
-      {{ cat.replace('_', ' ') }}
-    </a>
-    {% endfor %}
+  <div class="page-header">
+    <h1 class="display">Your favorites</h1>
+    <p>{{ products|length }} item{% if products|length != 1 %}s{% endif %} saved</p>
   </div>
 
   {% if products %}
@@ -316,7 +245,7 @@
     {% for product in products %}
       <div class="product-card-wrap">
         {% include "_product_card.html" %}
-        {% with product_id=product.id, is_favorited=(product.id in favorite_ids) %}
+        {% with product_id=product.id, is_favorited=true %}
           {% include "_favorite_button.html" %}
         {% endwith %}
       </div>
@@ -324,8 +253,9 @@
   </div>
   {% else %}
   <div class="empty-state">
-    <h2>No products yet</h2>
-    <p>Check back soon — new equipment is added regularly.</p>
+    <h2 class="display">No favorites yet</h2>
+    <p>Save panels, inverters, batteries, and accessories to build your perfect solar system.</p>
+    <a href="/catalog" class="btn-pill">Browse catalog</a>
   </div>
   {% endif %}
 </div>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catalog — Grand Elevation Solar</title>
+<title>{% block title %}Grand Elevation Solar{% endblock %}</title>
 <script>
 (function() {
   const stored = localStorage.getItem('theme');
@@ -17,12 +17,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
 <style>
+  /* ─── TOKENS ─── */
   :root {
     --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
     --gold-light: #FBDFA8; --gold-deep: #E8651C; --green: #3D5C3A;
     --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1);
-    --footer-ray: #0A0A0A;
-    --footer-text: #1a1200;
+    --footer-ray: #0A0A0A; --footer-text: #1a1200;
+    --danger: #C0392B;
   }
   html[data-theme="dark"] {
     --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
@@ -30,23 +31,23 @@
     --border: rgba(244,241,234,0.12);
     --footer-ray: rgba(244,241,234,0.15);
     --footer-text: #F4F1EA;
+    --danger: #E74C3C;
   }
-  body { transition: background-color 0.25s ease, color 0.25s ease; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
   .display { font-family: 'Sora', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
   a { color: inherit; text-decoration: none; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
 
-/* ---------- NAV ---------- */
+  /* ─── NAV ─── */
   .nav {
     display: flex; align-items: center; gap: 20px;
     padding: 24px 0; border-bottom: 1px solid var(--border);
   }
-
   .nav-brand { display: flex; align-items: center; flex-shrink: 0; }
   .logo-spinner {
     position: relative; display: inline-flex; align-items: center; justify-content: center;
@@ -64,17 +65,6 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .nav-brand img { height: 38px; width: auto; display: block; border-radius: 50%; position: relative; z-index: 1; }
-
-  .fulfillment-pill {
-    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
-    border: 1.5px solid var(--border); border-radius: 999px;
-    padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: var(--gold-light); transition: border-color 0.15s ease;
-  }
-  .fulfillment-pill:hover { border-color: var(--gold-deep); }
-  .fulfillment-pill svg { width: 18px; height: 18px; color: var(--gold-deep); flex-shrink: 0; }
-  .fulfillment-pill .fp-label { color: var(--gray-mid); font-weight: 500; }
-  .fulfillment-pill .fp-value { color: var(--ink); }
 
   .search-bar {
     flex: 1; position: relative; display: flex; align-items: center;
@@ -99,37 +89,109 @@
   .nav-icon-link {
     display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;
   }
+  .nav-icon-link svg { width: 20px; height: 20px; }
+
+  .nav-build-link {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: 999px;
+    border: 1.5px solid var(--gold-deep);
+    color: var(--gold-deep); font-size: 14px; font-weight: 600;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+  }
+  .nav-build-link:hover { background: var(--gold-deep); color: var(--bg); }
+  .nav-build-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+
   .theme-toggle {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 40px; height: 40px; border-radius: 999px;
-      border: 1.5px solid var(--border); background: transparent;
-      color: var(--ink); cursor: pointer;
-      transition: border-color 0.15s ease, background 0.15s ease;
-      -webkit-tap-highlight-color: transparent;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 999px;
+    border: 1.5px solid var(--border); background: transparent;
+    color: var(--ink); cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
   }
   .theme-toggle:hover { border-color: var(--ink); }
   .theme-toggle svg { width: 18px; height: 18px; display: block; }
   .theme-toggle .icon-moon { display: none; }
   html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
   html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
-  .nav-icon-link svg { width: 20px; height: 20px; }
 
-
-  /* ---------- CATEGORY STRIP ---------- */
-  .category-strip {
-    display: flex; gap: 10px; overflow-x: auto; padding: 18px 0;
+  /* ─── AUTH MODAL ─── */
+  .auth-modal {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
   }
-  .category-strip::-webkit-scrollbar { display: none; }
-  .category-pill {
-    flex-shrink: 0; padding: 9px 18px; border-radius: 999px;
-    border: 1.5px solid var(--border); font-size: 13px; font-weight: 600;
-    text-transform: capitalize; white-space: nowrap;
-    transition: border-color 0.15s ease, background 0.15s ease;
+  .auth-modal.is-visible { opacity: 1; pointer-events: auto; }
+  .auth-modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(10,10,10,0.45);
+    backdrop-filter: blur(4px);
   }
-  .category-pill:hover { border-color: var(--gold-deep); }
-  .category-pill.is-active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  html[data-theme="dark"] .auth-modal-backdrop { background: rgba(0,0,0,0.6); }
+  .auth-modal-panel {
+    position: relative;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 90%; max-width: 360px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transform: translateY(8px) scale(0.98);
+    transition: transform 0.2s ease;
+  }
+  .auth-modal.is-visible .auth-modal-panel { transform: translateY(0) scale(1); }
+  .auth-modal-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: none; background: transparent; color: var(--gray-mid);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .auth-modal-close:hover { color: var(--ink); background: var(--gold-light); }
+  .auth-modal-close svg { width: 16px; height: 16px; }
+  .auth-modal-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--gold-light);
+    color: var(--gold-deep);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .auth-modal-icon svg { width: 24px; height: 24px; }
+  .auth-modal-title {
+    font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700;
+    color: var(--ink); margin-bottom: 6px;
+  }
+  .auth-modal-text {
+    font-size: 14px; color: var(--gray-mid); line-height: 1.55;
+    margin-bottom: 24px;
+  }
+  .auth-modal-actions {
+    display: flex; gap: 10px; flex-direction: column;
+  }
+  .auth-modal-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; border-radius: 999px; padding: 13px 20px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: transform 0.1s ease, background 0.15s ease;
+    font-family: 'Inter', sans-serif; text-decoration: none;
+  }
+  .auth-modal-btn:active { transform: translateY(1px); }
+  .auth-modal-btn-primary { background: var(--ink); color: var(--bg); }
+  .auth-modal-btn-primary:hover { background: var(--gold-deep); }
+  .auth-modal-btn-secondary {
+    background: transparent; color: var(--ink); border-color: var(--border);
+  }
+  .auth-modal-btn-secondary:hover { border-color: var(--ink); }
 
-  /* ---------- FAVORITE BUTTON ---------- */
+  /* ─── SHARED COMPONENTS ─── */
+  .page-header { padding: 36px 0 28px; }
+  .page-header h1 { font-size: 32px; line-height: 1.15; }
+  .page-header p { font-size: 15px; color: var(--gray-mid); margin-top: 6px; }
+
   .product-card-wrap { position: relative; }
   .favorite-btn {
     position: absolute; top: 12px; right: 12px; z-index: 2;
@@ -146,12 +208,10 @@
   .favorite-btn.is-favorited { color: var(--gold-deep); }
   .favorite-btn.is-favorited svg { fill: currentColor; }
 
-  /* ---------- PRODUCT GRID ---------- */
   .product-grid {
     display: grid; grid-template-columns: 1fr; gap: 18px;
-    padding-bottom: 80px;
+    padding-bottom: 40px;
   }
-
   .product-card {
     display: flex; gap: 20px; align-items: stretch;
     border: 1.5px solid var(--border); border-radius: 16px;
@@ -159,14 +219,12 @@
     transition: border-color 0.15s ease, transform 0.15s ease;
   }
   .product-card:hover { border-color: var(--ink); transform: translateY(-2px); }
-
   .product-card-image {
     width: 220px; height: 220px; flex-shrink: 0; background: var(--gold-light);
     display: flex; align-items: center; justify-content: center;
   }
   .product-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .product-card-image-placeholder { font-size: 13px; color: var(--gray-mid); }
-
   .product-card-info {
     flex: 1; display: flex; flex-direction: column; justify-content: center;
     gap: 8px; padding: 20px 24px 20px 0;
@@ -179,16 +237,58 @@
   .product-card-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 19px; }
   .product-card-price { font-size: 17px; font-weight: 600; color: var(--gold-deep); }
 
-  /* ---------- EMPTY STATE ---------- */
   .empty-state {
     text-align: center; padding: 80px 20px; color: var(--gray-mid);
   }
   .empty-state h2 { font-family: 'Sora', sans-serif; color: var(--ink); font-size: 20px; margin-bottom: 8px; }
 
+  .btn-pill {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    border-radius: 999px; padding: 14px 28px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent;
+    background: var(--ink); color: var(--bg);
+    transition: transform 0.15s ease, background 0.15s ease;
+    font-family: 'Inter', sans-serif; text-decoration: none;
+  }
+  .btn-pill:hover { background: var(--gold-deep); }
+  .btn-pill:active { transform: translateY(1px); }
+
+  /* ─── FOOTER ─── */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0 32px;
+    margin-top: 40px;
+  }
+  .footer-columns {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+    padding-bottom: 32px;
+  }
+  .footer-col h4 {
+    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 12px; color: var(--ink);
+  }
+  .footer-col a, .footer-col p {
+    display: block; font-size: 13px; color: var(--gray-mid);
+    margin-bottom: 8px; line-height: 1.55; text-decoration: none;
+  }
+  .footer-col a:hover { color: var(--gold-deep); }
+  .footer-bar {
+    border-top: 1px solid var(--border); padding-top: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; color: var(--gray-mid);
+  }
+  .footer-brand { display: flex; align-items: center; gap: 12px; }
+  .footer-brand .logo-spinner::before,
+  .footer-brand .logo-spinner .orbit-dot { inset: -4px; }
+  .footer-brand img { height: 22px; width: auto; display: block; border-radius: 50%; }
+  .footer-brand span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); }
+
+  /* ─── SHARED RESPONSIVE ─── */
   @media (min-width: 720px) {
     .product-grid { grid-template-columns: repeat(2, 1fr); }
   }
-
   @media (max-width: 640px) {
     .wrap { padding: 0 20px; }
     .nav { flex-wrap: wrap; }
@@ -196,105 +296,12 @@
     .product-card { flex-direction: column; }
     .product-card-image { width: 100%; height: 160px; }
     .product-card-info { padding: 16px 20px 20px; }
+    .footer-columns { grid-template-columns: 1fr; gap: 24px; }
+    .footer-bar { flex-direction: column; gap: 8px; text-align: center; }
+    .page-header h1 { font-size: 26px; }
   }
-
-/* ---------- SITE FOOTER ---------- */
-.site-footer {
-  border-top: 1px solid var(--border);
-  padding: 48px 0 32px;
-  margin-top: 40px;
-}
-
-.footer-columns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  padding-bottom: 32px;
-}
-
-.footer-col h4 {
-  font-family: 'Sora', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-  color: var(--ink);
-}
-
-.footer-col a,
-.footer-col p {
-  display: block;
-  font-size: 13px;
-  color: var(--gray-mid);
-  margin-bottom: 8px;
-  line-height: 1.55;
-  text-decoration: none;
-}
-
-.footer-col a:hover {
-  color: var(--gold-deep);
-}
-
-.footer-bar {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--gray-mid);
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-brand .logo-spinner::before,
-.footer-brand .logo-spinner .orbit-dot {
-  inset: -4px;
-}
-
-.footer-brand img {
-  height: 22px;
-  width: auto;
-  display: block;
-  border-radius: 50%;
-}
-
-.footer-brand span {
-  font-family: 'Sora', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--ink);
-}
-
-@media (max-width: 640px) {
-  .footer-columns {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  .footer-bar {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-}
-.nav-build-link {
-  display: flex; align-items: center; gap: 7px;
-  padding: 9px 16px; border-radius: 999px;
-  border: 1.5px solid var(--gold-deep);
-  color: var(--gold-deep); font-size: 14px; font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  flex-shrink: 0;
-}
-.nav-build-link:hover {
-  background: var(--gold-deep); color: var(--bg);
-}
-.nav-build-link svg { width: 18px; height: 18px; flex-shrink: 0; }
 </style>
+{% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -302,33 +309,7 @@
   {% include "_nav.html" %}
 </div>
 
-<div class="wrap">
-  <div class="category-strip">
-    {% for cat in categories %}
-    <a href="/catalog/category/{{ cat }}" class="category-pill {% if active_category == cat %}is-active{% endif %}">
-      {{ cat.replace('_', ' ') }}
-    </a>
-    {% endfor %}
-  </div>
-
-  {% if products %}
-  <div class="product-grid">
-    {% for product in products %}
-      <div class="product-card-wrap">
-        {% include "_product_card.html" %}
-        {% with product_id=product.id, is_favorited=(product.id in favorite_ids) %}
-          {% include "_favorite_button.html" %}
-        {% endwith %}
-      </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="empty-state">
-    <h2>No products yet</h2>
-    <p>Check back soon — new equipment is added regularly.</p>
-  </div>
-  {% endif %}
-</div>
+{% block content %}{% endblock %}
 
 <div class="wrap">
   <footer class="site-footer">
@@ -365,11 +346,29 @@
   </footer>
 </div>
 
+<!-- Auth Modal -->
+<div class="auth-modal" id="authModal" aria-hidden="true">
+  <div class="auth-modal-backdrop" data-close-modal></div>
+  <div class="auth-modal-panel" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <button type="button" class="auth-modal-close" data-close-modal aria-label="Close dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="auth-modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+    </div>
+    <h3 id="authModalTitle" class="auth-modal-title">Sign in required</h3>
+    <p class="auth-modal-text">You need to be signed in to access your favorites, cart, and system builder.</p>
+    <div class="auth-modal-actions">
+      <a href="/signin" class="auth-modal-btn auth-modal-btn-primary">Sign in</a>
+      <button type="button" class="auth-modal-btn auth-modal-btn-secondary" data-close-modal>Not now</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   var root = document.documentElement;
   var toggle = document.getElementById('themeToggle');
-
   function applyTheme(theme) {
     if (theme === 'dark') {
       root.setAttribute('data-theme', 'dark');
@@ -379,24 +378,44 @@
       toggle.setAttribute('aria-pressed', 'false');
     }
   }
-
   var stored = localStorage.getItem('theme');
-  if (stored) {
-    applyTheme(stored);
-  } else {
+  if (stored) { applyTheme(stored); }
+  else {
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     var theme = prefersDark ? 'dark' : 'light';
-    applyTheme(theme);
-    localStorage.setItem('theme', theme);
+    applyTheme(theme); localStorage.setItem('theme', theme);
   }
-
   toggle.addEventListener('click', function () {
     var isDark = root.getAttribute('data-theme') === 'dark';
     var next = isDark ? 'light' : 'dark';
-    applyTheme(next);
-    localStorage.setItem('theme', next);
+    applyTheme(next); localStorage.setItem('theme', next);
+  });
+})();
+
+(function () {
+  var modal = document.getElementById('authModal');
+  if (!modal) return;
+  function openModal() {
+    modal.classList.add('is-visible');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    modal.classList.remove('is-visible');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  document.querySelectorAll('[data-requires-auth]').forEach(function (link) {
+    link.addEventListener('click', function (e) { e.preventDefault(); openModal(); });
+  });
+  modal.querySelectorAll('[data-close-modal]').forEach(function (el) {
+    el.addEventListener('click', closeModal);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('is-visible')) closeModal();
   });
 })();
 </script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

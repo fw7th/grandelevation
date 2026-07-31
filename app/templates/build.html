@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a System — Grand Elevation Solar</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
+<style>
+  :root {
+    --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
+    --gold-light: #FBDFA8; --gold-deep: #E8651C; --green: #3D5C3A;
+    --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1);
+    --footer-ray: #0A0A0A; --footer-text: #1a1200;
+    --danger: #C0392B;
+  }
+  html[data-theme="dark"] {
+    --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
+    --gold-deep: #FFB648; --green: #7FA87A; --gray-mid: #9B968A;
+    --border: rgba(244,241,234,0.12);
+    --footer-ray: rgba(244,241,234,0.15);
+    --footer-text: #F4F1EA;
+    --danger: #E74C3C;
+  }
+  body { transition: background-color 0.25s ease, color 0.25s ease; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .display { font-family: 'Sora', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    display: flex; align-items: center; gap: 20px;
+    padding: 24px 0; border-bottom: 1px solid var(--border);
+  }
+  .nav-brand { display: flex; align-items: center; flex-shrink: 0; }
+  .logo-spinner {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .logo-spinner::before {
+    content: ''; position: absolute; inset: -6px; border-radius: 50%;
+    border: 1px dashed var(--gold); opacity: 0.5;
+  }
+  .logo-spinner .orbit-dot {
+    position: absolute; inset: -6px; border-radius: 50%; animation: spin 16s linear infinite;
+  }
+  .logo-spinner .orbit-dot::before {
+    content: ''; position: absolute; top: -2.5px; left: 50%; width: 5px; height: 5px;
+    margin-left: -2.5px; border-radius: 50%; background: var(--gold-deep);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .nav-brand img { height: 38px; width: auto; display: block; border-radius: 50%; position: relative; z-index: 1; }
+
+  .nav-build-link {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 16px; border-radius: 999px;
+    border: 1.5px solid var(--gold-deep);
+    color: var(--gold-deep); font-size: 14px; font-weight: 600;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+  }
+  .nav-build-link:hover { background: var(--gold-deep); color: var(--bg); }
+  .nav-build-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .search-bar {
+    flex: 1; position: relative; display: flex; align-items: center;
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 12px 56px 12px 22px;
+  }
+  .search-bar input {
+    flex: 1; border: none; background: none; outline: none;
+    font-family: 'Inter', sans-serif; font-size: 12px; color: var(--ink);
+  }
+  .search-submit {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%; border: none;
+    background: var(--gold-deep); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .search-submit:hover { background: var(--ink); transform: translateY(-50%) scale(1.05); }
+  .search-submit svg { width: 14px; height: 14px; }
+
+  .nav-actions { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+  .nav-icon-link {
+    display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600;
+  }
+  .theme-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 999px;
+    border: 1.5px solid var(--border); background: transparent;
+    color: var(--ink); cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .theme-toggle:hover { border-color: var(--ink); }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-moon { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  .nav-icon-link svg { width: 20px; height: 20px; }
+
+  /* ---------- PAGE HEADER ---------- */
+  .page-header { padding: 36px 0 28px; }
+  .page-header h1 { font-size: 32px; line-height: 1.15; }
+  .page-header p { font-size: 15px; color: var(--gray-mid); margin-top: 6px; }
+
+  /* ---------- BUILDER ---------- */
+  .builder-section {
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 48px;
+    background: var(--bg);
+  }
+  .builder-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+  }
+  .builder-header h2 {
+    font-size: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .builder-header h2 svg {
+    width: 24px; height: 24px; color: var(--gold-deep);
+  }
+  .system-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 6px 14px; border-radius: 999px; background: var(--gold-light);
+    color: var(--gold-deep);
+  }
+  .system-status.is-complete {
+    background: rgba(61,92,58,0.15); color: var(--green);
+  }
+
+  .builder-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .builder-slot {
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 180px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .builder-slot:hover { border-color: var(--gold-deep); }
+  .builder-slot.is-filled {
+    background: var(--gold-light);
+    border-color: var(--gold-light);
+  }
+  html[data-theme="dark"] .builder-slot.is-filled {
+    background: rgba(74,58,26,0.4);
+    border-color: rgba(74,58,26,0.6);
+  }
+
+  .slot-header {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--gray-mid);
+  }
+  .slot-header svg { width: 16px; height: 16px; color: var(--gold-deep); }
+
+  .slot-items {
+    display: flex; flex-direction: column; gap: 8px;
+    flex: 1;
+  }
+  .slot-item {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    padding: 8px 10px; border-radius: 10px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    transition: transform 0.1s ease;
+  }
+  .slot-item:hover { transform: translateX(2px); }
+  .slot-item img {
+    width: 32px; height: 32px; object-fit: cover; border-radius: 6px;
+    background: var(--gold-light); flex-shrink: 0;
+  }
+  .slot-item .slot-item-name {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; line-height: 1.3; flex: 1;
+  }
+  .slot-item .slot-item-price {
+    font-size: 12px; color: var(--gold-deep); font-weight: 700;
+    flex-shrink: 0;
+  }
+  .slot-item .remove-btn {
+    flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: none; background: transparent; color: var(--gray-mid);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .slot-item .remove-btn:hover { color: var(--danger); background: rgba(192,57,43,0.1); }
+  .slot-item .remove-btn svg { width: 14px; height: 14px; }
+
+  .slot-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; text-align: center;
+    color: var(--gray-mid); font-size: 13px;
+    padding: 16px 12px;
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+  }
+  .slot-empty svg { width: 24px; height: 24px; opacity: 0.5; }
+  .slot-empty a {
+    font-size: 12px; font-weight: 600; color: var(--gold-deep);
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .slot-empty a:hover { color: var(--ink); }
+
+  .builder-footer {
+    margin-top: 22px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px;
+  }
+  .builder-hint {
+    font-size: 13px; color: var(--gray-mid); line-height: 1.55; max-width: 520px;
+  }
+  .builder-hint strong { color: var(--ink); font-weight: 600; }
+  .builder-total {
+    text-align: right;
+  }
+  .builder-total .total-label {
+    font-size: 12px; color: var(--gray-mid); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .builder-total .total-value {
+    font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800;
+    color: var(--ink); letter-spacing: -0.01em;
+  }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty-state {
+    text-align: center; padding: 80px 20px; color: var(--gray-mid);
+  }
+  .empty-state h2 { font-family: 'Sora', sans-serif; color: var(--ink); font-size: 20px; margin-bottom: 8px; }
+  .empty-state .btn-pill {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    border-radius: 999px; padding: 14px 28px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent; margin-top: 20px;
+    background: var(--ink); color: var(--bg);
+    transition: transform 0.15s ease, background 0.15s ease;
+    font-family: 'Inter', sans-serif;
+  }
+  .empty-state .btn-pill:hover { background: var(--gold-deep); }
+  .empty-state .btn-pill:active { transform: translateY(1px); }
+
+  /* ---------- FOOTER ---------- */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0 32px;
+    margin-top: 40px;
+  }
+  .footer-columns {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+    padding-bottom: 32px;
+  }
+  .footer-col h4 {
+    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 12px; color: var(--ink);
+  }
+  .footer-col a, .footer-col p {
+    display: block; font-size: 13px; color: var(--gray-mid);
+    margin-bottom: 8px; line-height: 1.55; text-decoration: none;
+  }
+  .footer-col a:hover { color: var(--gold-deep); }
+  .footer-bar {
+    border-top: 1px solid var(--border); padding-top: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; color: var(--gray-mid);
+  }
+  .footer-brand { display: flex; align-items: center; gap: 12px; }
+  .footer-brand .logo-spinner::before,
+  .footer-brand .logo-spinner .orbit-dot { inset: -4px; }
+  .footer-brand img { height: 22px; width: auto; display: block; border-radius: 50%; }
+  .footer-brand span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); }
+
+  @media (max-width: 860px) {
+    .builder-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 20px; }
+    .nav { flex-wrap: wrap; }
+    .search-bar { order: 3; width: 100%; }
+    .builder-grid { grid-template-columns: 1fr; }
+    .builder-footer { flex-direction: column; align-items: flex-start; }
+    .footer-columns { grid-template-columns: 1fr; gap: 24px; }
+    .footer-bar { flex-direction: column; gap: 8px; text-align: center; }
+    .page-header h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  {% include "_nav.html" %}
+</div>
+
+<div class="wrap">
+  <div class="page-header">
+    <h1 class="display">Build a system</h1>
+    <p>Save one of each core component and we’ll help you confirm compatibility.</p>
+  </div>
+
+  {% if products %}
+  {% set system_categories = [
+    ('panel', 'Panels', 'M3 3h18v12H3zM3 9h18M9 3v12M15 3v12'),
+    ('inverter', 'Inverter', 'M4 12h4l2-6 4 12 2-6h4'),
+    ('battery', 'Battery', 'M7 7h10v10H7zM7 10h10M7 13h10'),
+    ('accessory', 'Accessories', 'M12 2l3 6 6 1-4.5 4.5 1 6-5.5-3-5.5 3 1-6L3 9l6-1z')
+  ] %}
+  {% set grouped = {} %}
+  {% for p in products %}{% set _ = grouped.update({p.category: grouped.get(p.category, []) + [p]}) %}{% endfor %}
+  {% set filled_count = [c for c, _, _ in system_categories if c in grouped]|length %}
+  {% set total_price = products|sum(attribute='price') %}
+
+  <div class="builder-section">
+    <div class="builder-header">
+      <h2 class="display">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        Core components
+      </h2>
+      <span class="system-status {% if filled_count == 4 %}is-complete{% endif %}" id="systemStatus">
+        {% if filled_count == 4 %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>
+        System complete
+        {% else %}
+        {{ filled_count }}/4 components selected
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="builder-grid" id="builderGrid">
+      {% for cat_key, cat_label, cat_icon in system_categories %}
+      <div class="builder-slot {% if cat_key in grouped %}is-filled{% endif %}" data-category="{{ cat_key }}" data-label="{{ cat_label }}">
+        <div class="slot-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="{{ cat_icon }}"/></svg>
+          {{ cat_label }}
+        </div>
+        {% if cat_key in grouped %}
+        <div class="slot-items">
+          {% for p in grouped[cat_key] %}
+          <div class="slot-item" id="slot-item-{{ p.id }}">
+            {% if p.image_url %}
+            <img src="{{ p.image_url }}" alt="">
+            {% else %}
+            <div style="width:32px;height:32px;border-radius:6px;background:var(--gold-light);flex-shrink:0;"></div>
+            {% endif %}
+            <span class="slot-item-name">{{ p.name }}</span>
+            <span class="slot-item-price">₦{{ "{:,.0f}".format(p.price) }}</span>
+            <button type="button" class="remove-btn" aria-label="Remove from favorites"
+              hx-post="/favorites/{{ p.id }}" hx-swap="none"
+              onclick="removeSlotItem(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="slot-items">
+          <div class="slot-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            <span>No {{ cat_label|lower }} yet</span>
+            <a href="/catalog/category/{{ cat_key }}">Browse {{ cat_label|lower }}</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="builder-footer">
+      <p class="builder-hint" id="builderHint">
+        {% if filled_count == 0 %}
+          <strong>Start here:</strong> Save a panel, inverter, battery, and accessories to see your complete system at a glance.
+        {% elif filled_count < 4 %}
+          <strong>Keep going:</strong> A complete solar setup needs all four core components. Add the missing pieces to power your space reliably.
+        {% else %}
+          <strong>Looking good:</strong> You've got all core components covered. Review the specs on each product page to confirm voltage and capacity compatibility before checkout.
+        {% endif %}
+      </p>
+      <div class="builder-total">
+        <div class="total-label">System total</div>
+        <div class="total-value">₦{{ "{:,.2f}".format(total_price) }}</div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <h2 class="display">Nothing saved yet</h2>
+    <p>Browse the catalog and save panels, inverters, batteries, and accessories to start building your system.</p>
+    <a href="/catalog" class="btn-pill">Browse catalog</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="wrap">
+  <footer class="site-footer">
+    <div class="footer-columns">
+      <div class="footer-col">
+        <h4>Contact us</h4>
+        <p>ATT034, Yobe Plaza, Tradefair,<br> Lagos, Nigeria</p>
+        <a href="https://wa.me/2348107730018" target="_blank">WhatsApp us</a>
+        <a href="https://chat.whatsapp.com/LJQBZap6XOO7gQiTA24OOR?mode=ac_t" target="_blank">Join our WhatsApp group</a>
+      </div>
+      <div class="footer-col">
+        <h4>Buune</h4>
+        <a href="/static/buune-privacy-policy.html" target="_blank">Privacy policy</a>
+        <a href="/static/buune-terms.html" target="_blank">Terms</a>
+        <a href="/static/buune-data-deletion.html" target="_blank">Data deletion</a>
+      </div>
+      <div class="footer-col">
+        <h4>General</h4>
+        <a href="/catalog">Catalog</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/signin">Sign in</a>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="footer-brand">
+        <div class="logo-spinner">
+          <img src="/static/grand_logo.png" alt="Grand Elevation Solar">
+          <div class="orbit-dot"></div>
+        </div>
+        <span>Grand Elevation Solar</span>
+      </div>
+      <div>&copy; 2026 Grand Elevation Solar</div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      toggle.setAttribute('aria-pressed', 'true');
+    } else {
+      root.removeAttribute('data-theme');
+      toggle.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  var stored = localStorage.getItem('theme');
+  if (stored) {
+    applyTheme(stored);
+  } else {
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = prefersDark ? 'dark' : 'light';
+    applyTheme(theme);
+    localStorage.setItem('theme', theme);
+  }
+
+  toggle.addEventListener('click', function () {
+    var isDark = root.getAttribute('data-theme') === 'dark';
+    var next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('theme', next);
+  });
+})();
+
+function removeSlotItem(btn) {
+  var row = btn.closest('.slot-item');
+  var slot = btn.closest('.builder-slot');
+  row.remove();
+
+  if (!slot.querySelector('.slot-item')) {
+    slot.classList.remove('is-filled');
+    var catKey = slot.dataset.category;
+    var catLabel = slot.dataset.label;
+    var itemsContainer = slot.querySelector('.slot-items');
+    itemsContainer.innerHTML =
+      '<div class="slot-empty">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>' +
+        '<span>No ' + catLabel.toLowerCase() + ' yet</span>' +
+        '<a href="/catalog/category/' + catKey + '">Browse ' + catLabel.toLowerCase() + '</a>' +
+      '</div>';
+  }
+  updateSystemStatus();
+}
+
+function updateSystemStatus() {
+  var filled = document.querySelectorAll('.builder-slot.is-filled').length;
+  var status = document.getElementById('systemStatus');
+  var hint = document.getElementById('builderHint');
+  if (filled === 4) {
+    status.classList.add('is-complete');
+    status.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg> System complete';
+    hint.innerHTML = '<strong>Looking good:</strong> You\'ve got all core components covered. Review the specs on each product page to confirm voltage and capacity compatibility before checkout.';
+  } else {
+    status.classList.remove('is-complete');
+    status.textContent = filled + '/4 components selected';
+    if (filled === 0) {
+      hint.innerHTML = '<strong>Start here:</strong> Save a panel, inverter, battery, and accessories to see your complete system at a glance.';
+    } else {
+      hint.innerHTML = '<strong>Keep going:</strong> A complete solar setup needs all four core components. Add the missing pieces to power your space reliably.';
+    }
+  }
+}
+</script>
+</body>
+</html>

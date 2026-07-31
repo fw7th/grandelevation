@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Please wait — Grand Elevation Solar</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0A0A;
+    --bg: #FAF8F3;
+    --gold: #F2A623;
+    --gold-light: #FBDFA8;
+    --gold-deep: #E8651C;
+    --green: #3D5C3A;
+    --gray-mid: #6B6B6B;
+    --border: rgba(10,10,10,0.1);
+    --error: #B3261E;
+  }
+
+  html[data-theme="dark"] {
+    --ink: #F4F1EA;
+    --bg: #14130F;
+    --gold: #F2A623;
+    --gold-light: #4A3A1A;
+    --gold-deep: #FFB648;
+    --green: #7FA87A;
+    --gray-mid: #9B968A;
+    --border: rgba(244,241,234,0.12);
+    --error: #FF8A80;
+  }
+
+  html, body {
+    background-color: var(--bg);
+    color: var(--ink);
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .display {
+    font-family: 'Sora', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+    width: 100%;
+  }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-brand img {
+    height: 38px;
+    width: auto;
+    display: block;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo-spinner {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-spinner::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px dashed var(--gold);
+    opacity: 0.5;
+  }
+
+  .logo-spinner .orbit-dot {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    animation: spin 16s linear infinite;
+  }
+
+  .logo-spinner .orbit-dot::before {
+    content: '';
+    position: absolute;
+    top: -2.5px;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    margin-left: -2.5px;
+    border-radius: 50%;
+    background: var(--gold-deep);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .nav-brand span {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--ink);
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  .theme-toggle .icon-moon { display: none; }
+
+  html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+
+  /* ---------- AUTH CARD ---------- */
+  .auth-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0 80px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .auth-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gold-light);
+    color: var(--ink);
+    padding: 7px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+
+  .auth-eyebrow::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold-deep);
+    flex-shrink: 0;
+  }
+
+  .auth-card h1 {
+    font-size: 32px;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
+  .auth-card .sub {
+    font-size: 15px;
+    color: var(--gray-mid);
+    margin-bottom: 32px;
+    line-height: 1.55;
+  }
+
+  .link {
+    font-weight: 600;
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 1px;
+    transition: border-color 0.15s ease;
+  }
+
+  .link:hover { border-color: var(--ink); }
+
+  .auth-switch {
+    text-align: center;
+    font-size: 14px;
+    color: var(--gray-mid);
+    margin-top: 28px;
+  }
+
+  /* ---------- FOOTER ---------- */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--gray-mid);
+  }
+
+  .footer .nav-brand img {
+    height: 22px;
+  }
+
+  .footer .logo-spinner::before,
+  .footer .logo-spinner .orbit-dot {
+    inset: -4px;
+  }
+
+  .footer .nav-brand span {
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  @media (max-width: 760px) {
+    .wrap { padding: 0 20px; }
+    .auth-card h1 { font-size: 28px; }
+    .footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <a href="/" class="nav-brand">
+      <div class="logo-spinner">
+        <!-- Paste your base64 logo src below -->
+        <img src="static/grand_logo.png" alt="Grand Elevation Solar">
+        <div class="orbit-dot"></div>
+      </div>
+      <span>Grand Elevation Solar</span>
+    </a>
+    <div class="nav-actions">
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<main class="auth-main">
+  <div class="wrap">
+    <div class="auth-card">
+      <div class="auth-eyebrow">Account recovery</div>
+      <h1 class="display">Slow down</h1>
+      <p class="sub">
+        Hmm, we noticed that you requested two password changes this hour.
+        If you can find the link, check your spam folder.
+      </p>
+      <p class="sub">
+        If you still can't find it,
+        <a href="https://wa.me/2348107730018" class="link" target="_blank" rel="noopener">WhatsApp us</a>
+        or
+        <a href="mailto:okosaop@gmail.com" class="link">email our developer</a>
+        to get things sorted out.
+      </p>
+      <div class="auth-switch">
+        <a href="/signin" class="link">Back to sign in</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="wrap">
+  <footer class="footer">
+    <div class="nav-brand">
+      <div class="logo-spinner">
+        <!-- Paste your base64 logo src below -->
+        <img src="/static/grand_logo.png" alt="Grand Elevation Solar">
+        <div class="orbit-dot"></div>
+      </div>
+      <span>Grand Elevation Solar</span>
+    </div>
+    <div>&copy; 2026 Grand Elevation Solar</div>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var toggle = document.getElementById('themeToggle');
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        root.setAttribute('data-theme', 'dark');
+        toggle.setAttribute('aria-pressed', 'true');
+      } else {
+        root.removeAttribute('data-theme');
+        toggle.setAttribute('aria-pressed', 'false');
+      }
+    }
+
+    var stored = localStorage.getItem('theme');
+    if (stored) {
+      applyTheme(stored);
+    } else {
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = prefersDark ? 'dark' : 'light';
+      applyTheme(theme);
+      localStorage.setItem('theme', theme);
+    }
+
+    toggle.addEventListener('click', function () {
+      var isDark = root.getAttribute('data-theme') === 'dark';
+      var next = isDark ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('theme', next);
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -461,58 +461,26 @@
   }
 }
 
+/* Nav bar styling */
+.nav-build-link {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 999px;
+  border: 1.5px solid var(--gold-deep);
+  color: var(--gold-deep); font-size: 14px; font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+.nav-build-link:hover {
+  background: var(--gold-deep); color: var(--bg);
+}
+.nav-build-link svg { width: 18px; height: 18px; flex-shrink: 0; }
 </style>
 </head>
 <body>
 
+<!-- Include nav file -->
 <div class="wrap">
-  <nav class="nav">
-    <a href="/catalog" class="nav-brand">
-      <div class="logo-spinner">
-        <img src="/static/grand_logo.png" alt="Grand Elevation Solar">
-        <div class="orbit-dot"></div>
-      </div>
-    </a>
-
-    <button type="button" class="fulfillment-pill" id="fulfillmentPill">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-      <span class="fp-label">Pickup or delivery:</span>
-      <span class="fp-value" id="fulfillmentValue">Select location</span>
-    </button>
-
-    <div class="search-bar">
-      <input type="text" placeholder="Search panels, inverters, batteries...">
-      <button type="button" class="search-submit" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-    </div>
-
-    <div class="nav-actions">
-      <a href="/favorites" class="nav-icon-link" aria-label="Favorites">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        Faves
-      </a>
-      {% if username %}
-      <a href="/account" class="nav-icon-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
-        {{ username }}
-      </a>
-      {% else %}
-      <a href="/signin" class="nav-icon-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
-        Sign in
-      </a>
-      {% endif %}
-      <a href="/cart" class="nav-icon-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
-        Cart
-      </a>
-      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-      </button>
-    </div>
-  </nav>
+  {% include "_nav.html" %}
 </div>
 
 <div class="wrap">

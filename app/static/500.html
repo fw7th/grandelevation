@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 — Grand Elevation Solar</title>
+<title>500 — Grand Elevation Solar</title>
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <script>
 (function() {
@@ -59,7 +59,7 @@
   }
 
   .mascot {
-    width: 220px;
+    width: 200px;
     height: auto;
     margin: 0 auto 32px;
     display: block;
@@ -113,7 +113,10 @@
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
-    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
   }
 
   .btn-primary {
@@ -138,7 +141,7 @@
 
   @media (max-width: 480px) {
     .code { font-size: 64px; }
-    .mascot { width: 180px; }
+    .mascot { width: 160px; }
   }
 </style>
 </head>
@@ -147,43 +150,43 @@
 <div class="wrap">
   <svg class="mascot" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <!-- Solar panel body -->
-    <rect x="40" y="50" width="120" height="90" rx="14" fill="var(--gold-light)" stroke="var(--ink)" stroke-width="2.5"/>
+    <rect x="40" y="65" width="120" height="90" rx="14" fill="var(--gold-light)" stroke="var(--ink)" stroke-width="2.5"/>
     
     <!-- Panel grid lines -->
-    <line x1="40" y1="80" x2="160" y2="80" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
-    <line x1="40" y1="110" x2="160" y2="110" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
-    <line x1="80" y1="50" x2="80" y2="140" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
-    <line x1="120" y1="50" x2="120" y2="140" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    <line x1="40" y1="95" x2="160" y2="95" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    <line x1="40" y1="125" x2="160" y2="125" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    <line x1="80" y1="65" x2="80" y2="155" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
+    <line x1="120" y1="65" x2="120" y2="155" stroke="var(--ink)" stroke-width="1.5" opacity="0.25"/>
     
-    <!-- Crack in corner -->
-    <polyline points="145,50 135,65 148,75 138,90 150,100" stroke="var(--gold-deep)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <line x1="142" y1="72" x2="152" y2="68" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="140" y1="85" x2="148" y2="88" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- X eyes (knocked out) -->
+    <line x1="72" y1="88" x2="84" y2="100" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="84" y1="88" x2="72" y2="100" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>
     
-    <!-- Eyes -->
-    <circle cx="78" cy="92" r="5" fill="var(--ink)"/>
-    <circle cx="122" cy="92" r="5" fill="var(--ink)"/>
+    <line x1="116" y1="88" x2="128" y2="100" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="128" y1="88" x2="116" y2="100" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>
     
-    <!-- Sad mouth -->
-    <path d="M88 108 Q100 102 112 108" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Flat/unconscious mouth -->
+    <line x1="92" y1="118" x2="108" y2="118" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>
     
-    <!-- Disconnected wire hanging -->
-    <path d="M60 140 Q60 165 50 170" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-    <circle cx="50" cy="172" r="3.5" fill="var(--gold-deep)"/>
-    <line x1="50" y1="175" x2="46" y2="182" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="50" y1="175" x2="54" y2="182" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Smoke puffs -->
+    <circle cx="70" cy="48" r="10" fill="var(--gray-mid)" opacity="0.2"/>
+    <circle cx="90" cy="38" r="13" fill="var(--gray-mid)" opacity="0.15"/>
+    <circle cx="115" cy="44" r="9" fill="var(--gray-mid)" opacity="0.2"/>
     
-    <!-- Spark / broken connection hint -->
-    <path d="M44 158 L48 154 L46 160 L50 156" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Spark / short circuit -->
+    <path d="M145 140 L150 132 L155 140 L150 148 Z" fill="var(--gold-deep)" opacity="0.9"/>
+    <line x1="142" y1="136" x2="138" y2="130" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="158" y1="136" x2="162" y2="130" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="150" y1="128" x2="150" y2="122" stroke="var(--gold-deep)" stroke-width="1.5" stroke-linecap="round"/>
   </svg>
 
-  <div class="code">404</div>
-  <h1>Page not found</h1>
-  <p>Looks like this panel got cracked and the wire came loose. The page you're looking for doesn't exist or has been moved.</p>
+  <div class="code">500</div>
+  <h1>Something went wrong</h1>
+  <p>This one's on us. Our servers hit a snag while processing your request. Try refreshing the page, or come back in a moment.</p>
 
   <div class="btn-row">
-    <a href="/" class="btn btn-primary">Back home</a>
-    <a href="/catalog" class="btn btn-secondary">Browse catalog</a>
+    <button type="button" class="btn btn-primary" onclick="location.reload()">Refresh page</button>
+    <a href="/" class="btn btn-secondary">Back home</a>
   </div>
 </div>
 
