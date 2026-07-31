@@ -1,114 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ product.name }} — Grand Elevation Solar</title>
-<script>
-(function() {
-  const stored = localStorage.getItem('theme');
-  const theme = stored || 'dark';
-  document.documentElement.setAttribute('data-theme', theme);
-})();
-</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.12/htmx.min.js"></script>
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} — Grand Elevation Solar{% endblock %}
+
+{% block extra_css %}
 <style>
-  :root {
-    --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
-    --gold-light: #FBDFA8; --gold-deep: #E8651C; --green: #3D5C3A;
-    --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1);
-  }
-  html[data-theme="dark"] {
-    --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
-    --gold-deep: #FFB648; --green: #7FA87A; --gray-mid: #9B968A;
-    --border: rgba(244,241,234,0.12);
-  }
-  body { transition: background-color 0.25s ease, color 0.25s ease; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  .display { font-family: 'Sora', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
-  a { color: inherit; text-decoration: none; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
-
-  /* ---------- NAV ---------- */
-  .nav {
-    display: flex; align-items: center; gap: 20px;
-    padding: 24px 0; border-bottom: 1px solid var(--border);
-  }
-  .nav-brand { display: flex; align-items: center; flex-shrink: 0; }
-  .logo-spinner {
-    position: relative; display: inline-flex; align-items: center; justify-content: center;
-  }
-  .logo-spinner::before {
-    content: ''; position: absolute; inset: -6px; border-radius: 50%;
-    border: 1px dashed var(--gold); opacity: 0.5;
-  }
-  .logo-spinner .orbit-dot {
-    position: absolute; inset: -6px; border-radius: 50%; animation: spin 16s linear infinite;
-  }
-  .logo-spinner .orbit-dot::before {
-    content: ''; position: absolute; top: -2.5px; left: 50%; width: 5px; height: 5px;
-    margin-left: -2.5px; border-radius: 50%; background: var(--gold-deep);
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .nav-brand img { height: 38px; width: auto; display: block; border-radius: 50%; position: relative; z-index: 1; }
-
-  .fulfillment-pill {
-    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
-    border: 1.5px solid var(--border); border-radius: 999px;
-    padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
-    background: var(--gold-light); transition: border-color 0.15s ease;
-  }
-  .fulfillment-pill:hover { border-color: var(--gold-deep); }
-  .fulfillment-pill svg { width: 18px; height: 18px; color: var(--gold-deep); flex-shrink: 0; }
-  .fulfillment-pill .fp-label { color: var(--gray-mid); font-weight: 500; }
-  .fulfillment-pill .fp-value { color: var(--ink); }
-
-  .search-bar {
-    flex: 1; position: relative; display: flex; align-items: center;
-    background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px;
-    padding: 12px 56px 12px 22px;
-  }
-  .search-bar input {
-    flex: 1; border: none; background: none; outline: none;
-    font-family: 'Inter', sans-serif; font-size: 12px; color: var(--ink);
-  }
-  .search-submit {
-    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-    width: 28px; height: 28px; border-radius: 50%; border: none;
-    background: var(--gold-deep); color: var(--bg);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: background 0.15s ease, transform 0.15s ease;
-  }
-  .search-submit:hover { background: var(--ink); transform: translateY(-50%) scale(1.05); }
-  .search-submit svg { width: 14px; height: 14px; }
-
-  .nav-actions { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
-  .nav-icon-link { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; }
-  .nav-icon-link svg { width: 20px; height: 20px; }
-
-  .theme-toggle {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border-radius: 999px;
-    border: 1.5px solid var(--border); background: transparent;
-    color: var(--ink); cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .theme-toggle:hover { border-color: var(--ink); }
-  .theme-toggle svg { width: 18px; height: 18px; display: block; }
-  .theme-toggle .icon-moon { display: none; }
-  html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
-  html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
-
-  /* ---------- BREADCRUMB ---------- */
+  /* Breadcrumb */
   .breadcrumb {
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     padding: 20px 0 0; font-size: 13px; color: var(--gray-mid);
@@ -117,7 +13,7 @@
   .breadcrumb .sep { opacity: 0.5; }
   .breadcrumb .current { color: var(--ink); font-weight: 600; }
 
-  /* ---------- PRODUCT HERO ---------- */
+  /* Product Hero */
   .product-hero {
     display: grid;
     grid-template-columns: 300px 1fr 360px;
@@ -125,12 +21,9 @@
     padding: 24px 0 48px;
     align-items: start;
   }
+  .product-info-col { padding-top: 4px; }
 
-  .product-info-col {
-    padding-top: 4px;
-  }
-
-  /* -- Gallery -- */
+  /* Gallery */
   .gallery {
     position: relative;
     border: 1.5px solid var(--border);
@@ -141,11 +34,8 @@
     overflow: hidden;
     display: flex; align-items: center; justify-content: center;
   }
-  .gallery img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-  }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .gallery-placeholder { font-size: 14px; color: var(--gray-mid); }
-
   .gallery-nav {
     position: absolute; top: 50%; transform: translateY(-50%);
     width: 32px; height: 32px; border-radius: 50%;
@@ -160,35 +50,24 @@
   .gallery-nav svg { width: 15px; height: 15px; }
   .gallery-nav.prev { left: 10px; }
   .gallery-nav.next { right: 10px; }
-
   .gallery-dots {
     position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 5px;
   }
   .gallery-dots .dot {
     width: 5px; height: 5px; border-radius: 50%;
-    background: var(--ink);
-    opacity: 0.25;
+    background: var(--ink); opacity: 0.25;
     transition: opacity 0.15s ease, width 0.15s ease;
   }
   .gallery-dots .dot.is-active { opacity: 1; width: 14px; border-radius: 3px; }
 
-  .category-tag {
-    display: inline-flex; align-self: flex-start;
-    background: var(--gold-light); padding: 4px 12px; border-radius: 999px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-  }
-
-  .product-title {
-    font-size: 28px; line-height: 1.2; margin: 14px 0 4px;
-  }
-
+  .product-title { font-size: 28px; line-height: 1.2; margin: 14px 0 4px; }
   .product-desc {
     font-size: 14.5px; line-height: 1.65; color: var(--gray-mid);
     margin-top: 10px; max-width: 640px;
   }
 
-  /* -- Buy rail -- */
+  /* Buy Rail */
   .buy-rail {
     background: var(--gold-light);
     border: 1.5px solid var(--border);
@@ -200,15 +79,11 @@
     position: sticky;
     top: 24px;
   }
-
   .buy-price {
     font-family: 'Sora', sans-serif;
-    font-weight: 800;
-    font-size: 30px;
-    letter-spacing: -0.01em;
-    color: var(--ink);
+    font-weight: 800; font-size: 30px;
+    letter-spacing: -0.01em; color: var(--ink);
   }
-
   .return-policy-row {
     display: flex; align-items: center; gap: 6px;
     font-size: 13px; font-weight: 600; color: var(--green);
@@ -216,7 +91,6 @@
     border-bottom: 1px solid var(--border);
   }
   .return-policy-row svg.check { width: 16px; height: 16px; flex-shrink: 0; }
-
   .info-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; border-radius: 50%;
@@ -226,8 +100,7 @@
   }
   .info-btn:hover { color: var(--gold-deep); }
   .info-btn svg { width: 18px; height: 18px; }
-
-  .btn-pill {
+  .btn-pill-detail {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     width: 100%; border-radius: 999px; padding: 15px 20px;
     font-size: 15px; font-weight: 600; cursor: pointer;
@@ -235,14 +108,10 @@
     transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
     font-family: 'Inter', sans-serif;
   }
-  .btn-pill:active { transform: translateY(1px); }
-  .btn-pill svg { width: 17px; height: 17px; }
-
-  .btn-add-cart {
-    background: var(--ink); color: var(--bg);
-  }
+  .btn-pill-detail:active { transform: translateY(1px); }
+  .btn-pill-detail svg { width: 17px; height: 17px; }
+  .btn-add-cart { background: var(--ink); color: var(--bg); }
   .btn-add-cart:hover { background: var(--gold-deep); }
-
   .btn-add-list {
     background: transparent; color: var(--ink); border-color: var(--ink);
   }
@@ -250,18 +119,11 @@
   .btn-add-list.is-favorited { border-color: var(--gold-deep); color: var(--gold-deep); }
   .btn-add-list.is-favorited svg { fill: currentColor; }
 
-  /* ---------- SPECS ---------- */
-  .specs-section {
-    padding: 12px 0 64px;
-    border-top: 1px solid var(--border);
-  }
-  .specs-heading {
-    font-size: 20px; margin: 32px 0 20px;
-  }
+  /* Specs */
+  .specs-section { padding: 12px 0 64px; border-top: 1px solid var(--border); }
+  .specs-heading { font-size: 20px; margin: 32px 0 20px; }
   .specs-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
   }
   .spec-card {
     display: flex; align-items: flex-start; gap: 12px;
@@ -281,43 +143,27 @@
     text-transform: uppercase; letter-spacing: 0.03em;
     margin-bottom: 3px;
   }
-  .spec-value {
-    font-size: 15px; font-weight: 600; color: var(--ink);
-    text-transform: capitalize;
-  }
+  .spec-value { font-size: 15px; font-weight: 600; color: var(--ink); text-transform: capitalize; }
 
-  /* ---------- RELATED ROWS ---------- */
-  .related-section {
-    padding: 12px 0 40px;
-    border-top: 1px solid var(--border);
-  }
+  /* Related */
+  .related-section { padding: 12px 0 40px; border-top: 1px solid var(--border); }
   .related-heading {
     display: flex; align-items: baseline; gap: 10px;
     margin: 32px 0 4px;
   }
   .related-heading h2 { font-size: 20px; }
-  .related-subtext {
-    font-size: 13px; color: var(--gray-mid);
-    margin-bottom: 18px;
-  }
-
+  .related-subtext { font-size: 13px; color: var(--gray-mid); margin-bottom: 18px; }
   .related-scroll {
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding: 4px 2px 12px;
+    display: flex; gap: 14px;
+    overflow-x: auto; padding: 4px 2px 12px;
     scroll-snap-type: x proximity;
   }
   .related-scroll::-webkit-scrollbar { height: 6px; }
   .related-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
-
   .related-card-wrap {
-    flex: 0 0 auto;
-    width: 200px;
-    scroll-snap-align: start;
-    position: relative;
+    flex: 0 0 auto; width: 200px;
+    scroll-snap-align: start; position: relative;
   }
-
   .related-card {
     display: flex; flex-direction: column;
     border: 1.5px solid var(--border); border-radius: 14px;
@@ -325,14 +171,12 @@
     transition: border-color 0.15s ease, transform 0.15s ease;
   }
   .related-card:hover { border-color: var(--ink); transform: translateY(-2px); }
-
   .related-card-image {
     width: 100%; aspect-ratio: 1 / 1; background: var(--gold-light);
     display: flex; align-items: center; justify-content: center;
   }
   .related-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .related-card-image-placeholder { font-size: 11px; color: var(--gray-mid); }
-
   .related-card-info {
     padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 5px;
   }
@@ -343,13 +187,9 @@
     overflow: hidden;
   }
   .related-card-price { font-size: 13px; font-weight: 600; color: var(--gold-deep); }
+  .related-empty { font-size: 13px; color: var(--gray-mid); padding: 18px 0 6px; }
 
-  .related-empty {
-    font-size: 13px; color: var(--gray-mid);
-    padding: 18px 0 6px;
-  }
-
-  /* ---------- RESPONSIVE ---------- */
+  /* Responsive */
   @media (max-width: 860px) {
     .product-hero { grid-template-columns: 1fr 1fr; }
     .product-hero .gallery { grid-column: 1; grid-row: 1; }
@@ -357,132 +197,19 @@
     .product-hero .product-info-col { grid-column: 1 / -1; grid-row: 2; }
     .specs-grid { grid-template-columns: repeat(2, 1fr); }
   }
-
   @media (max-width: 640px) {
     .product-hero { grid-template-columns: 1fr; }
-    .product-hero .gallery,
-    .product-hero .buy-rail,
-    .product-hero .product-info-col { grid-column: 1; }
+    .product-hero .gallery, .product-hero .buy-rail, .product-hero .product-info-col { grid-column: 1; }
     .product-hero .gallery { grid-row: 1; }
     .product-hero .product-info-col { grid-row: 2; }
     .product-hero .buy-rail { grid-row: 3; }
-  }
-
-  @media (max-width: 640px) {
-    .wrap { padding: 0 20px; }
-    .nav { flex-wrap: wrap; }
-    .search-bar { order: 3; width: 100%; }
     .specs-grid { grid-template-columns: 1fr; }
     .product-title { font-size: 22px; }
   }
-
-/* ---------- SITE FOOTER ---------- */
-.site-footer {
-  border-top: 1px solid var(--border);
-  padding: 48px 0 32px;
-  margin-top: 40px;
-}
-
-.footer-columns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  padding-bottom: 32px;
-}
-
-.footer-col h4 {
-  font-family: 'Sora', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-  color: var(--ink);
-}
-
-.footer-col a,
-.footer-col p {
-  display: block;
-  font-size: 13px;
-  color: var(--gray-mid);
-  margin-bottom: 8px;
-  line-height: 1.55;
-  text-decoration: none;
-}
-
-.footer-col a:hover {
-  color: var(--gold-deep);
-}
-
-.footer-bar {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--gray-mid);
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-brand .logo-spinner::before,
-.footer-brand .logo-spinner .orbit-dot {
-  inset: -4px;
-}
-
-.footer-brand img {
-  height: 22px;
-  width: auto;
-  display: block;
-  border-radius: 50%;
-}
-
-.footer-brand span {
-  font-family: 'Sora', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--ink);
-}
-
-@media (max-width: 640px) {
-  .footer-columns {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  .footer-bar {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-}
-
-/* Nav bar styling */
-.nav-build-link {
-  display: flex; align-items: center; gap: 7px;
-  padding: 9px 16px; border-radius: 999px;
-  border: 1.5px solid var(--gold-deep);
-  color: var(--gold-deep); font-size: 14px; font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  flex-shrink: 0;
-}
-.nav-build-link:hover {
-  background: var(--gold-deep); color: var(--bg);
-}
-.nav-build-link svg { width: 18px; height: 18px; flex-shrink: 0; }
 </style>
-</head>
-<body>
+{% endblock %}
 
-<!-- Include nav file -->
-<div class="wrap">
-  {% include "_nav.html" %}
-</div>
-
+{% block content %}
 <div class="wrap">
   <div class="breadcrumb">
     <a href="/catalog">Catalog</a>
@@ -493,7 +220,7 @@
   </div>
 
   <div class="product-hero">
-    <!-- ---------- GALLERY ---------- -->
+    <!-- Gallery -->
     <div class="gallery" id="productGallery">
       {% if product.image_url %}
       <img src="{{ product.image_url }}" alt="{{ product.name }}" id="galleryImage">
@@ -516,14 +243,14 @@
       {% endif %}
     </div>
 
-    <!-- ---------- TITLE / DESCRIPTION ---------- -->
+    <!-- Title / Description -->
     <div class="product-info-col">
       <span class="category-tag">{{ product.category.replace('_', ' ') }}</span>
       <h1 class="product-title display">{{ product.name }}</h1>
       <p class="product-desc">{{ product.description }}</p>
     </div>
 
-    <!-- ---------- BUY RAIL ---------- -->
+    <!-- Buy Rail -->
     <div class="buy-rail">
       <div class="buy-price">₦{{ "{:,.2f}".format(product.price) }}</div>
 
@@ -535,14 +262,14 @@
         </button>
       </div>
 
-      <button type="button" class="btn-pill btn-add-cart" id="addToCartBtn">
+      <button type="button" class="btn-pill-detail btn-add-cart" id="addToCartBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
         Add to cart
       </button>
 
       <button
         type="button"
-        class="btn-pill btn-add-list {% if is_favorited %}is-favorited{% endif %}"
+        class="btn-pill-detail btn-add-list {% if is_favorited %}is-favorited{% endif %}"
         id="addToListBtn"
         hx-post="/favorites/{{ product.id }}"
         hx-target="this"
@@ -554,7 +281,7 @@
     </div>
   </div>
 
-  <!-- ---------- SPECS ---------- -->
+  <!-- Specs -->
   <div class="specs-section">
     <h2 class="specs-heading display">Specifications</h2>
     <div class="specs-grid">
@@ -572,24 +299,18 @@
     </div>
   </div>
 
-  <!-- ---------- BEST PAIRINGS ---------- -->
+  <!-- Best Pairings -->
   <div class="related-section">
-    <div class="related-heading">
-      <h2 class="display">Best pairings</h2>
-    </div>
+    <div class="related-heading"><h2 class="display">Best pairings</h2></div>
     <p class="related-subtext">Confirmed compatible with this {{ product.category.replace('_', ' ') }}.</p>
-
     {% if paired_products %}
     <div class="related-scroll">
       {% for item in paired_products[:10] %}
       <div class="related-card-wrap">
         <a href="/products/{{ item.id }}" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}
-            <img src="{{ item.image_url }}" alt="{{ item.name }}">
-            {% else %}
-            <div class="related-card-image-placeholder">No image</div>
-            {% endif %}
+            {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }}">
+            {% else %}<div class="related-card-image-placeholder">No image</div>{% endif %}
           </div>
           <div class="related-card-info">
             <span class="category-tag">{{ item.category.replace('_', ' ') }}</span>
@@ -605,24 +326,18 @@
     {% endif %}
   </div>
 
-  <!-- ---------- SIMILAR PRODUCTS ---------- -->
+  <!-- Similar Products -->
   <div class="related-section">
-    <div class="related-heading">
-      <h2 class="display">Similar products</h2>
-    </div>
+    <div class="related-heading"><h2 class="display">Similar products</h2></div>
     <p class="related-subtext">Other {{ product.category.replace('_', ' ') }} options worth a look.</p>
-
     {% if similar_products %}
     <div class="related-scroll">
       {% for item in similar_products[:10] %}
       <div class="related-card-wrap">
         <a href="/products/{{ item.id }}" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}
-            <img src="{{ item.image_url }}" alt="{{ item.name }}">
-            {% else %}
-            <div class="related-card-image-placeholder">No image</div>
-            {% endif %}
+            {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }}">
+            {% else %}<div class="related-card-image-placeholder">No image</div>{% endif %}
           </div>
           <div class="related-card-info">
             <span class="category-tag">{{ item.category.replace('_', ' ') }}</span>
@@ -638,105 +353,31 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
 
-<div class="wrap">
-  <footer class="site-footer">
-    <div class="footer-columns">
-      <div class="footer-col">
-        <h4>Contact us</h4>
-        <p>ATT034, Yobe Plaza, Tradefair,<br> Lagos, Nigeria</p>
-        <a href="https://wa.me/2348107730018" target="_blank">WhatsApp us</a>
-        <a href="https://chat.whatsapp.com/LJQBZap6XOO7gQiTA24OOR?mode=ac_t" target="_blank">Join our WhatsApp group</a>
-      </div>
-      <div class="footer-col">
-        <h4>Buune</h4>
-        <a href="/static/buune-privacy-policy.html" target="_blank">Privacy policy</a>
-        <a href="/static/buune-terms.html" target="_blank">Terms</a>
-        <a href="/static/buune-data-deletion.html" target="_blank">Data deletion</a>
-      </div>
-      <div class="footer-col">
-        <h4>General</h4>
-        <a href="/catalog">Catalog</a>
-        <a href="/favorites">Favorites</a>
-        <a href="/signin">Sign in</a>
-      </div>
-    </div>
-    <div class="footer-bar">
-      <div class="footer-brand">
-        <div class="logo-spinner">
-          <img src="/static/grand_logo.png" alt="Grand Elevation Solar">
-          <div class="orbit-dot"></div>
-        </div>
-        <span>Grand Elevation Solar</span>
-      </div>
-      <div>&copy; 2026 Grand Elevation Solar</div>
-    </div>
-  </footer>
-</div>
-
+{% block extra_js %}
 <script>
-  (function () {
-    var root = document.documentElement;
-    var toggle = document.getElementById('themeToggle');
+(function () {
+  var IMAGES = [{% if images %}{% for img in images %}"{{ img }}"{% if not loop.last %},{% endif %}{% endfor %}{% endif %}];
+  var current = 0;
+  var imgEl = document.getElementById('galleryImage');
+  var dots = document.querySelectorAll('.gallery-dots .dot');
+  var prevBtn = document.getElementById('galleryPrev');
+  var nextBtn = document.getElementById('galleryNext');
 
-    function applyTheme(theme) {
-      if (theme === 'dark') {
-        root.setAttribute('data-theme', 'dark');
-        toggle.setAttribute('aria-pressed', 'true');
-      } else {
-        root.removeAttribute('data-theme');
-        toggle.setAttribute('aria-pressed', 'false');
-      }
-    }
-
-    var stored = localStorage.getItem('theme');
-    if (stored) {
-      applyTheme(stored);
-    } else {
-      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = prefersDark ? 'dark' : 'light';
-      applyTheme(theme);
-      localStorage.setItem('theme', theme);
-    }
-
-    toggle.addEventListener('click', function () {
-      var isDark = root.getAttribute('data-theme') === 'dark';
-      var next = isDark ? 'light' : 'dark';
-      applyTheme(next);
-      localStorage.setItem('theme', next);
-    });
-  })();
-
-  (function () {
-    var IMAGES = [{% if images %}{% for img in images %}"{{ img }}"{% if not loop.last %},{% endif %}{% endfor %}{% endif %}];
-    var current = 0;
-    var imgEl = document.getElementById('galleryImage');
-    var dots = document.querySelectorAll('.gallery-dots .dot');
-    var prevBtn = document.getElementById('galleryPrev');
-    var nextBtn = document.getElementById('galleryNext');
-
-    function render() {
-      if (!imgEl || IMAGES.length === 0) return;
-      imgEl.src = IMAGES[current];
-      dots.forEach(function (dot, i) {
-        dot.classList.toggle('is-active', i === current);
-      });
-    }
-
-    if (prevBtn) {
-      prevBtn.addEventListener('click', function () {
+  function render() {
+    if (!imgEl || IMAGES.length === 0) return;
+    imgEl.src = IMAGES[current];
+    dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === current); });
+  }
+  if (prevBtn) prevBtn.addEventListener('click', function () {
         current = (current - 1 + IMAGES.length) % IMAGES.length;
         render();
       });
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener('click', function () {
+  if (nextBtn) nextBtn.addEventListener('click', function () {
         current = (current + 1) % IMAGES.length;
         render();
       });
-    }
-  })();
-</script>
-
-</body>
-</html>
+    })();
+  </script>
+{% endblock %}
