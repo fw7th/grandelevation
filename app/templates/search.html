@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{% if query %}"{{ query }}" — Search{% else %}Search{% endif %} — Grand Elevation Solar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .search-stage {
+    min-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 40px 0 80px;
+  }
+
+  /* Blank state */
+  .search-blank {
+    text-align: center;
+    color: var(--gray-mid);
+    margin-top: 12vh;
+  }
+  .search-blank svg {
+    width: 64px; height: 64px;
+    color: var(--gold-deep);
+    opacity: 0.35;
+    margin-bottom: 16px;
+  }
+  .search-blank h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 20px; color: var(--ink); margin-bottom: 6px;
+  }
+  .search-blank p { font-size: 14px; }
+
+  /* Results */
+  .search-meta {
+    font-size: 14px; color: var(--gray-mid); margin-bottom: 20px;
+  }
+  .search-meta strong { color: var(--ink); }
+
+  /* No results */
+  .search-empty {
+    text-align: center;
+    max-width: 420px;
+    margin: 10vh auto 0;
+    color: var(--gray-mid);
+  }
+  .search-empty .empty-icon-wrap {
+    width: 80px; height: 80px;
+    margin: 0 auto 20px;
+    color: var(--gold-deep);
+    opacity: 0.8;
+  }
+  .search-empty .empty-icon-wrap svg {
+    width: 100%; height: 100%;
+    display: none;
+  }
+  .search-empty h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 20px; color: var(--ink); margin-bottom: 8px;
+  }
+  .search-empty p { font-size: 14px; line-height: 1.6; margin-bottom: 18px; }
+  .search-empty a {
+    color: var(--gold-deep); font-weight: 600;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .search-empty a:hover { color: var(--ink); }
+
+  /* Product grid reuse from base */
+  .product-grid { padding-bottom: 60px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="search-stage">
+    {% if not query %}
+    <!-- ─── BLANK ─── -->
+    <div class="search-blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+      <h2 class="display">What are you looking for?</h2>
+      <p>Type in the search bar above to find panels, inverters, batteries, and more.</p>
+    </div>
+
+    {% elif products %}
+    <!-- ─── RESULTS ─── -->
+    <p class="search-meta">Found <strong>{{ products|length }}</strong> result{% if products|length != 1 %}s{% endif %} for "<strong>{{ query }}</strong>"</p>
+    <div class="product-grid">
+      {% for product in products %}
+        <div class="product-card-wrap">
+          {% include "_product_card.html" %}
+          {% with product_id=product.id, is_favorited=(product.id in favorite_ids) %}
+            {% include "_favorite_button.html" %}
+          {% endwith %}
+        </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- ─── NO RESULTS ─── -->
+    <div class="search-empty">
+      <div class="empty-icon-wrap">
+        <!-- Sad sun -->
+        <svg class="no-result-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/><path d="M9 16c.8.6 1.8 1 3 1s2.2-.4 3-1" stroke-width="1.5"/></svg>
+        <!-- Empty panel -->
+        <svg class="no-result-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v14M15 4v14"/><path d="M12 22v-4" stroke-width="1.5"/></svg>
+        <!-- Low battery -->
+        <svg class="no-result-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="7" width="16" height="10" rx="1.5"/><path d="M19 10v4M7 10v4M11 10v4"/><path d="M12 21h0" stroke-width="2"/></svg>
+      </div>
+      <h2 class="display">Didn't find this product</h2>
+      <p>We don't have <strong>"{{ query }}"</strong> in stock right now. Reach out to us and we'll source it for you — then add it to the catalog.</p>
+      <a href="https://wa.me/2348107730018?text=Hi%20Grand%20Elevation%20Solar,%20I'm%20looking%20for:%20{{ query|urlencode }}" target="_blank">Request via WhatsApp →</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var svgs = document.querySelectorAll('.no-result-svg');
+  if (svgs.length) {
+    svgs.forEach(function (s) { s.style.display = 'none'; });
+    svgs[Math.floor(Math.random() * svgs.length)].style.display = 'block';
+  }
+})();
+</script>
+{% endblock %}
