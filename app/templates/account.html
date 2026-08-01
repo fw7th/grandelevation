@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Your Account — Grand Elevation Solar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .account-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 40px;
+    padding-bottom: 80px;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .account-sidebar {
+    position: sticky; top: 24px; align-self: start;
+  }
+  .account-nav {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .account-nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; color: var(--gray-mid);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .account-nav a:hover { color: var(--ink); background: var(--gold-light); }
+  .account-nav a.is-active { color: var(--ink); background: var(--gold-light); }
+  .account-nav a svg { width: 18px; height: 18px; }
+
+  .account-nav .nav-sep {
+    height: 1px; background: var(--border); margin: 8px 0;
+  }
+
+  .btn-logout {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: none; background: transparent;
+    color: var(--danger); font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: background 0.15s ease;
+  }
+  .btn-logout:hover { background: rgba(192,57,43,0.08); }
+  .btn-logout svg { width: 18px; height: 18px; }
+
+  /* ─── CARDS ─── */
+  .account-main { display: flex; flex-direction: column; gap: 32px; }
+
+  .account-card {
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+  }
+  .account-card h2 {
+    font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .account-card h2 svg { width: 20px; height: 20px; color: var(--gold-deep); }
+
+  /* Profile */
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-group label {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--gray-mid);
+  }
+  .field-group input {
+    padding: 10px 14px; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
+    outline: none; transition: border-color 0.15s ease;
+  }
+  .field-group input:focus { border-color: var(--gold-deep); }
+  .field-group input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .field-actions {
+    display: flex; gap: 10px; margin-top: 20px;
+  }
+  .btn-sm {
+    padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid transparent; font-family: 'Inter', sans-serif;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .btn-sm:active { transform: translateY(1px); }
+  .btn-sm-primary { background: var(--ink); color: var(--bg); }
+  .btn-sm-primary:hover { background: var(--gold-deep); }
+  .btn-sm-secondary {
+    background: transparent; color: var(--ink); border-color: var(--border);
+  }
+  .btn-sm-secondary:hover { border-color: var(--ink); }
+
+  /* Orders */
+  .order-list { display: flex; flex-direction: column; gap: 12px; }
+  .order-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 16px; border-radius: 12px;
+    border: 1.5px solid var(--border);
+    transition: border-color 0.15s ease;
+  }
+  .order-row:hover { border-color: var(--gold-deep); }
+  .order-info { min-width: 0; }
+  .order-id {
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .order-meta {
+    font-size: 13px; color: var(--gray-mid);
+  }
+  .order-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; padding: 5px 12px; border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .status-completed { background: rgba(61,92,58,0.12); color: var(--green); }
+  .status-pending { background: var(--gold-light); color: var(--gold-deep); }
+  .status-cancelled { background: rgba(192,57,43,0.1); color: var(--danger); }
+  .order-amount {
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Saved systems */
+  .system-list { display: flex; flex-direction: column; gap: 10px; }
+  .system-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; padding: 14px 16px; border-radius: 12px;
+    border: 1.5px solid var(--border);
+  }
+  .system-row:hover { border-color: var(--gold-deep); }
+  .system-name { font-weight: 700; font-size: 14px; }
+  .system-spec { font-size: 12px; color: var(--gray-mid); margin-top: 2px; }
+  .system-actions { display: flex; gap: 8px; }
+  .btn-text {
+    font-size: 13px; font-weight: 600; color: var(--gold-deep);
+    background: none; border: none; cursor: pointer;
+    padding: 4px 8px; border-radius: 6px;
+    transition: background 0.15s ease;
+  }
+  .btn-text:hover { background: var(--gold-light); }
+
+  @media (max-width: 860px) {
+    .account-layout { grid-template-columns: 1fr; }
+    .account-sidebar { position: static; }
+    .account-nav { flex-direction: row; flex-wrap: wrap; }
+    .profile-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="page-header">
+    <h1 class="display">Your account</h1>
+    <p>Manage your profile, orders, and saved systems.</p>
+  </div>
+
+  <div class="account-layout">
+    <aside class="account-sidebar">
+      <nav class="account-nav">
+        <a href="#profile" class="is-active" onclick="switchTab(event, 'profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+          Profile
+        </a>
+        <a href="#orders" onclick="switchTab(event, 'orders')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          Orders
+        </a>
+        <a href="#systems" onclick="switchTab(event, 'systems')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Saved systems
+        </a>
+        <div class="nav-sep"></div>
+        <form action="/logout" method="post" style="margin:0;">
+          <button type="submit" class="btn-logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Log out
+          </button>
+        </form>
+      </nav>
+    </aside>
+
+    <div class="account-main">
+      <!-- PROFILE -->
+      <section class="account-card" id="tab-profile">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+          Profile
+        </h2>
+        <form method="post" action="/account/profile" class="profile-grid">
+          <div class="field-group">
+            <label for="acc-username">Username</label>
+            <input type="text" id="acc-username" name="username" value="{{ user.username }}" required>
+          </div>
+          <div class="field-group">
+            <label for="acc-email">Email</label>
+            <input type="email" id="acc-email" name="email" value="{{ user.email }}" required>
+          </div>
+          <div class="field-group">
+            <label for="acc-phone">Phone (WhatsApp)</label>
+            <input type="tel" id="acc-phone" name="phone" value="{{ user.phone or '' }}" placeholder="+234...">
+          </div>
+          <div class="field-group">
+            <label for="acc-pwd">New password</label>
+            <input type="password" id="acc-pwd" name="password" placeholder="Leave blank to keep current">
+          </div>
+          <div class="field-actions" style="grid-column: 1 / -1;">
+            <button type="submit" class="btn-sm btn-sm-primary">Save changes</button>
+            <button type="reset" class="btn-sm btn-sm-secondary">Reset</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="account-card" id="tab-orders" style="display:none;">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          Order history
+        </h2>
+        {% if orders %}
+        <div class="order-list">
+          {% for order in orders %}
+          <div class="order-row">
+            <div class="order-info">
+              <div class="order-id">Order #{{ order.id }}</div>
+              <div class="order-meta">{{ order.created_at.strftime('%d %b %Y') }} · {{ order.items_count }} item{% if order.items_count != 1 %}s{% endif %}</div>
+            </div>
+            <span class="order-status status-{{ order.status }}">
+              {% if order.status == 'completed' %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>{% endif %}
+              {{ order.status }}
+            </span>
+            <div class="order-amount">₦{{ "{:,.2f}".format(order.total) }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="color:var(--gray-mid); font-size:14px;">No orders yet. When you make a purchase, it will show up here.</p>
+        {% endif %}
+      </section>
+
+      <!-- SAVED SYSTEMS -->
+      <section class="account-card" id="tab-systems" style="display:none;">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Saved systems
+        </h2>
+        {% if saved_systems %}
+        <div class="system-list">
+          {% for sys in saved_systems %}
+          <div class="system-row">
+            <div>
+              <div class="system-name">{{ sys.name or 'Untitled system' }}</div>
+              <div class="system-spec">{{ sys.component_count }} components · ₦{{ "{:,.0f}".format(sys.total_price) }} · {{ sys.created_at.strftime('%d %b %Y') }}</div>
+            </div>
+            <div class="system-actions">
+              <a href="/build?load={{ sys.id }}" class="btn-text">Edit</a>
+              <button type="button" class="btn-text" onclick="deleteSystem({{ sys.id }})">Delete</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="color:var(--gray-mid); font-size:14px;">No saved systems. <a href="/build" style="color:var(--gold-deep); text-decoration:underline; text-underline-offset:2px;">Build one</a>.</p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchTab(e, id) {
+  e.preventDefault();
+  document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));
+  e.currentTarget.classList.add('is-active');
+  document.querySelectorAll('.account-main > section').forEach(s => s.style.display = 'none');
+  document.getElementById('tab-' + id).style.display = '';
+}
+
+function deleteSystem(id) {
+  if (!confirm('Delete this saved system?')) return;
+  // htmx.ajax('DELETE', '/build/system/' + id, { target: 'closest .system-row', swap: 'outerHTML' });
+  console.log('Delete system', id);
+}
+</script>
+{% endblock %}

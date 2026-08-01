@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Your Cart — Grand Elevation Solar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 40px;
+    align-items: start;
+    padding-bottom: 80px;
+  }
+
+  /* ─── CART ITEMS ─── */
+  .cart-section h2 {
+    font-size: 20px; margin-bottom: 4px;
+  }
+  .cart-subhead {
+    font-size: 14px; color: var(--gray-mid); margin-bottom: 20px;
+  }
+  .cart-list { border-top: 1px solid var(--border); }
+
+  .cart-item {
+    display: flex; align-items: center; gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cart-item-image {
+    width: 90px; height: 90px; border-radius: 12px;
+    background: var(--gold-light); flex-shrink: 0;
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .cart-item-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cart-item-image-placeholder { font-size: 11px; color: var(--gray-mid); }
+
+  .cart-item-details { flex: 1; min-width: 0; }
+  .cart-item-name {
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .cart-item-meta {
+    font-size: 12px; color: var(--gray-mid); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.03em;
+  }
+
+  .cart-item-qty {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 10px;
+  }
+  .qty-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--ink); font-size: 16px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color 0.15s ease;
+  }
+  .qty-btn:hover { border-color: var(--gold-deep); color: var(--gold-deep); }
+  .qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .qty-value {
+    font-size: 14px; font-weight: 600; min-width: 24px; text-align: center;
+  }
+
+  .cart-item-price {
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 16px;
+    color: var(--ink); text-align: right; min-width: 90px;
+  }
+  .cart-item-remove {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600; color: var(--gray-mid);
+    background: none; border: none; cursor: pointer;
+    margin-top: 4px; padding: 2px 0;
+    transition: color 0.15s ease;
+  }
+  .cart-item-remove:hover { color: var(--danger); }
+  .cart-item-remove svg { width: 14px; height: 14px; }
+
+  /* ─── SYSTEM BUNDLE ROW ─── */
+  .bundle-row {
+    display: flex; align-items: center; gap: 14px;
+    border: 1.5px solid var(--gold-deep);
+    border-radius: 16px; padding: 16px 18px;
+    margin-bottom: 16px; background: var(--gold-light);
+  }
+  html[data-theme="dark"] .bundle-row {
+    background: rgba(74,58,26,0.4);
+    border-color: var(--gold-deep);
+  }
+  .bundle-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--bg); color: var(--gold-deep);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .bundle-icon svg { width: 20px; height: 20px; }
+  .bundle-info { flex: 1; }
+  .bundle-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; }
+  .bundle-count { font-size: 12px; color: var(--gray-mid); margin-top: 2px; }
+  .bundle-price {
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 16px;
+  }
+
+  /* ─── SUMMARY RAIL ─── */
+  .summary-rail {
+    background: var(--gold-light);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    position: sticky; top: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  html[data-theme="dark"] .summary-rail {
+    background: rgba(74,58,26,0.3);
+  }
+  .summary-rail h3 {
+    font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px;
+  }
+  .summary-row .label { color: var(--gray-mid); }
+  .summary-row .value { font-weight: 600; }
+  .summary-divider {
+    height: 1px; background: var(--border); margin: 4px 0;
+  }
+  .summary-total {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .summary-total .label {
+    font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
+  }
+  .summary-total .value {
+    font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .checkout-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; border-radius: 999px; padding: 16px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    border: none; background: var(--ink); color: var(--bg);
+    font-family: 'Inter', sans-serif;
+    transition: background 0.15s ease, transform 0.1s ease;
+    margin-top: 4px;
+  }
+  .checkout-btn:hover { background: var(--gold-deep); }
+  .checkout-btn:active { transform: translateY(1px); }
+  .checkout-btn svg { width: 18px; height: 18px; }
+
+  .summary-note {
+    font-size: 12px; color: var(--gray-mid); line-height: 1.5;
+    text-align: center;
+  }
+  .summary-note a { color: var(--gold-deep); text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ─── EMPTY STATE ─── */
+  .cart-empty {
+    text-align: center; padding: 80px 20px; color: var(--gray-mid);
+  }
+  .cart-empty h2 { font-family: 'Sora', sans-serif; color: var(--ink); font-size: 20px; margin-bottom: 8px; }
+
+  @media (max-width: 860px) {
+    .cart-layout { grid-template-columns: 1fr; }
+    .summary-rail { position: static; }
+  }
+  @media (max-width: 640px) {
+    .cart-item { gap: 12px; }
+    .cart-item-image { width: 72px; height: 72px; }
+    .cart-item-name { font-size: 14px; }
+    .cart-item-price { font-size: 14px; min-width: 70px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="page-header">
+    <h1 class="display">Your cart</h1>
+    <p>{% if cart_items %}{{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %}{% else %}Nothing here yet{% endif %}</p>
+  </div>
+
+  {% if cart_items or system_bundles %}
+  <div class="cart-layout">
+    <div class="cart-section">
+      {% if system_bundles %}
+      <h2 class="display">System bundles</h2>
+      <p class="cart-subhead">Complete kits ready for installation.</p>
+      {% for bundle in system_bundles %}
+      <div class="bundle-row">
+        <div class="bundle-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <div class="bundle-info">
+          <div class="bundle-name">{{ bundle.name or 'Custom Solar System' }}</div>
+          <div class="bundle-count">{{ bundle.products|length }} components</div>
+        </div>
+        <div class="bundle-price">₦{{ "{:,.2f}".format(bundle.total_price) }}</div>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      <h2 class="display">Items</h2>
+      <p class="cart-subhead">Individual products in your cart.</p>
+      <div class="cart-list">
+        {% for item in cart_items %}
+        <div class="cart-item" data-item-id="{{ item.id }}">
+          <div class="cart-item-image">
+            {% if item.product.image_url %}
+            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}">
+            {% else %}
+            <div class="cart-item-image-placeholder">No image</div>
+            {% endif %}
+          </div>
+          <div class="cart-item-details">
+            <div class="cart-item-name">{{ item.product.name }}</div>
+            <div class="cart-item-meta">{{ item.product.category.replace('_', ' ') }}</div>
+            <div class="cart-item-qty">
+              <button type="button" class="qty-btn" onclick="updateQty({{ item.id }}, -1)" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button type="button" class="qty-btn" onclick="updateQty({{ item.id }}, 1)">+</button>
+            </div>
+            <button type="button" class="cart-item-remove" onclick="removeItem({{ item.id }})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              Remove
+            </button>
+          </div>
+          <div class="cart-item-price">₦{{ "{:,.2f}".format(item.product.price * item.quantity) }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="summary-rail">
+      <h3>Order summary</h3>
+
+      <div class="summary-row">
+        <span class="label">Subtotal</span>
+        <span class="value">₦{{ "{:,.2f}".format(subtotal) }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Shipping</span>
+        <span class="value">Calculated at checkout</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Estimated VAT</span>
+        <span class="value">₦{{ "{:,.2f}".format(vat or 0) }}</span>
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="summary-total">
+        <span class="label">Total</span>
+        <span class="value">₦{{ "{:,.2f}".format(total) }}</span>
+      </div>
+
+      {% if username %}
+      <button type="button" class="checkout-btn" onclick="window.location.href='/checkout'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Proceed to checkout
+      </button>
+      {% else %}
+      <button type="button" class="checkout-btn" data-requires-auth>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Proceed to checkout
+      </button>
+      {% endif %}
+
+      <p class="summary-note">
+        Pickup available at <a href="https://maps.google.com/?q=Tradefair+Lagos" target="_blank">Tradefair, Lagos</a>.<br>
+        Need help? <a href="https://wa.me/2348107730018" target="_blank">WhatsApp us</a>.
+      </p>
+    </div>
+  </div>
+  {% else %}
+  <div class="cart-empty">
+    <h2 class="display">Your cart is empty</h2>
+    <p>Add a system or browse individual products to get started.</p>
+    <a href="/catalog" class="btn-pill" style="margin-top:16px;">Browse catalog</a>
+    <a href="/build" class="btn-pill" style="margin-top:10px; background:transparent; color:var(--ink); border-color:var(--ink);">Build a system</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateQty(itemId, delta) {
+  // HTMX: patch /cart/item/{itemId} with { quantity_change: delta }
+  // For now, reload on success
+  console.log('Update qty', itemId, delta);
+}
+
+function removeItem(itemId) {
+  // HTMX: delete /cart/item/{itemId}
+  // For now, visual removal
+  const row = document.querySelector('[data-item-id="' + itemId + '"]');
+  if (row) row.remove();
+}
+</script>
+{% endblock %}

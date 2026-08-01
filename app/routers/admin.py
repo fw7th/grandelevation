@@ -7,7 +7,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from ..auth import authenticate
 from ..database import get_session
 from ..models import Product, Users
-from ..security import PageException
 from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
 
 router = APIRouter(prefix="/admin", tags=["admin"])
