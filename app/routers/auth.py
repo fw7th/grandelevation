@@ -9,7 +9,6 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ..auth import authenticate
 from ..database import get_session
 from ..models import PasswordResetToken, Session, Users
 from ..security import (
@@ -18,6 +17,7 @@ from ..security import (
     password_hash,
     record_attempt,
 )
+from ..utils import authenticate
 
 router = APIRouter(tags=["auth"])
 templates = Jinja2Templates(directory="app/templates")
@@ -563,21 +563,3 @@ async def logout(
     response.delete_cookie("session_token")
 
     return response
-
-
-@router.get("/account")
-async def account(
-    request: Request,
-    session: AsyncSession = Depends(get_session),
-):
-    user = await authenticate(request, session)
-    if not user:
-        return RedirectResponse("/catalog")
-
-    return templates.TemplateResponse(
-        request=request,
-        name="account.html",
-        context={
-            "user": user,
-        },
-    )

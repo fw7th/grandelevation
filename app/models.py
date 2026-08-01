@@ -1,7 +1,6 @@
 # models.py
 
 from datetime import datetime, timedelta
-from typing import Optional
 
 from sqlmodel import JSON, Column, Field, SQLModel, UniqueConstraint
 

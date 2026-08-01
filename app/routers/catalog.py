@@ -3,16 +3,15 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ..auth import authenticate
 from ..database import get_session
 from ..models import Favorite, Product
 from ..services.featured import get_daily_featured
 from ..specs import (
     SPEC_MODELS,
 )
-from ..utils import get_active_categories
+from ..utils import authenticate, get_active_categories
 
-router = APIRouter(prefix="/catalog", tags=["catalog"])
+router = APIRouter(tags=["catalog"])
 templates = Jinja2Templates(directory="app/templates")
 
 

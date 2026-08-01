@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.auth import authenticate
 from app.database import get_session
+
+from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
 

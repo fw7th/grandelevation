@@ -2,16 +2,18 @@ import asyncio
 import base64
 import os
 import smtplib
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from fastapi import Request
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .models import Product
+from .models import Product, Session, Users
 
 
 async def get_active_categories(session: AsyncSession) -> list[str]:
@@ -131,3 +133,36 @@ def sync_gmail_dispatch(recipient_email: str, reset_link: str):
     return (
         service.users().messages().send(userId="me", body={"raw": raw_base64}).execute()
     )
+
+
+async def authenticate(
+    request: Request,
+    session: AsyncSession,
+) -> Users | None:
+    token = request.cookies.get("session_token")
+
+    if token is None:
+        return None
+
+    statement = select(Session).where(Session.token == token)
+    result = await session.exec(statement)
+    db_session = result.first()
+
+    if db_session is None:
+        return None
+
+    if db_session.expires_at < datetime.utcnow():
+        await session.delete(db_session)
+        await session.commit()
+        return None
+
+    statement = select(Users).where(Users.id == db_session.user_id)
+    result = await session.exec(statement)
+    user = result.first()
+
+    if user is None:
+        await session.delete(db_session)
+        await session.commit()
+        return None
+
+    return user

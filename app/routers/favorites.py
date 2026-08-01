@@ -4,10 +4,10 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from ..auth import authenticate
 from ..database import get_session
 from ..models import Favorite, Product
 from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
+from ..utils import authenticate
 
 router = APIRouter(tags=["favorites"])
 templates = Jinja2Templates(directory="app/templates")
