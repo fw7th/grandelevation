@@ -7,8 +7,8 @@
   </a>
 
   <div class="search-bar">
-    <input type="text" placeholder="Search panels, inverters, batteries...">
-    <button type="button" class="search-submit" aria-label="Search">
+    <input type="text" id="navSearchInput" placeholder="Search panels, inverters, batteries..." value="{{ query or '' }}">
+    <button type="button" class="search-submit" id="navSearchBtn" aria-label="Search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
     </button>
   </div>

@@ -18,6 +18,7 @@ async def product_page(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
+    user = await authenticate(request, session)
     statement = select(Product).where(Product.id == slug)
     result = await session.exec(statement)
     product = result.one()
@@ -28,6 +29,7 @@ async def product_page(
         request=request,
         name="/products.html",
         context={
+            "username": user.username if user else None,
             "product": product,
             "categories": await get_active_categories(session),
         },

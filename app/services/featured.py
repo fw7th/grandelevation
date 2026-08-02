@@ -52,7 +52,13 @@ async def _seed_random(session: AsyncSession) -> None:
     # than session.exec() (SQLModel's ORM-row-unwrapping wrapper, meant
     # for Select statements) -- keeps this independent of SQLModel version
     # quirks around raw text() handling.
-    await session.execute(text("SELECT setseed(:seed)"), {"seed": seed})
+    # Check if the current database dialect is NOT SQLite before seeding
+    if session.bind.dialect.name != "sqlite":
+        await session.execute(text("SELECT setseed(:seed)"), {"seed": 0.5})
+    else:
+        # Optional: Use SQLite's random ordering alternative without a seed
+        # SQLite does not support seeding its random() natively out of the box
+        pass
 
 
 async def get_daily_featured(

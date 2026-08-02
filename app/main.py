@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
-from app.routers import admin, auth, build, catalog, favorites, products, shop
+from app.routers import admin, auth, build, catalog, favorites, products, search, shop
 
 
 @asynccontextmanager
@@ -25,7 +25,8 @@ app.include_router(auth.router)
 app.include_router(catalog.router)
 app.include_router(favorites.router)
 app.include_router(shop.router)
-# app.include_router(build.router)
+app.include_router(search.router)
+app.include_router(build.router)
 
 
 @app.get("/")

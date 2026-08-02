@@ -6,7 +6,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database import get_session
 from ..models import Favorite, Product
-from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
 from ..utils import authenticate
 
 router = APIRouter(tags=["favorites"])
