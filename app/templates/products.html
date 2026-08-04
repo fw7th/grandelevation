@@ -220,6 +220,7 @@
   </div>
 
   <div class="product-hero">
+
     <!-- Gallery -->
     <div class="gallery" id="productGallery">
       {% if product.image_url %}
@@ -227,6 +228,20 @@
       {% else %}
       <div class="gallery-placeholder">No image available</div>
       {% endif %}
+
+      <button
+        type="button"
+        class="gallery-fav {% if is_favorited %}is-favorited{% endif %}"
+        id="galleryFavBtn"
+        hx-post="/favorites/{{ product.id }}"
+        hx-target="this"
+        hx-swap="outerHTML"
+        aria-label="{% if is_favorited %}Remove from favourites{% else %}Add to favourites{% endif %}"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
+        </svg>
+      </button>
 
       {% if images and images|length > 1 %}
       <button type="button" class="gallery-nav prev" id="galleryPrev" aria-label="Previous image">
@@ -262,21 +277,22 @@
         </button>
       </div>
 
-      <button type="button" class="btn-pill-detail btn-add-cart" id="addToCartBtn">
+      <button type="button" class="btn-pill-detail btn-add-list" id="addToCartBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
         Add to cart
       </button>
 
       <button
-        type="button"
-        class="btn-pill-detail btn-add-list {% if is_favorited %}is-favorited{% endif %}"
-        id="addToListBtn"
-        hx-post="/favorites/{{ product.id }}"
-        hx-target="this"
-        hx-swap="outerHTML"
+        type="submit"
+        name="action"
+        class="btn-pill-detail btn-add-cart"
+        id="buyNowBtn"
+        value="buy_now"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        {% if is_favorited %}Saved to list{% else %}Add to list{% endif %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      Buy now
       </button>
     </div>
   </div>
