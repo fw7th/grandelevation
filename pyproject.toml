@@ -36,3 +36,6 @@ test = [
 dev = [
     "ruff>=0.16.1",
 ]
+
+[tool.ruff]
+extend-exclude = ["*.md"]
