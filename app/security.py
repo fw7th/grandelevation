@@ -31,7 +31,7 @@ async def is_locked_out(email: str, session: AsyncSession) -> bool:
         .select_from(LoginAttempt)
         .where(
             LoginAttempt.email == email,
-            LoginAttempt.succeeded == False,
+            not LoginAttempt.succeeded,
             LoginAttempt.attempted_at >= cutoff,
         )
     )

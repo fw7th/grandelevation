@@ -6,7 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 
-from ..models import CartItem, Users
+from ..models import CartItem
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
@@ -80,9 +80,7 @@ async def update_profile(
     if not user:
         return RedirectResponse("/signin", status_code=303)
 
-    from sqlmodel import select
 
-    from app.models import Users
 
     user.username = username.strip()
     user.email = email.strip()

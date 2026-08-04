@@ -1,12 +1,10 @@
-import asyncio
 import base64
 import os
-import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from fastapi import Request
+from fastapi import Request as FastAPIRequest
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -136,7 +134,7 @@ def sync_gmail_dispatch(recipient_email: str, reset_link: str):
 
 
 async def authenticate(
-    request: Request,
+    request: FastAPIRequest,
     session: AsyncSession,
 ) -> Users | None:
     token = request.cookies.get("session_token")
