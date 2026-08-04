@@ -80,8 +80,6 @@ async def update_profile(
     if not user:
         return RedirectResponse("/signin", status_code=303)
 
-
-
     user.username = username.strip()
     user.email = email.strip()
 
