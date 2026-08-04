@@ -61,31 +61,6 @@
   }
   .gallery-dots .dot.is-active { opacity: 1; width: 14px; border-radius: 3px; }
 
-  /* Gallery favourite heart */
-  .gallery-fav {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255,255,255,0.92);
-    color: var(--ink);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
-    z-index: 2;
-  }
-  html[data-theme="dark"] .gallery-fav { background: rgba(20,19,15,0.92); }
-  .gallery-fav:hover { transform: scale(1.08); color: var(--gold-deep); }
-  .gallery-fav svg { width: 17px; height: 17px; }
-  .gallery-fav.is-favorited { color: var(--gold-deep); }
-  .gallery-fav.is-favorited svg { fill: currentColor; }
-
   .product-title { font-size: 28px; line-height: 1.2; margin: 14px 0 4px; }
   .product-desc {
     font-size: 14.5px; line-height: 1.65; color: var(--gray-mid);
@@ -302,19 +277,10 @@
       <div class="gallery-placeholder">No image available</div>
       {% endif %}
 
-      <button
-        type="button"
-        class="gallery-fav {% if is_favorited %}is-favorited{% endif %}"
-        id="galleryFavBtn"
-        hx-post="/favorites/{{ product.id }}"
-        hx-target="this"
-        hx-swap="outerHTML"
-        aria-label="{% if is_favorited %}Remove from favourites{% else %}Add to favourites{% endif %}"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
-        </svg>
-      </button>
+      {% with product_id=product.id %}
+        {% include "_favorite_button.html" %}
+      {% endwith %}
+
 
       {% if images and images|length > 1 %}
       <button type="button" class="gallery-nav prev" id="galleryPrev" aria-label="Previous image">
