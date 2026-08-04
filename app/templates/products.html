@@ -61,6 +61,31 @@
   }
   .gallery-dots .dot.is-active { opacity: 1; width: 14px; border-radius: 3px; }
 
+  /* Gallery favourite heart */
+  .gallery-fav {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.92);
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+    z-index: 2;
+  }
+  html[data-theme="dark"] .gallery-fav { background: rgba(20,19,15,0.92); }
+  .gallery-fav:hover { transform: scale(1.08); color: var(--gold-deep); }
+  .gallery-fav svg { width: 17px; height: 17px; }
+  .gallery-fav.is-favorited { color: var(--gold-deep); }
+  .gallery-fav.is-favorited svg { fill: currentColor; }
+
   .product-title { font-size: 28px; line-height: 1.2; margin: 14px 0 4px; }
   .product-desc {
     font-size: 14.5px; line-height: 1.65; color: var(--gray-mid);
@@ -100,6 +125,57 @@
   }
   .info-btn:hover { color: var(--gold-deep); }
   .info-btn svg { width: 18px; height: 18px; }
+
+  /* Quantity dropdown */
+  .qty-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .qty-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .qty-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 120px;
+  }
+  .qty-select {
+    width: 100%;
+    padding: 10px 36px 10px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s ease;
+  }
+  .qty-select:focus {
+    outline: none;
+    border-color: var(--gold-deep);
+  }
+  .qty-chevron {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    color: var(--ink);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
   .btn-pill-detail {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     width: 100%; border-radius: 999px; padding: 15px 20px;
@@ -116,8 +192,6 @@
     background: transparent; color: var(--ink); border-color: var(--ink);
   }
   .btn-add-list:hover { border-color: var(--gold-deep); color: var(--gold-deep); }
-  .btn-add-list.is-favorited { border-color: var(--gold-deep); color: var(--gold-deep); }
-  .btn-add-list.is-favorited svg { fill: currentColor; }
 
   /* Specs */
   .specs-section { padding: 12px 0 64px; border-top: 1px solid var(--border); }
@@ -220,7 +294,6 @@
   </div>
 
   <div class="product-hero">
-
     <!-- Gallery -->
     <div class="gallery" id="productGallery">
       {% if product.image_url %}
@@ -305,6 +378,7 @@
         Buy now
       </button>
     </form>
+  </div>
 
   <!-- Specs -->
   <div class="specs-section">

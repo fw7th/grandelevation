@@ -56,6 +56,15 @@ async def account(request: Request, session: AsyncSession = Depends(get_session)
     )
 
 
+@router.post("/cart/add")
+async def cart_add(
+    product_id: int = Form(...),
+    quantity: int = Form(...),
+    action: str = Form(...),  # "add" or "buy_now"
+):
+    pass
+
+
 @router.post("/account/profile")
 async def update_profile(
     request: Request,
