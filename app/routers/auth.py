@@ -63,9 +63,7 @@ async def signup_post(
 
     if not email:
         errors["email"] = "Email is required."
-    elif "@" not in email:
-        errors["email"] = "Enter a valid email address."
-    elif "." not in email.rsplit("@", 1)[1]:
+    elif "@" not in email or "." not in email.rsplit("@", 1)[1]:
         errors["email"] = "Enter a valid email address."
 
     if len(password) < 8:
@@ -194,9 +192,7 @@ async def signin_post(
     # ---------- Validation ----------
     if not email:
         errors["email"] = "Email is required."
-    elif "@" not in email:
-        errors["email"] = "Enter a valid email address."
-    elif "." not in email.rsplit("@", 1)[1]:
+    elif "@" not in email or "." not in email.rsplit("@", 1)[1]:
         errors["email"] = "Enter a valid email address."
 
     if not password:
@@ -310,9 +306,7 @@ async def forgot_password_post(
 
     if not email:
         errors["email"] = "Email is required."
-    elif "@" not in email:
-        errors["email"] = "Enter a valid email address."
-    elif "." not in email.rsplit("@", 1)[1]:
+    elif "@" not in email or "." not in email.rsplit("@", 1)[1]:
         errors["email"] = "Enter a valid email address."
 
     # ---------- Validation failed ----------
