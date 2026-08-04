@@ -266,7 +266,9 @@
     </div>
 
     <!-- Buy Rail -->
-    <div class="buy-rail">
+    <form class="buy-rail" action="/cart/add" method="post">
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+
       <div class="buy-price">₦{{ "{:,.2f}".format(product.price) }}</div>
 
       <div class="return-policy-row">
@@ -277,25 +279,32 @@
         </button>
       </div>
 
-      <button type="button" class="btn-pill-detail btn-add-list" id="addToCartBtn">
+      <div class="qty-row">
+        <label for="qtySelect" class="qty-label">Quantity</label>
+        <div class="qty-wrap">
+          <select name="quantity" id="qtySelect" class="qty-select">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+          <svg class="qty-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+
+      <button type="submit" name="action" value="add" class="btn-pill-detail btn-add-cart" id="addToCartBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
         Add to cart
       </button>
 
-      <button
-        type="submit"
-        name="action"
-        class="btn-pill-detail btn-add-cart"
-        id="buyNowBtn"
-        value="buy_now"
-      >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-      </svg>
-      Buy now
+      <button type="submit" name="action" value="buy_now" class="btn-pill-detail btn-add-list" id="buyNowBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        Buy now
       </button>
-    </div>
-  </div>
+    </form>
 
   <!-- Specs -->
   <div class="specs-section">
