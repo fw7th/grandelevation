@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 
-from ..models import CartItem, Users
+from ..models import CartItem
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
@@ -20,7 +21,7 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
         return RedirectResponse("/catalog")
 
     statement = select(CartItem).where(CartItem.user_id == user.id)
-    result = await session.exec(statement)
+    cartitems = await session.exec(statement)
 
     # TODO: query CartItem + Product, compute totals
     return templates.TemplateResponse(
@@ -28,7 +29,7 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
         name="cart.html",
         context={
             "user": user,
-            "cart_items": result.all(),
+            "cart_items": cartitems.all(),
             "system_bundles": [],
             "subtotal": 0.0,
             "vat": 0.0,
@@ -37,7 +38,7 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     )
 
 
-@router.post("/cart")
+@router.post("/cart/add")
 async def cart_add(
     request: Request,
     product_id: int = Form(...),
@@ -47,6 +48,19 @@ async def cart_add(
     user = await authenticate(request, session)
     if not user:
         return RedirectResponse("/catalog")
+
+    cartitem = CartItem(
+        user_id=user.id,
+        product_id=product_id,
+        quantity=quantity,
+    )
+
+    try:
+        session.add(cartitem)
+        await session.commit()
+
+    except SQLAlchemyError:
+        await session.rollback()
 
 
 @router.get("/account")
@@ -79,10 +93,6 @@ async def update_profile(
     user = await authenticate(request, session)
     if not user:
         return RedirectResponse("/signin", status_code=303)
-
-    from sqlmodel import select
-
-    from app.models import Users
 
     user.username = username.strip()
     user.email = email.strip()
