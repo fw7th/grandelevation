@@ -124,3 +124,26 @@ async def test_cart_lifo_ordering(client, db_session):
     text = r.text
     # LIFO: most recently added (p2) should appear first
     assert text.index("Panel B") < text.index("Panel A")
+
+
+# ─── cart add ─────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_cart_add_creates_item_and_sets_added_param(client, db_session):
+    await _signup_user(client)
+    product = await _seed_product(db_session)
+
+    r = await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 2},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+    assert r.headers["location"] == f"/cart?added={product.id}"
+
+    result = await db_session.exec(select(CartItem))
+    items = result.all()
+    assert len(items) == 1
+    assert items[0].quantity == 2
+    assert items[0].product_id == product.id
