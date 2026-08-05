@@ -1,7 +1,7 @@
 import pytest
 from sqlmodel import select
 
-from app.models import CartItem, Product, User
+from app.models import CartItem, Product, Users
 
 # ─── helpers ──────────────────────────────────────────
 
@@ -76,3 +76,51 @@ async def test_account_redirects_when_not_authenticated(client):
     r = await client.get("/account", follow_redirects=False)
     assert r.status_code == 307
     assert r.headers["location"] == "/catalog"
+
+
+# ─── cart read ────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_cart_empty_for_authenticated_user(client, db_session):
+    await _signup_user(client)
+    r = await client.get("/cart")
+    assert r.status_code == 200
+    assert "Your cart is empty" in r.text
+
+
+@pytest.mark.asyncio
+async def test_cart_shows_item_and_computes_totals(client, db_session):
+    await _signup_user(client)
+    product = await _seed_product(db_session, price=25000.0)
+
+    await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 3},
+        follow_redirects=False,
+    )
+
+    r = await client.get("/cart")
+    assert r.status_code == 200
+    assert product.name in r.text
+    # 3 × 25,000 = 75,000
+    assert "75,000.00" in r.text
+
+
+@pytest.mark.asyncio
+async def test_cart_lifo_ordering(client, db_session):
+    await _signup_user(client)
+    p1 = await _seed_product(db_session, name="Panel A", price=100.0)
+    p2 = await _seed_product(db_session, name="Panel B", price=200.0)
+
+    await client.post(
+        "/cart/add", data={"product_id": p1.id, "quantity": 1}, follow_redirects=False
+    )
+    await client.post(
+        "/cart/add", data={"product_id": p2.id, "quantity": 1}, follow_redirects=False
+    )
+
+    r = await client.get("/cart")
+    text = r.text
+    # LIFO: most recently added (p2) should appear first
+    assert text.index("Panel B") < text.index("Panel A")
