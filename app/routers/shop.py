@@ -24,6 +24,7 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
         select(CartItem, Product)
         .join(Product, CartItem.product_id == Product.id)
         .where(CartItem.user_id == user.id)
+        .order_by(CartItem.updated_at.desc())  # LIFO: newest first
     )
 
     results = await session.exec(statement)
@@ -32,10 +33,17 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     subtotal = 0.0
     # Each result is (CartItem, Product)
     for cart_item, product in cart_items:
-        print(f"{product.name}: qty={cart_item.quantity}, price={product.price}")
         subtotal += cart_item.quantity * product.price
 
-    # TODO: Compute totals
+    # Dopamine hit: product just added?
+    added_product = None
+    added_param = request.query_params.get("added")
+    if added_param:
+        try:
+            added_product = await session.get(Product, int(added_param))
+        except (ValueError, TypeError):
+            pass
+
     return templates.TemplateResponse(
         request=request,
         name="cart.html",
@@ -45,6 +53,7 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
             "system_bundles": [],
             "total": subtotal,
             "subtotal": subtotal,
+            "added_product": added_product,
         },
     )
 
@@ -73,7 +82,9 @@ async def cart_add(
     except SQLAlchemyError:
         await session.rollback()
 
-    return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
+    return RedirectResponse(
+        f"/cart?added={product_id}", status_code=status.HTTP_302_FOUND
+    )
 
 
 @router.get("/account")
