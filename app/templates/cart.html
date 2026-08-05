@@ -383,12 +383,6 @@
 
 {% block extra_js %}
 <script>
-function updateQty(itemId, delta) {
-  // HTMX: patch /cart/item/{itemId} with { quantity_change: delta }
-  // For now, reload on success
-  console.log('Update qty', itemId, delta);
-}
-
 // Remove toast from DOM after animation so it doesn't eat pointer events
 const toast = document.getElementById('add-toast');
 if (toast) {
