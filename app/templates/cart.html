@@ -306,10 +306,13 @@
               <span class="qty-value">{{ product.quantity }}</span>
               <button type="button" class="qty-btn" onclick="updateQty({{ item.id }}, 1)">+</button>
             </div>
-            <button type="button" class="cart-item-remove" onclick="removeItem({{ item.id }})">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              Remove
-            </button>
+                <form action="/cart/remove" method="post" style="display:inline;">
+                  <input type="hidden" name="cart_item_id" value="{{ product.id }}">
+                  <button type="submit" class="cart-item-remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    Remove
+                  </button>
+                </form>
           </div>
           <div class="cart-item-price">₦{{ "{:,.2f}".format(item.price * product.quantity) }}</div>
         </div>
@@ -373,12 +376,6 @@ function updateQty(itemId, delta) {
   console.log('Update qty', itemId, delta);
 }
 
-function removeItem(itemId) {
-  // HTMX: delete /cart/item/{itemId}
-  // For now, visual removal
-  const row = document.querySelector('[data-item-id="' + itemId + '"]');
-  if (row) row.remove();
-}
 // Remove toast from DOM after animation so it doesn't eat pointer events
 const toast = document.getElementById('add-toast');
 if (toast) {
