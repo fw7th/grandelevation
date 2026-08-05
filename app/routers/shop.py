@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 
-from ..models import CartItem
+from ..models import CartItem, Product
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
@@ -20,16 +20,26 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     if not user:
         return RedirectResponse("/catalog")
 
-    statement = select(CartItem).where(CartItem.user_id == user.id)
-    cartitems = await session.exec(statement)
+    statement = (
+        select(CartItem, Product)
+        .join(Product, CartItem.product_id == Product.id)
+        .where(CartItem.user_id == user.id)
+    )
 
-    # TODO: query CartItem + Product, compute totals
+    results = await session.exec(statement)
+    cart_items = results.all()
+
+    # Each result is (CartItem, Product)
+    for cart_item, product in cart_items:
+        print(f"{product.name}: qty={cart_item.quantity}, price={product.price}")
+
+    # TODO: Compute totals
     return templates.TemplateResponse(
         request=request,
         name="cart.html",
         context={
             "user": user,
-            "cart_items": cartitems.all(),
+            "cart_items": cart_items,
             "system_bundles": [],
             "subtotal": 0.0,
             "vat": 0.0,
