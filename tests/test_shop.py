@@ -206,3 +206,104 @@ async def test_cart_remove_ignores_other_users_item(client, db_session):
     # Item A still exists
     result = await db_session.exec(select(CartItem))
     assert len(result.all()) == 1
+
+
+# ─── cart update (delta) ──────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_cart_update_increases_quantity(client, db_session):
+    await _signup_user(client)
+    product = await _seed_product(db_session)
+
+    await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 1},
+        follow_redirects=False,
+    )
+    result = await db_session.exec(select(CartItem))
+    cart_item = result.first()
+
+    r = await client.post(
+        "/cart/update",
+        data={"cart_item_id": cart_item.id, "delta": 1},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+
+    await db_session.refresh(cart_item)
+    assert cart_item.quantity == 2
+
+
+@pytest.mark.asyncio
+async def test_cart_update_decreases_quantity(client, db_session):
+    await _signup_user(client)
+    product = await _seed_product(db_session)
+
+    await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 3},
+        follow_redirects=False,
+    )
+    result = await db_session.exec(select(CartItem))
+    cart_item = result.first()
+
+    r = await client.post(
+        "/cart/update",
+        data={"cart_item_id": cart_item.id, "delta": -1},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+
+    await db_session.refresh(cart_item)
+    assert cart_item.quantity == 2
+
+
+@pytest.mark.asyncio
+async def test_cart_update_deletes_when_quantity_zero(client, db_session):
+    await _signup_user(client)
+    product = await _seed_product(db_session)
+
+    await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 1},
+        follow_redirects=False,
+    )
+    result = await db_session.exec(select(CartItem))
+    cart_item = result.first()
+
+    r = await client.post(
+        "/cart/update",
+        data={"cart_item_id": cart_item.id, "delta": -1},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+
+    result = await db_session.exec(select(CartItem))
+    assert len(result.all()) == 0
+
+
+@pytest.mark.asyncio
+async def test_cart_update_ignores_other_users_item(client, db_session):
+    await _signup_user(client, username="usera", email="a@example.com")
+    product = await _seed_product(db_session)
+    await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 5},
+        follow_redirects=False,
+    )
+    result = await db_session.exec(select(CartItem))
+    item_a = result.first()
+
+    client.cookies.clear()
+    await _signup_user(client, username="userb", email="b@example.com")
+
+    r = await client.post(
+        "/cart/update",
+        data={"cart_item_id": item_a.id, "delta": -1},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+
+    await db_session.refresh(item_a)
+    assert item_a.quantity == 5
