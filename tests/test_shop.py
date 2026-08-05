@@ -147,3 +147,62 @@ async def test_cart_add_creates_item_and_sets_added_param(client, db_session):
     assert len(items) == 1
     assert items[0].quantity == 2
     assert items[0].product_id == product.id
+
+
+# ─── cart remove ──────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_cart_remove_deletes_item(client, db_session):
+    await _signup_user(client)
+    product = await _seed_product(db_session)
+
+    await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 1},
+        follow_redirects=False,
+    )
+
+    result = await db_session.exec(select(CartItem))
+    cart_item = result.first()
+
+    r = await client.post(
+        "/cart/remove",
+        data={"cart_item_id": cart_item.id},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+    assert r.headers["location"] == "/cart"
+
+    result = await db_session.exec(select(CartItem))
+    assert len(result.all()) == 0
+
+
+@pytest.mark.asyncio
+async def test_cart_remove_ignores_other_users_item(client, db_session):
+    # User A creates item
+    await _signup_user(client, username="usera", email="a@example.com")
+    product = await _seed_product(db_session)
+    await client.post(
+        "/cart/add",
+        data={"product_id": product.id, "quantity": 1},
+        follow_redirects=False,
+    )
+    result = await db_session.exec(select(CartItem))
+    item_a = result.first()
+
+    # User B tries to delete it
+    client.cookies.clear()
+    await _signup_user(client, username="userb", email="b@example.com")
+
+    r = await client.post(
+        "/cart/remove",
+        data={"cart_item_id": item_a.id},
+        follow_redirects=False,
+    )
+    assert r.status_code == 302
+    assert r.headers["location"] == "/cart"
+
+    # Item A still exists
+    result = await db_session.exec(select(CartItem))
+    assert len(result.all()) == 1
