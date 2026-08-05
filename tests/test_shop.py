@@ -1,5 +1,6 @@
 import pytest
 from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models import CartItem, Product, Users
 
@@ -19,24 +20,25 @@ async def _signup_user(client, username="shopuser", email="shop@example.com"):
 
 
 async def _seed_product(
-    db_session,
+    engine,
     name="Test Panel",
     price=50000.0,
     category="solar_panel",
     image_url=None,
     description="A test product",
 ):
-    product = Product(
-        name=name,
-        price=price,
-        category=category,
-        image_url=image_url,
-        description=description,
-    )
-    db_session.add(product)
-    await db_session.commit()
-    await db_session.refresh(product)
-    return product
+    async with AsyncSession(engine) as session:
+        product = Product(
+            name=name,
+            price=price,
+            category=category,
+            image_url=image_url,
+            description=description,
+        )
+        session.add(product)
+        await session.commit()
+        await session.refresh(product)
+        return product
 
 
 # ─── auth guards ──────────────────────────────────────
@@ -93,7 +95,7 @@ async def test_account_redirects_when_not_authenticated(client):
 
 
 @pytest.mark.asyncio
-async def test_cart_empty_for_authenticated_user(client, db_session):
+async def test_cart_empty_for_authenticated_user(client):
     await _signup_user(client)
     r = await client.get("/cart")
     assert r.status_code == 200
@@ -101,9 +103,9 @@ async def test_cart_empty_for_authenticated_user(client, db_session):
 
 
 @pytest.mark.asyncio
-async def test_cart_shows_item_and_computes_totals(client, db_session):
+async def test_cart_shows_item_and_computes_totals(client, engine):
     await _signup_user(client)
-    product = await _seed_product(db_session, price=25000.0)
+    product = await _seed_product(engine, price=25000.0)
 
     await client.post(
         "/cart/add",
@@ -119,10 +121,10 @@ async def test_cart_shows_item_and_computes_totals(client, db_session):
 
 
 @pytest.mark.asyncio
-async def test_cart_lifo_ordering(client, db_session):
+async def test_cart_lifo_ordering(client, engine):
     await _signup_user(client)
-    p1 = await _seed_product(db_session, name="Panel A", price=100.0)
-    p2 = await _seed_product(db_session, name="Panel B", price=200.0)
+    p1 = await _seed_product(engine, name="Panel A", price=100.0)
+    p2 = await _seed_product(engine, name="Panel B", price=200.0)
 
     await client.post(
         "/cart/add", data={"product_id": p1.id, "quantity": 1}, follow_redirects=False
@@ -141,9 +143,9 @@ async def test_cart_lifo_ordering(client, db_session):
 
 
 @pytest.mark.asyncio
-async def test_cart_add_creates_item_and_sets_added_param(client, db_session):
+async def test_cart_add_creates_item_and_sets_added_param(client, engine):
     await _signup_user(client)
-    product = await _seed_product(db_session)
+    product = await _seed_product(engine)
 
     r = await client.post(
         "/cart/add",
@@ -153,20 +155,21 @@ async def test_cart_add_creates_item_and_sets_added_param(client, db_session):
     assert r.status_code == 302
     assert r.headers["location"] == f"/cart?added={product.id}"
 
-    result = await db_session.exec(select(CartItem))
-    items = result.all()
-    assert len(items) == 1
-    assert items[0].quantity == 2
-    assert items[0].product_id == product.id
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        items = result.all()
+        assert len(items) == 1
+        assert items[0].quantity == 2
+        assert items[0].product_id == product.id
 
 
 # ─── cart remove ──────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_cart_remove_deletes_item(client, db_session):
+async def test_cart_remove_deletes_item(client, engine):
     await _signup_user(client)
-    product = await _seed_product(db_session)
+    product = await _seed_product(engine)
 
     await client.post(
         "/cart/add",
@@ -174,8 +177,9 @@ async def test_cart_remove_deletes_item(client, db_session):
         follow_redirects=False,
     )
 
-    result = await db_session.exec(select(CartItem))
-    cart_item = result.first()
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        cart_item = result.first()
 
     r = await client.post(
         "/cart/remove",
@@ -185,24 +189,27 @@ async def test_cart_remove_deletes_item(client, db_session):
     assert r.status_code == 302
     assert r.headers["location"] == "/cart"
 
-    result = await db_session.exec(select(CartItem))
-    assert len(result.all()) == 0
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        assert len(result.all()) == 0
 
 
 @pytest.mark.asyncio
-async def test_cart_remove_ignores_other_users_item(client, db_session):
-    # Users A creates item
+async def test_cart_remove_ignores_other_users_item(client, engine):
+    # User A creates item
     await _signup_user(client, username="usera", email="a@example.com")
-    product = await _seed_product(db_session)
+    product = await _seed_product(engine)
     await client.post(
         "/cart/add",
         data={"product_id": product.id, "quantity": 1},
         follow_redirects=False,
     )
-    result = await db_session.exec(select(CartItem))
-    item_a = result.first()
 
-    # Users B tries to delete it
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        item_a = result.first()
+
+    # User B tries to delete it
     client.cookies.clear()
     await _signup_user(client, username="userb", email="b@example.com")
 
@@ -215,25 +222,28 @@ async def test_cart_remove_ignores_other_users_item(client, db_session):
     assert r.headers["location"] == "/cart"
 
     # Item A still exists
-    result = await db_session.exec(select(CartItem))
-    assert len(result.all()) == 1
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        assert len(result.all()) == 1
 
 
 # ─── cart update (delta) ──────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_cart_update_increases_quantity(client, db_session):
+async def test_cart_update_increases_quantity(client, engine):
     await _signup_user(client)
-    product = await _seed_product(db_session)
+    product = await _seed_product(engine)
 
     await client.post(
         "/cart/add",
         data={"product_id": product.id, "quantity": 1},
         follow_redirects=False,
     )
-    result = await db_session.exec(select(CartItem))
-    cart_item = result.first()
+
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        cart_item = result.first()
 
     r = await client.post(
         "/cart/update",
@@ -242,22 +252,26 @@ async def test_cart_update_increases_quantity(client, db_session):
     )
     assert r.status_code == 302
 
-    await db_session.refresh(cart_item)
-    assert cart_item.quantity == 2
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem).where(CartItem.id == cart_item.id))
+        refreshed = result.first()
+        assert refreshed.quantity == 2
 
 
 @pytest.mark.asyncio
-async def test_cart_update_decreases_quantity(client, db_session):
+async def test_cart_update_decreases_quantity(client, engine):
     await _signup_user(client)
-    product = await _seed_product(db_session)
+    product = await _seed_product(engine)
 
     await client.post(
         "/cart/add",
         data={"product_id": product.id, "quantity": 3},
         follow_redirects=False,
     )
-    result = await db_session.exec(select(CartItem))
-    cart_item = result.first()
+
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        cart_item = result.first()
 
     r = await client.post(
         "/cart/update",
@@ -266,22 +280,26 @@ async def test_cart_update_decreases_quantity(client, db_session):
     )
     assert r.status_code == 302
 
-    await db_session.refresh(cart_item)
-    assert cart_item.quantity == 2
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem).where(CartItem.id == cart_item.id))
+        refreshed = result.first()
+        assert refreshed.quantity == 2
 
 
 @pytest.mark.asyncio
-async def test_cart_update_deletes_when_quantity_zero(client, db_session):
+async def test_cart_update_deletes_when_quantity_zero(client, engine):
     await _signup_user(client)
-    product = await _seed_product(db_session)
+    product = await _seed_product(engine)
 
     await client.post(
         "/cart/add",
         data={"product_id": product.id, "quantity": 1},
         follow_redirects=False,
     )
-    result = await db_session.exec(select(CartItem))
-    cart_item = result.first()
+
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        cart_item = result.first()
 
     r = await client.post(
         "/cart/update",
@@ -290,21 +308,24 @@ async def test_cart_update_deletes_when_quantity_zero(client, db_session):
     )
     assert r.status_code == 302
 
-    result = await db_session.exec(select(CartItem))
-    assert len(result.all()) == 0
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        assert len(result.all()) == 0
 
 
 @pytest.mark.asyncio
-async def test_cart_update_ignores_other_users_item(client, db_session):
+async def test_cart_update_ignores_other_users_item(client, engine):
     await _signup_user(client, username="usera", email="a@example.com")
-    product = await _seed_product(db_session)
+    product = await _seed_product(engine)
     await client.post(
         "/cart/add",
         data={"product_id": product.id, "quantity": 5},
         follow_redirects=False,
     )
-    result = await db_session.exec(select(CartItem))
-    item_a = result.first()
+
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem))
+        item_a = result.first()
 
     client.cookies.clear()
     await _signup_user(client, username="userb", email="b@example.com")
@@ -316,15 +337,17 @@ async def test_cart_update_ignores_other_users_item(client, db_session):
     )
     assert r.status_code == 302
 
-    await db_session.refresh(item_a)
-    assert item_a.quantity == 5
+    async with AsyncSession(engine) as session:
+        result = await session.exec(select(CartItem).where(CartItem.id == item_a.id))
+        refreshed = result.first()
+        assert refreshed.quantity == 5
 
 
 # ─── account ──────────────────────────────────────────
 
 
 @pytest.mark.asyncio
-async def test_account_page_loads_for_authenticated_user(client, db_session):
+async def test_account_page_loads_for_authenticated_user(client):
     await _signup_user(client)
     r = await client.get("/account")
     assert r.status_code == 200
@@ -332,7 +355,7 @@ async def test_account_page_loads_for_authenticated_user(client, db_session):
 
 
 @pytest.mark.asyncio
-async def test_profile_update_persists_changes(client, db_session):
+async def test_profile_update_persists_changes(client, engine):
     await _signup_user(client)
 
     r = await client.post(
@@ -347,9 +370,10 @@ async def test_profile_update_persists_changes(client, db_session):
     assert r.status_code == 303
     assert r.headers["location"] == "/account"
 
-    result = await db_session.exec(
-        select(Users).where(Users.email == "new@example.com")
-    )
-    user = result.first()
-    assert user is not None
-    assert user.username == "newname"
+    async with AsyncSession(engine) as session:
+        result = await session.exec(
+            select(Users).where(Users.email == "new@example.com")
+        )
+        user = result.first()
+        assert user is not None
+        assert user.username == "newname"
