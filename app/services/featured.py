@@ -48,6 +48,7 @@ def _seed_for_today() -> float:
 async def _seed_random(session: AsyncSession) -> None:
     """Seed this connection's random() so ORDER BY random() is stable today."""
     seed = _seed_for_today()
+    print("Seed", seed)
     # session.execute() (plain SQLAlchemy async, always available) rather
     # than session.exec() (SQLModel's ORM-row-unwrapping wrapper, meant
     # for Select statements) -- keeps this independent of SQLModel version

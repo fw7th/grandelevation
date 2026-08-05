@@ -31,3 +31,14 @@ test = [
     "httpx>=0.27",
     "aiosqlite>=0.20",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.1",
+]
+
+[tool.ruff]
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+ignore = ["B008", "I001", "DTZ003", "DTZ011", "BLE001"] # Do not perform function call `Depends` in argument defaults

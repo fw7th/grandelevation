@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import RedirectResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
