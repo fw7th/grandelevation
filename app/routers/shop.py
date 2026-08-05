@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 
-from ..models import CartItem
+from ..models import CartItem, Product
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
@@ -19,25 +20,45 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     if not user:
         return RedirectResponse("/catalog")
 
-    statement = select(CartItem).where(CartItem.user_id == user.id)
-    result = await session.exec(statement)
+    statement = (
+        select(CartItem, Product)
+        .join(Product, CartItem.product_id == Product.id)
+        .where(CartItem.user_id == user.id)
+        .order_by(CartItem.updated_at.desc())  # LIFO: newest first
+    )
 
-    # TODO: query CartItem + Product, compute totals
+    results = await session.exec(statement)
+    cart_items = results.all()
+
+    subtotal = 0.0
+    # Each result is (CartItem, Product)
+    for cart_item, product in cart_items:
+        subtotal += cart_item.quantity * product.price
+
+    # Dopamine hit: product just added?
+    added_product = None
+    added_param = request.query_params.get("added")
+    if added_param:
+        try:
+            added_product = await session.get(Product, int(added_param))
+        except (ValueError, TypeError):
+            pass
+
     return templates.TemplateResponse(
         request=request,
         name="cart.html",
         context={
-            "user": user,
-            "cart_items": result.all(),
+            "username": user.username if user else None,
+            "cart_items": cart_items,
             "system_bundles": [],
-            "subtotal": 0.0,
-            "vat": 0.0,
-            "total": 0.0,
+            "total": subtotal,
+            "subtotal": subtotal,
+            "added_product": added_product,
         },
     )
 
 
-@router.post("/cart")
+@router.post("/cart/add")
 async def cart_add(
     request: Request,
     product_id: int = Form(...),
@@ -47,6 +68,23 @@ async def cart_add(
     user = await authenticate(request, session)
     if not user:
         return RedirectResponse("/catalog")
+
+    cartitem = CartItem(
+        user_id=user.id,
+        product_id=product_id,
+        quantity=quantity,
+    )
+
+    try:
+        session.add(cartitem)
+        await session.commit()
+
+    except SQLAlchemyError:
+        await session.rollback()
+
+    return RedirectResponse(
+        f"/cart?added={product_id}", status_code=status.HTTP_302_FOUND
+    )
 
 
 @router.get("/account")
