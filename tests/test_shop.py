@@ -307,3 +307,36 @@ async def test_cart_update_ignores_other_users_item(client, db_session):
 
     await db_session.refresh(item_a)
     assert item_a.quantity == 5
+
+
+# ─── account ──────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_account_page_loads_for_authenticated_user(client, db_session):
+    await _signup_user(client)
+    r = await client.get("/account")
+    assert r.status_code == 200
+    assert "shopuser" in r.text
+
+
+@pytest.mark.asyncio
+async def test_profile_update_persists_changes(client, db_session):
+    await _signup_user(client)
+
+    r = await client.post(
+        "/account/profile",
+        data={
+            "username": "newname",
+            "email": "new@example.com",
+            "phone": "08012345678",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    assert r.headers["location"] == "/account"
+
+    result = await db_session.exec(select(User).where(User.email == "new@example.com"))
+    user = result.first()
+    assert user is not None
+    assert user.username == "newname"
