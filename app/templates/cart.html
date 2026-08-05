@@ -232,28 +232,24 @@
       </div>
     </div>
 
-    <div class="summary-rail">
-      <h3>Order summary</h3>
+<div class="summary-rail">
+  <h3>Order summary</h3>
 
-      <div class="summary-row">
-        <span class="label">Subtotal</span>
-        <span class="value">₦{{ "{:,.2f}".format(subtotal) }}</span>
-      </div>
-      <div class="summary-row">
-        <span class="label">Shipping</span>
-        <span class="value">Calculated at checkout</span>
-      </div>
-      <div class="summary-row">
-        <span class="label">Estimated VAT</span>
-        <span class="value">₦{{ "{:,.2f}".format(vat or 0) }}</span>
-      </div>
+  <div class="summary-row">
+    <span class="label">Subtotal</span>
+    <span class="value">₦{{ "{:,.2f}".format(subtotal) }}</span>
+  </div>
+  <div class="summary-row">
+    <span class="label">Delivery</span>
+    <span class="value">Calculated at checkout</span>
+  </div>
 
-      <div class="summary-divider"></div>
+  <div class="summary-divider"></div>
 
-      <div class="summary-total">
-        <span class="label">Total</span>
-        <span class="value">₦{{ "{:,.2f}".format(total) }}</span>
-      </div>
+  <div class="summary-total">
+    <span class="label">Total</span>
+    <span class="value">₦{{ "{:,.2f}".format(total) }}</span>
+  </div>
 
       {% if username %}
       <button type="button" class="checkout-btn" onclick="window.location.href='/checkout'">

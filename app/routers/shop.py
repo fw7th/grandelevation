@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
-from sqlmodel import col, select
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
@@ -29,21 +29,22 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     results = await session.exec(statement)
     cart_items = results.all()
 
+    subtotal = 0.0
     # Each result is (CartItem, Product)
     for cart_item, product in cart_items:
         print(f"{product.name}: qty={cart_item.quantity}, price={product.price}")
+        subtotal += cart_item.quantity * product.price
 
     # TODO: Compute totals
     return templates.TemplateResponse(
         request=request,
         name="cart.html",
         context={
-            "user": user,
+            "username": user.username if user else None,
             "cart_items": cart_items,
             "system_bundles": [],
-            "subtotal": 0.0,
-            "vat": 0.0,
-            "total": 0.0,
+            "total": subtotal,
+            "subtotal": subtotal,
         },
     )
 
@@ -71,6 +72,8 @@ async def cart_add(
 
     except SQLAlchemyError:
         await session.rollback()
+
+    return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
 
 
 @router.get("/account")
