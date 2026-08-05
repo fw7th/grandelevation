@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 
+from ..models import CartItem
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
+templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/cart")
@@ -15,9 +19,8 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     if not user:
         return RedirectResponse("/catalog")
 
-    from fastapi.templating import Jinja2Templates
-
-    templates = Jinja2Templates(directory="app/templates")
+    statement = select(CartItem).where(CartItem.user_id == user.id)
+    result = await session.exec(statement)
 
     # TODO: query CartItem + Product, compute totals
     return templates.TemplateResponse(
@@ -25,7 +28,7 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
         name="cart.html",
         context={
             "user": user,
-            "cart_items": [],
+            "cart_items": result.all(),
             "system_bundles": [],
             "subtotal": 0.0,
             "vat": 0.0,
@@ -34,15 +37,23 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     )
 
 
+@router.post("/cart")
+async def cart_add(
+    request: Request,
+    product_id: int = Form(...),
+    quantity: int = Form(...),
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+    if not user:
+        return RedirectResponse("/catalog")
+
+
 @router.get("/account")
 async def account(request: Request, session: AsyncSession = Depends(get_session)):
     user = await authenticate(request, session)
     if not user:
         return RedirectResponse("/catalog")
-
-    from fastapi.templating import Jinja2Templates
-
-    templates = Jinja2Templates(directory="app/templates")
 
     # TODO: query orders and saved_systems
     return templates.TemplateResponse(
@@ -68,10 +79,6 @@ async def update_profile(
     user = await authenticate(request, session)
     if not user:
         return RedirectResponse("/signin", status_code=303)
-
-    from sqlmodel import select
-
-    from app.models import Users
 
     user.username = username.strip()
     user.email = email.strip()
