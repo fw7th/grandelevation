@@ -19,9 +19,20 @@ async def _signup_user(client, username="shopuser", email="shop@example.com"):
 
 
 async def _seed_product(
-    db_session, name="Test Panel", price=50000.0, category="solar_panel", image_url=None
+    db_session,
+    name="Test Panel",
+    price=50000.0,
+    category="solar_panel",
+    image_url=None,
+    description="A test product",
 ):
-    product = Product(name=name, price=price, category=category, image_url=image_url)
+    product = Product(
+        name=name,
+        price=price,
+        category=category,
+        image_url=image_url,
+        description=description,
+    )
     db_session.add(product)
     await db_session.commit()
     await db_session.refresh(product)
@@ -180,7 +191,7 @@ async def test_cart_remove_deletes_item(client, db_session):
 
 @pytest.mark.asyncio
 async def test_cart_remove_ignores_other_users_item(client, db_session):
-    # User A creates item
+    # Users A creates item
     await _signup_user(client, username="usera", email="a@example.com")
     product = await _seed_product(db_session)
     await client.post(
@@ -191,7 +202,7 @@ async def test_cart_remove_ignores_other_users_item(client, db_session):
     result = await db_session.exec(select(CartItem))
     item_a = result.first()
 
-    # User B tries to delete it
+    # Users B tries to delete it
     client.cookies.clear()
     await _signup_user(client, username="userb", email="b@example.com")
 
@@ -336,7 +347,9 @@ async def test_profile_update_persists_changes(client, db_session):
     assert r.status_code == 303
     assert r.headers["location"] == "/account"
 
-    result = await db_session.exec(select(User).where(User.email == "new@example.com"))
+    result = await db_session.exec(
+        select(Users).where(Users.email == "new@example.com")
+    )
     user = result.first()
     assert user is not None
     assert user.username == "newname"
