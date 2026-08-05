@@ -87,6 +87,59 @@ async def cart_add(
     )
 
 
+@router.post("/cart/remove")
+async def cart_remove(
+    request: Request,
+    cart_item_id: int = Form(...),
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+    if not user:
+        return RedirectResponse("/catalog")
+
+    cart_item = await session.get(CartItem, cart_item_id)
+
+    # Safety check: only delete if it exists and belongs to this user
+    if cart_item and cart_item.user_id == user.id:
+        try:
+            await session.delete(cart_item)
+            await session.commit()
+        except SQLAlchemyError:
+            await session.rollback()
+
+    return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/cart/update")
+async def cart_update(
+    request: Request,
+    cart_item_id: int = Form(...),
+    delta: int = Form(...),
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+    if not user:
+        return RedirectResponse("/catalog")
+
+    cart_item = await session.get(CartItem, cart_item_id)
+    if not cart_item or cart_item.user_id != user.id:
+        return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
+
+    new_qty = cart_item.quantity + delta
+
+    if new_qty <= 0:
+        await session.delete(cart_item)
+    else:
+        cart_item.quantity = new_qty
+
+    try:
+        await session.commit()
+    except SQLAlchemyError:
+        await session.rollback()
+
+    return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
+
+
 @router.get("/account")
 async def account(request: Request, session: AsyncSession = Depends(get_session)):
     user = await authenticate(request, session)
