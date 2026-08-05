@@ -28,6 +28,9 @@
     align-items: center;
     gap: 14px;
   }
+    .add-toast.dismissed {
+      animation: toastOut 0.35s cubic-bezier(0.55, 0, 1, 0.45) forwards !important;
+    }
   .add-toast-img {
     width: 48px; height: 48px; border-radius: 10px;
     background: var(--gold-light); overflow: hidden;
@@ -379,9 +382,25 @@ function updateQty(itemId, delta) {
 // Remove toast from DOM after animation so it doesn't eat pointer events
 const toast = document.getElementById('add-toast');
 if (toast) {
+  let gone = false;
+  const removeToast = () => {
+    if (gone) return;
+    gone = true;
+    toast.remove();
+  };
+
+  // Normal auto-dismiss
   toast.addEventListener('animationend', (e) => {
-    if (e.animationName === 'toastOut') toast.remove();
+    if (e.animationName === 'toastOut') removeToast();
   });
+
+  // Click anywhere to dismiss early
+  document.addEventListener('click', () => {
+    toast.classList.add('dismissed');
+    toast.addEventListener('animationend', (e) => {
+      if (e.animationName === 'toastOut') removeToast();
+    }, {once: true});
+  }, {once: true});
 }
 </script>
 {% endblock %}
