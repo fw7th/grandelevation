@@ -9,7 +9,7 @@ from app.main import app
 
 
 @pytest_asyncio.fixture
-async def client():
+async def engine():
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -19,6 +19,12 @@ async def client():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
+    yield engine
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def client(engine):
     async def override_get_session():
         from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -33,3 +39,11 @@ async def client():
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def db_session(engine):
+    from sqlmodel.ext.asyncio.session import AsyncSession
+
+    async with AsyncSession(engine) as session:
+        yield session

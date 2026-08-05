@@ -5,35 +5,28 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "aiosqlite>=0.22.1",
     "asyncpg>=0.31.0",
     "fastapi>=0.138.1",
     "google-api-python-client>=2.198.0",
     "google-auth-httplib2>=0.4.0",
     "google-auth-oauthlib>=1.4.0",
-    "httpx>=0.28.1",
     "jinja2>=3.1.6",
     "passlib[bcrypt]>=1.7.4",
     "psycopg[binary]>=3.3.4",
     "pwdlib[argon2]>=0.3.0",
     "pydantic[dotenv,email]>=2.13.4",
-    "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
     "python-multipart>=0.0.32",
     "sqlalchemy>=2.0.51",
     "sqlmodel>=0.0.39",
     "uvicorn[standard]>=0.49.0",
 ]
-[project.optional-dependencies]
-test = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.23",
-    "httpx>=0.27",
-    "aiosqlite>=0.20",
-]
 
 [dependency-groups]
 dev = [
+    "aiosqlite>=0.22.1",
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.16.1",
 ]
 
@@ -41,4 +34,4 @@ dev = [
 extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
-ignore = ["B008", "I001", "DTZ003", "DTZ011", "BLE001"] # Do not perform function call `Depends` in argument defaults
+ignore = ["B008", "I001", "DTZ003", "DTZ011", "BLE001"]
