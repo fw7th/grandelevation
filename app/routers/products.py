@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
