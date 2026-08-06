@@ -4,6 +4,75 @@
 
 {% block extra_css %}
 <style>
+  /* ─── SUCCESS BANNER ─── */
+  .success-banner {
+    display: none;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    background: rgba(61, 92, 58, 0.10);
+    border: 1.5px solid rgba(61, 92, 58, 0.30);
+    border-radius: 12px;
+    color: var(--green);
+    font-size: 14px;
+    line-height: 1.5;
+    animation: bannerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .success-banner.visible { display: flex; }
+  .success-banner .icon { font-size: 18px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+  .success-banner .msg { flex: 1; }
+  .success-banner .msg strong { font-weight: 700; color: var(--ink); display: block; margin-bottom: 2px; }
+
+  /* ─── RATE LIMIT BANNER ─── */
+  .rate-limit-banner {
+    display: none;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    background: rgba(192, 57, 43, 0.08);
+    border: 1.5px solid rgba(192, 57, 43, 0.25);
+    border-radius: 12px;
+    color: var(--danger);
+    font-size: 14px;
+    line-height: 1.5;
+    animation: bannerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .rate-limit-banner.visible { display: flex; }
+  .rate-limit-banner .icon {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .rate-limit-banner .msg { flex: 1; }
+  .rate-limit-banner .msg strong {
+    font-weight: 700;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 2px;
+  }
+  @keyframes bannerSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── FORM ERRORS ─── */
+  .field-group.has-error input {
+    border-color: var(--danger);
+    background: rgba(192, 57, 43, 0.04);
+  }
+  .field-group.has-error input:focus {
+    border-color: var(--danger);
+  }
+  .field-error {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
   .account-layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -188,32 +257,63 @@
     </aside>
 
     <div class="account-main">
+
       <!-- PROFILE -->
       <section class="account-card" id="tab-profile">
         <h2>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
           Profile
         </h2>
+
+        {% if success %}
+        <div class="success-banner visible">
+          <span class="icon">✅</span>
+          <span class="msg">
+            <strong>Details updated</strong>
+            Your profile has been saved successfully.
+          </span>
+        </div>
+        {% endif %}
+
+        {% if rate_limited %}
+        <div class="rate-limit-banner visible">
+          <span class="icon">⏳</span>
+          <span class="msg">
+            <strong>Whoa, slow down</strong>
+            You've been updating your details too frequently. Please wait a while before making more changes.
+          </span>
+        </div>
+        {% endif %}
+
         <form method="post" action="/account/profile" class="profile-grid">
-          <div class="field-group">
+          <div class="field-group {% if errors.get('username') %}has-error{% endif %}">
             <label for="acc-username">Username</label>
-            <input type="text" id="acc-username" name="username" value="{{ user.username }}" required>
+            <input type="text" id="acc-username" name="username" value="{{ username }}" required>
+            {% if errors.get('username') %}
+            <div class="field-error">{{ errors.username }}</div>
+            {% endif %}
           </div>
-          <div class="field-group">
+          <div class="field-group {% if errors.get('email') %}has-error{% endif %}">
             <label for="acc-email">Email</label>
-            <input type="email" id="acc-email" name="email" value="{{ user.email }}" required>
+            <input type="email" id="acc-email" name="email" value="{{ email }}" required>
+            {% if errors.get('email') %}
+            <div class="field-error">{{ errors.email }}</div>
+            {% endif %}
           </div>
           <div class="field-group">
             <label for="acc-phone">Phone (WhatsApp)</label>
-            <input type="tel" id="acc-phone" name="phone" value="{{ user.phone or '' }}" placeholder="+234...">
+            <input type="tel" id="acc-phone" name="phone" value="{{ phone or '' }}" placeholder="+234...">
           </div>
-          <div class="field-group">
+          <div class="field-group {% if errors.get('password') %}has-error{% endif %}">
             <label for="acc-pwd">New password</label>
             <input type="password" id="acc-pwd" name="password" placeholder="Leave blank to keep current">
+            {% if errors.get('password') %}
+            <div class="field-error">{{ errors.password }}</div>
+            {% endif %}
           </div>
           <div class="field-actions" style="grid-column: 1 / -1;">
             <button type="submit" class="btn-sm btn-sm-primary">Save changes</button>
-            <button type="reset" class="btn-sm btn-sm-secondary">Reset</button>
+            <button type="reset" class="btn-sm btn-sm-secondary">Reset form</button>
           </div>
         </form>
       </section>
@@ -277,6 +377,17 @@
 
 {% block extra_js %}
 <script>
+// Auto-hide rate limit banner after 6s
+const banner = document.querySelector('.rate-limit-banner');
+if (banner) {
+  setTimeout(() => {
+    banner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-8px)';
+    setTimeout(() => banner.remove(), 400);
+  }, 6000);
+}
+
 function switchTab(e, id) {
   e.preventDefault();
   document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));

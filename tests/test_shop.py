@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -358,6 +360,15 @@ async def test_account_page_loads_for_authenticated_user(client):
 async def test_profile_update_persists_changes(client, engine):
     await _signup_user(client)
 
+    # Bypass the 3-hour rate limit by setting updated_at to 4 hours ago
+    async with AsyncSession(engine) as session:
+        result = await session.exec(
+            select(Users).where(Users.email == "shop@example.com")
+        )
+        user = result.first()
+        user.updated_at = datetime.utcnow() - timedelta(hours=4)
+        await session.commit()
+
     r = await client.post(
         "/account/profile",
         data={
@@ -368,7 +379,7 @@ async def test_profile_update_persists_changes(client, engine):
         follow_redirects=False,
     )
     assert r.status_code == 303
-    assert r.headers["location"] == "/account"
+    assert r.headers["location"] == "/account?updated=1"
 
     async with AsyncSession(engine) as session:
         result = await session.exec(

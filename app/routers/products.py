@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -18,24 +18,21 @@ async def product_page(
     session: AsyncSession = Depends(get_session),
 ):
     user = await authenticate(request, session)
-    if not user:
-        # Plain RedirectResponse won't navigate the browser on an htmx
-        # request (htmx follows redirects via XHR). HX-Redirect is the
-        # header htmx checks for "navigate the whole page here instead".
-        response = Response(status_code=200)
-        response.headers["HX-Redirect"] = "/signup"
-        return response
+
+    is_favorited = None
+    if user:
+        fav_statement = select(Favorite.product_id).where(
+            Favorite.user_id == user.id,
+        )
+        fav_result = await session.exec(fav_statement)
+        fav_ = fav_result.one_or_none()
+        is_favorited = fav_ if fav_ else None
 
     statement = select(Product).where(Product.id == slug)
     result = await session.exec(statement)
     product = result.one()
 
     print("Product Specs: ", product.specs)
-
-    fav_statement = select(Favorite.product_id).where(Favorite.user_id == user.id)
-    fav_result = await session.exec(fav_statement)
-    fav_ = fav_result.one_or_none()
-    is_favorited = fav_ if fav_ else None
 
     await session.commit()
     return templates.TemplateResponse(
