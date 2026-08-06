@@ -151,7 +151,9 @@ async def account(request: Request, session: AsyncSession = Depends(get_session)
         request=request,
         name="account.html",
         context={
-            "user": user,
+            "username": user.username if user else None,
+            "email": user.email if user else None,
+            "phone": user.phone if user else None,
             "orders": [],
             "saved_systems": [],
         },

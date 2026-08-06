@@ -197,15 +197,15 @@
         <form method="post" action="/account/profile" class="profile-grid">
           <div class="field-group">
             <label for="acc-username">Username</label>
-            <input type="text" id="acc-username" name="username" value="{{ user.username }}" required>
+            <input type="text" id="acc-username" name="username" value="{{ username }}" required>
           </div>
           <div class="field-group">
             <label for="acc-email">Email</label>
-            <input type="email" id="acc-email" name="email" value="{{ user.email }}" required>
+            <input type="email" id="acc-email" name="email" value="{{ email }}" required>
           </div>
           <div class="field-group">
             <label for="acc-phone">Phone (WhatsApp)</label>
-            <input type="tel" id="acc-phone" name="phone" value="{{ user.phone or '' }}" placeholder="+234...">
+            <input type="tel" id="acc-phone" name="phone" value="{{ phone or '' }}" placeholder="+234...">
           </div>
           <div class="field-group">
             <label for="acc-pwd">New password</label>
