@@ -4,6 +4,40 @@
 
 {% block extra_css %}
 <style>
+  /* ─── RATE LIMIT BANNER ─── */
+  .rate-limit-banner {
+    display: none;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    background: rgba(192, 57, 43, 0.08);
+    border: 1.5px solid rgba(192, 57, 43, 0.25);
+    border-radius: 12px;
+    color: var(--danger);
+    font-size: 14px;
+    line-height: 1.5;
+    animation: bannerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .rate-limit-banner.visible { display: flex; }
+  .rate-limit-banner .icon {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .rate-limit-banner .msg { flex: 1; }
+  .rate-limit-banner .msg strong {
+    font-weight: 700;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 2px;
+  }
+  @keyframes bannerSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   .account-layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -194,6 +228,17 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
           Profile
         </h2>
+
+        {% if rate_limited %}
+        <div class="rate-limit-banner visible">
+          <span class="icon">⏳</span>
+          <span class="msg">
+            <strong>Whoa, slow down</strong>
+            You've been updating your details too frequently. Please wait a bit before making more changes.
+          </span>
+        </div>
+        {% endif %}
+
         <form method="post" action="/account/profile" class="profile-grid">
           <div class="field-group">
             <label for="acc-username">Username</label>
@@ -277,6 +322,17 @@
 
 {% block extra_js %}
 <script>
+// Auto-hide rate limit banner after 6s
+const banner = document.querySelector('.rate-limit-banner');
+if (banner) {
+  setTimeout(() => {
+    banner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-8px)';
+    setTimeout(() => banner.remove(), 400);
+  }, 6000);
+}
+
 function switchTab(e, id) {
   e.preventDefault();
   document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));
