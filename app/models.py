@@ -16,6 +16,7 @@ class Users(SQLModel, table=True):
     phone: str | None = Field(default=None)
     password_hash: str
     role: str = Field(default="customer")  # "customer" | "admin"
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Session(SQLModel, table=True):

@@ -21,13 +21,12 @@ async def product_page(
 
     is_favorited = None
     if user:
-        fav_statement = select(Favorite.product_id).where(Favorite.user_id == user.id)
+        fav_statement = select(Favorite.product_id).where(
+            Favorite.user_id == user.id,
+        )
         fav_result = await session.exec(fav_statement)
         fav_ = fav_result.one_or_none()
         is_favorited = fav_ if fav_ else None
-        # Plain RedirectResponse won't navigate the browser on an htmx
-        # request (htmx follows redirects via XHR). HX-Redirect is the
-        # header htmx checks for "navigate the whole page here instead".
 
     statement = select(Product).where(Product.id == slug)
     result = await session.exec(statement)
