@@ -13,6 +13,7 @@ class Users(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
+    phone: str | None = Field(default=None)
     password_hash: str
     role: str = Field(default="customer")  # "customer" | "admin"
 
