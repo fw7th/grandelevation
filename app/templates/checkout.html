@@ -1,0 +1,738 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout — Grand Elevation Solar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 48px;
+    align-items: start;
+    padding-bottom: 100px;
+  }
+
+  /* ─── LEFT COLUMN ─── */
+  .checkout-section h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .checkout-subhead {
+    font-size: 14px;
+    color: var(--gray-mid);
+    margin-bottom: 24px;
+  }
+
+  /* ─── DELIVERY TOGGLE ─── */
+  .delivery-toggle {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .delivery-option {
+    flex: 1;
+    padding: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    background: var(--bg);
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .delivery-option:hover {
+    border-color: var(--gold-deep);
+  }
+  .delivery-option.active {
+    border-color: var(--gold-deep);
+    background: var(--gold-light);
+  }
+  html[data-theme="dark"] .delivery-option.active {
+    background: rgba(74,58,26,0.4);
+  }
+  .delivery-option .icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .delivery-option .label {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .delivery-option .hint {
+    font-size: 12px;
+    color: var(--gray-mid);
+    margin-top: 4px;
+  }
+
+  /* ─── DELIVERY FORM ─── */
+  .delivery-form {
+    display: none;
+    margin-bottom: 28px;
+  }
+  .delivery-form.visible {
+    display: block;
+  }
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.15s ease;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--gold-deep);
+  }
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .estimate-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--gold-light);
+    border-radius: 12px;
+    margin-top: 12px;
+  }
+  html[data-theme="dark"] .estimate-row {
+    background: rgba(74,58,26,0.3);
+  }
+  .estimate-row .label {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .estimate-row .value {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* ─── DISCLAIMER BOX ─── */
+  .disclaimer-box {
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 28px;
+    background: var(--bg);
+  }
+  .disclaimer-box .title {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .disclaimer-box p {
+    font-size: 13px;
+    color: var(--gray-mid);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .disclaimer-box a {
+    color: var(--gold-deep);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+  }
+
+  /* ─── ORDER ITEMS ─── */
+  .order-list {
+    border-top: 1px solid var(--border);
+  }
+  .order-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .order-item-image {
+    width: 64px; height: 64px; border-radius: 10px;
+    background: var(--gold-light); flex-shrink: 0;
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .order-item-image img { width: 100%; height: 100%; object-fit: cover; }
+  .order-item-image-placeholder { font-size: 10px; color: var(--gray-mid); }
+  .order-item-details { flex: 1; min-width: 0; }
+  .order-item-name {
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px;
+  }
+  .order-item-meta {
+    font-size: 12px; color: var(--gray-mid); margin-top: 2px;
+  }
+  .order-item-price {
+    font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px;
+    text-align: right; min-width: 80px;
+  }
+
+  /* ─── PAYMENT METHODS ─── */
+  .payment-methods { margin-bottom: 28px; }
+  .payment-method {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    background: var(--bg);
+    transition: all 0.2s ease;
+  }
+  .payment-method:hover { border-color: var(--gold-deep); }
+  .payment-method.active {
+    border-color: var(--gold-deep);
+    background: var(--gold-light);
+  }
+  html[data-theme="dark"] .payment-method.active {
+    background: rgba(74,58,26,0.4);
+  }
+  .payment-method input[type="radio"] {
+    width: 20px; height: 20px; accent-color: var(--gold-deep);
+    cursor: pointer; flex-shrink: 0;
+  }
+  .payment-method .pm-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .payment-method .pm-info { flex: 1; }
+  .payment-method .pm-name {
+    font-weight: 700; font-size: 14px; color: var(--ink);
+  }
+  .payment-method .pm-desc {
+    font-size: 12px; color: var(--gray-mid); margin-top: 2px;
+  }
+
+  /* ─── BANK DETAILS (demo) ─── */
+  .bank-details {
+    display: none;
+    border: 1.5px dashed var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 28px;
+    background: var(--bg);
+  }
+  .bank-details.visible { display: block; }
+  .bank-details h4 {
+    font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .bank-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .bank-row:last-child { border-bottom: none; }
+  .bank-row .bk-label { color: var(--gray-mid); font-weight: 500; }
+  .bank-row .bk-value {
+    font-family: 'Sora', sans-serif; font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .copy-btn {
+    background: none; border: none; color: var(--gold-deep);
+    cursor: pointer; padding: 2px; font-size: 13px;
+    font-weight: 600; text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* ─── PICKUP DETAILS ─── */
+  .pickup-details {
+    display: none;
+    border: 1.5px dashed var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 28px;
+    background: var(--bg);
+  }
+  .pickup-details.visible { display: block; }
+  .pickup-details h4 {
+    font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .pickup-details p {
+    font-size: 13px; color: var(--gray-mid); line-height: 1.7; margin: 0;
+  }
+  .pickup-details .address {
+    margin-top: 10px; padding: 14px;
+    background: var(--gold-light); border-radius: 10px;
+    font-size: 14px; font-weight: 600; color: var(--ink);
+  }
+  html[data-theme="dark"] .pickup-details .address {
+    background: rgba(74,58,26,0.3);
+  }
+
+  /* ─── WHATSAPP CTA ─── */
+  .whatsapp-cta {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: #25d36615;
+    border: 1.5px solid #25d36640;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.1s ease, background 0.15s ease;
+  }
+  .whatsapp-cta:hover {
+    background: #25d36625;
+    transform: translateY(-1px);
+  }
+  .whatsapp-cta .wa-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #25D366; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .whatsapp-cta .wa-text { flex: 1; }
+  .whatsapp-cta .wa-title {
+    font-weight: 700; font-size: 14px; color: var(--ink);
+  }
+  .whatsapp-cta .wa-hint {
+    font-size: 12px; color: var(--gray-mid); margin-top: 2px;
+  }
+
+  /* ─── SUMMARY RAIL ─── */
+  .summary-rail {
+    background: var(--gold-light);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    position: sticky; top: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  html[data-theme="dark"] .summary-rail {
+    background: rgba(74,58,26,0.3);
+  }
+  .summary-rail h3 {
+    font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px;
+  }
+  .summary-row .label { color: var(--gray-mid); }
+  .summary-row .value { font-weight: 600; }
+  .summary-divider {
+    height: 1px; background: var(--border); margin: 4px 0;
+  }
+  .summary-total {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .summary-total .label {
+    font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
+  }
+  .summary-total .value {
+    font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .pay-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; border-radius: 999px; padding: 16px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    border: none; background: var(--ink); color: var(--bg);
+    font-family: 'Inter', sans-serif;
+    transition: background 0.15s ease, transform 0.1s ease;
+    margin-top: 4px;
+  }
+  .pay-btn:hover { background: var(--gold-deep); }
+  .pay-btn:active { transform: translateY(1px); }
+  .pay-btn:disabled {
+    opacity: 0.5; cursor: not-allowed; background: var(--gray-mid);
+  }
+
+  .secure-note {
+    font-size: 12px; color: var(--gray-mid); line-height: 1.5;
+    text-align: center;
+  }
+
+  /* ─── INVOICE / RECEIPT SECTION ─── */
+  .invoice-section {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    margin-top: 8px;
+  }
+  .invoice-section h4 {
+    font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .invoice-list {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .invoice-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .invoice-row .inv-id { font-weight: 600; color: var(--ink); }
+  .invoice-row .inv-date { color: var(--gray-mid); font-size: 12px; }
+  .invoice-row .inv-link {
+    color: var(--gold-deep); font-weight: 600;
+    text-decoration: none; font-size: 12px;
+  }
+  .invoice-row .inv-link:hover { text-decoration: underline; }
+
+  /* ─── EMPTY STATE ─── */
+  .checkout-empty {
+    text-align: center; padding: 80px 20px; color: var(--gray-mid);
+  }
+  .checkout-empty h2 {
+    font-family: 'Sora', sans-serif; color: var(--ink); font-size: 20px; margin-bottom: 8px;
+  }
+
+  @media (max-width: 900px) {
+    .checkout-layout { grid-template-columns: 1fr; }
+    .summary-rail { position: static; }
+  }
+  @media (max-width: 640px) {
+    .delivery-toggle { flex-direction: column; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="page-header">
+    <h1 class="display">Checkout</h1>
+    <p>{% if cart_items %}{{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %} ready{% else %}Your cart is empty{% endif %}</p>
+  </div>
+
+  {% if cart_items %}
+  <div class="checkout-layout">
+    <!-- LEFT COLUMN -->
+    <div class="checkout-section">
+
+      <!-- WhatsApp CTA (before payment) -->
+      <a href="https://wa.me/2348107730018?text=Hi%20Grand%20Elevation%20Solar%2C%20I%27m%20about%20to%20place%20an%20order%20and%20I%20have%20some%20questions."
+         target="_blank" class="whatsapp-cta">
+        <div class="wa-icon">💬</div>
+        <div class="wa-text">
+          <div class="wa-title">Questions before you pay?</div>
+          <div class="wa-hint">Chat with us on WhatsApp — we'll reply fast.</div>
+        </div>
+      </a>
+
+      <!-- Delivery / Pickup Toggle -->
+      <h2 class="display">Delivery or pickup?</h2>
+      <p class="checkout-subhead">Choose how you'd like to receive your order.</p>
+
+      <div class="delivery-toggle">
+        <div class="delivery-option active" onclick="setDelivery('delivery')" id="opt-delivery">
+          <div class="icon">🚚</div>
+          <div class="label">Delivery</div>
+          <div class="hint">We'll calculate an estimate</div>
+        </div>
+        <div class="delivery-option" onclick="setDelivery('pickup')" id="opt-pickup">
+          <div class="icon">🏪</div>
+          <div class="label">Pickup</div>
+          <div class="hint">Collect from Tradefair, Lagos</div>
+        </div>
+      </div>
+
+      <!-- Delivery Form -->
+      <div class="delivery-form visible" id="delivery-form">
+        <div class="form-group">
+          <label for="location">Your location / address</label>
+          <input type="text" id="location" name="location" placeholder="e.g. Ikeja, Lagos">
+        </div>
+        <div class="form-group">
+          <label for="delivery-note">Additional details (optional)</label>
+          <textarea id="delivery-note" name="delivery_note" placeholder="Landmark, gate code, preferred delivery time..."></textarea>
+        </div>
+        <div class="estimate-row">
+          <span class="label">Estimated delivery</span>
+          <span class="value" id="delivery-estimate">₦0.00</span>
+        </div>
+        <p style="font-size:12px;color:var(--gray-mid);margin-top:10px;">
+          This is an estimate. Final pricing will be confirmed via 
+          <a href="https://wa.me/2348107730018" target="_blank" style="color:var(--gold-deep);">WhatsApp</a>.
+        </p>
+      </div>
+
+      <!-- Pickup Details -->
+      <div class="pickup-details" id="pickup-details">
+        <h4>📍 Pickup location</h4>
+        <p>Come collect your order in person. No delivery fees apply.</p>
+        <div class="address">
+          Tradefair Complex, Lagos<br>
+          <span style="font-weight:500;font-size:13px;color:var(--gray-mid);">Open Mon–Sat, 9am–6pm</span>
+        </div>
+        <p style="margin-top:10px;">
+          <a href="https://wa.me/2348107730018?text=Hi%2C%20I%27d%20like%20to%20confirm%20pickup%20for%20my%20order" target="_blank" style="color:var(--gold-deep);font-weight:600;">Message us on WhatsApp</a> before coming.
+        </p>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="disclaimer-box">
+        <div class="title">⚠️ Important — Delivery is independent</div>
+        <p>
+          Delivery pricing is <strong>independent from Grand Elevation Solar</strong>. 
+          You are free to arrange your own logistics, or we can handle it for you. 
+          Either way, <a href="https://wa.me/2348107730018" target="_blank">text us on WhatsApp</a> 
+          to discuss delivery options and pricing before or after payment. 
+          <strong>Payment on delivery is not accepted.</strong>
+        </p>
+      </div>
+
+      <!-- Order Items -->
+      <h2 class="display">Your order</h2>
+      <p class="checkout-subhead">Review your items before paying.</p>
+      <div class="order-list">
+        {% for cart_item, product in cart_items %}
+        <div class="order-item">
+          <div class="order-item-image">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            {% else %}
+            <div class="order-item-image-placeholder">No image</div>
+            {% endif %}
+          </div>
+          <div class="order-item-details">
+            <div class="order-item-name">{{ product.name }}</div>
+            <div class="order-item-meta">Qty: {{ cart_item.quantity }} · {{ product.category.replace('_', ' ') }}</div>
+          </div>
+          <div class="order-item-price">₦{{ "{:,.2f}".format(product.price * cart_item.quantity) }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Payment Methods -->
+      <h2 class="display" style="margin-top:32px;">Payment method</h2>
+      <p class="checkout-subhead">Select how you'd like to pay.</p>
+
+      <div class="payment-methods">
+        <label class="payment-method active" onclick="setPayment('transfer')" id="pm-transfer">
+          <input type="radio" name="payment_method" value="transfer" checked>
+          <div class="pm-icon">🏦</div>
+          <div class="pm-info">
+            <div class="pm-name">Bank Transfer</div>
+            <div class="pm-desc">Pay to our business account (demo)</div>
+          </div>
+        </label>
+
+        <label class="payment-method" onclick="setPayment('pickup')" id="pm-pickup">
+          <input type="radio" name="payment_method" value="pickup">
+          <div class="pm-icon">🏪</div>
+          <div class="pm-info">
+            <div class="pm-name">Pay on Pickup</div>
+            <div class="pm-desc">Pay when you collect from our address</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Bank Transfer Details (demo) -->
+      <div class="bank-details visible" id="bank-details">
+        <h4>🏦 Transfer to this account</h4>
+        <div class="bank-row">
+          <span class="bk-label">Bank</span>
+          <span class="bk-value">
+            Zenith Bank
+            <button class="copy-btn" onclick="copyText('Zenith Bank')">Copy</button>
+          </span>
+        </div>
+        <div class="bank-row">
+          <span class="bk-label">Account Number</span>
+          <span class="bk-value">
+            0123456789
+            <button class="copy-btn" onclick="copyText('0123456789')">Copy</button>
+          </span>
+        </div>
+        <div class="bank-row">
+          <span class="bk-label">Account Name</span>
+          <span class="bk-value">Grand Elevation Solar Ltd</span>
+        </div>
+        <div class="bank-row">
+          <span class="bk-label">Amount</span>
+          <span class="bk-value" id="bank-amount">₦{{ "{:,.2f}".format(total) }}</span>
+        </div>
+        <p style="font-size:12px;color:var(--gray-mid);margin-top:14px;line-height:1.6;">
+          After transferring, send your receipt to our 
+          <a href="https://wa.me/2348107730018" target="_blank" style="color:var(--gold-deep);font-weight:600;">WhatsApp</a>. 
+          We'll confirm your payment and relay delivery pricing if applicable.
+        </p>
+      </div>
+
+      <!-- Pickup Payment Details -->
+      <div class="pickup-details" id="pickup-pay-details">
+        <h4>🏪 Pay when you pick up</h4>
+        <p>No payment needed now. Just come to our address and pay on collection.</p>
+        <p style="margin-top:10px;">
+          We recommend 
+          <a href="https://wa.me/2348107730018?text=Hi%2C%20I%27ll%20be%20picking%20up%20my%20order" target="_blank" style="color:var(--gold-deep);font-weight:600;">messaging us on WhatsApp</a> 
+          to confirm your pickup time.
+        </p>
+      </div>
+
+      <!-- Invoice / Receipt Section -->
+      {% if invoices %}
+      <div class="invoice-section">
+        <h4>📄 Invoices & Receipts</h4>
+        <div class="invoice-list">
+          {% for inv in invoices %}
+          <div class="invoice-row">
+            <div>
+              <div class="inv-id">{{ inv.id }}</div>
+              <div class="inv-date">{{ inv.created_at.strftime('%d %b %Y') }}</div>
+            </div>
+            <a href="{{ inv.link }}" class="inv-link" target="_blank">View →</a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- RIGHT COLUMN: SUMMARY -->
+    <div class="summary-rail">
+      <h3>Order summary</h3>
+
+      <div class="summary-row">
+        <span class="label">Subtotal</span>
+        <span class="value">₦{{ "{:,.2f}".format(subtotal) }}</span>
+      </div>
+      <div class="summary-row" id="delivery-line" style="display:flex;">
+        <span class="label">Delivery</span>
+        <span class="value" id="summary-delivery">Calculated after payment</span>
+      </div>
+      <div class="summary-row" id="pickup-line" style="display:none;">
+        <span class="label">Pickup</span>
+        <span class="value">Free</span>
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="summary-total">
+        <span class="label">Total</span>
+        <span class="value" id="summary-total">₦{{ "{:,.2f}".format(total) }}</span>
+      </div>
+
+      <!-- WhatsApp (after payment context) -->
+      <a href="https://wa.me/2348107730018?text=Hi%20Grand%20Elevation%20Solar%2C%20I%27ve%20just%20placed%20an%20order."
+         target="_blank" class="whatsapp-cta" style="margin-top:4px;">
+        <div class="wa-icon">💬</div>
+        <div class="wa-text">
+          <div class="wa-title">Send receipt on WhatsApp</div>
+          <div class="wa-hint">We'll confirm and arrange delivery.</div>
+        </div>
+      </a>
+
+      <button type="button" class="pay-btn" id="pay-btn" onclick="submitOrder()">
+        <span id="pay-btn-text">Complete order</span>
+      </button>
+
+      <p class="secure-note">
+        🔒 Your order is secured. For questions, 
+        <a href="https://wa.me/2348107730018" target="_blank" style="color:var(--gold-deep);">WhatsApp us</a>.
+      </p>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="checkout-empty">
+    <h2 class="display">Nothing to checkout</h2>
+    <p>Add items to your cart before proceeding.</p>
+    <a href="/catalog" class="btn-pill" style="margin-top:16px;">Browse catalog</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let deliveryMode = 'delivery';
+  let paymentMode = 'transfer';
+
+  function setDelivery(mode) {
+    deliveryMode = mode;
+    document.getElementById('opt-delivery').classList.toggle('active', mode === 'delivery');
+    document.getElementById('opt-pickup').classList.toggle('active', mode === 'pickup');
+
+    document.getElementById('delivery-form').classList.toggle('visible', mode === 'delivery');
+    document.getElementById('pickup-details').classList.toggle('visible', mode === 'pickup');
+
+    document.getElementById('delivery-line').style.display = mode === 'delivery' ? 'flex' : 'none';
+    document.getElementById('pickup-line').style.display = mode === 'pickup' ? 'flex' : 'none';
+
+    if (mode === 'pickup') {
+      document.getElementById('summary-delivery').textContent = 'Free';
+    } else {
+      document.getElementById('summary-delivery').textContent = 'Calculated after payment';
+    }
+  }
+
+  function setPayment(mode) {
+    paymentMode = mode;
+    document.getElementById('pm-transfer').classList.toggle('active', mode === 'transfer');
+    document.getElementById('pm-pickup').classList.toggle('active', mode === 'pickup');
+
+    document.getElementById('bank-details').classList.toggle('visible', mode === 'transfer');
+    document.getElementById('pickup-pay-details').classList.toggle('visible', mode === 'pickup');
+
+    const btnText = document.getElementById('pay-btn-text');
+    btnText.textContent = mode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      // brief flash feedback could go here
+    });
+  }
+
+  function submitOrder() {
+    const btn = document.getElementById('pay-btn');
+    btn.disabled = true;
+    btn.querySelector('#pay-btn-text').textContent = 'Processing...';
+
+    // TODO: POST to /checkout/complete with deliveryMode, paymentMode, location, note
+    // For demo, just redirect or show confirmation
+    setTimeout(() => {
+      alert('Order submitted! (Demo — hook up the backend next.)');
+      btn.disabled = false;
+      btn.querySelector('#pay-btn-text').textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
+    }, 800);
+  }
+
+  // Simple delivery estimate demo
+  document.getElementById('location')?.addEventListener('input', function(e) {
+    const val = e.target.value.trim().toLowerCase();
+    let estimate = 0;
+    if (val.includes('lagos')) estimate = 3500;
+    else if (val.includes('abuja')) estimate = 8500;
+    else if (val.includes('portharcourt') || val.includes('ph')) estimate = 7500;
+    else if (val.length > 3) estimate = 5000;
+
+    document.getElementById('delivery-estimate').textContent = '₦' + estimate.toLocaleString('en-NG', {minimumFractionDigits: 2});
+  });
+</script>
+{% endblock %}

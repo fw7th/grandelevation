@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -6,8 +8,9 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
+from app.security import password_hash
 
-from ..models import CartItem, Product
+from ..models import CartItem, Product, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
@@ -146,14 +149,18 @@ async def account(request: Request, session: AsyncSession = Depends(get_session)
     if not user:
         return RedirectResponse("/catalog")
 
-    # TODO: query orders and saved_systems
+    success = request.query_params.get("updated") == "1"
+
     return templates.TemplateResponse(
         request=request,
         name="account.html",
         context={
-            "username": user.username if user else None,
-            "email": user.email if user else None,
-            "phone": user.phone if user else None,
+            "username": user.username,
+            "email": user.email,
+            "phone": getattr(user, "phone", "") or "",
+            "success": success,
+            "rate_limited": False,
+            "errors": {},
             "orders": [],
             "saved_systems": [],
         },
@@ -164,8 +171,8 @@ async def account(request: Request, session: AsyncSession = Depends(get_session)
 async def update_profile(
     request: Request,
     session: AsyncSession = Depends(get_session),
-    username: str = Form(),
-    email: str = Form(),
+    username: str = Form(default=""),
+    email: str = Form(default=""),
     phone: str = Form(default=""),
     password: str = Form(default=""),
 ):
@@ -173,18 +180,101 @@ async def update_profile(
     if not user:
         return RedirectResponse("/signin", status_code=303)
 
-    user.username = username.strip()
-    user.email = email.strip()
+    username = username.strip()
+    email = email.strip()
+    phone = phone.strip()
+    password = password or ""
 
+    current_phone = getattr(user, "phone", "") or ""
+
+    # No changes
+    if (
+        user.username == username
+        and user.email == email
+        and current_phone == phone
+        and not password
+    ):
+        return templates.TemplateResponse(
+            request=request,
+            name="account.html",
+            context={
+                "username": user.username,
+                "email": user.email,
+                "phone": current_phone,
+                "success": False,
+                "rate_limited": False,
+                "errors": {},
+                "orders": [],
+                "saved_systems": [],
+            },
+        )
+
+    # Rate limit
+    if user.updated_at and (user.updated_at + timedelta(hours=3)) >= datetime.utcnow():
+        return templates.TemplateResponse(
+            request=request,
+            name="account.html",
+            context={
+                "username": user.username,
+                "email": user.email,
+                "phone": current_phone,
+                "success": False,
+                "rate_limited": True,
+                "errors": {},
+                "orders": [],
+                "saved_systems": [],
+            },
+        )
+
+    errors = {}
+
+    if not username:
+        errors["username"] = "Username is required."
+    elif username != user.username:
+        stmt = select(Users).where(Users.username == username)
+        result = await session.exec(stmt)
+        if result.first():
+            errors["username"] = "This username is already taken."
+
+    if not email:
+        errors["email"] = "Email is required."
+    elif "@" not in email or "." not in email.rsplit("@", 1)[-1]:
+        errors["email"] = "Enter a valid email address."
+    elif email != user.email:
+        stmt = select(Users).where(Users.email == email)
+        result = await session.exec(stmt)
+        if result.first():
+            errors["email"] = "An account with this email already exists."
+
+    if password and len(password) < 8:
+        errors["password"] = "Password must be at least 8 characters."
+
+    if errors:
+        return templates.TemplateResponse(
+            request=request,
+            name="account.html",
+            context={
+                "username": username,
+                "email": email,
+                "phone": phone,
+                "success": False,
+                "rate_limited": False,
+                "errors": errors,
+                "orders": [],
+                "saved_systems": [],
+            },
+        )
+
+    # Apply
+    user.username = username
+    user.email = email
     if hasattr(user, "phone"):
-        user.phone = phone.strip()
+        user.phone = phone
 
-    if password and len(password) >= 8:
-        from app.security import password_hash
-
+    if password:
         user.password_hash = password_hash.hash(password)
 
     session.add(user)
     await session.commit()
 
-    return RedirectResponse("/account", status_code=303)
+    return RedirectResponse("/account?updated=1", status_code=303)
