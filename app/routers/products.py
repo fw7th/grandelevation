@@ -2,12 +2,12 @@ from typing import Iterable
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from specs import DISPLAY_FIELDS
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database import get_session
 from ..models import Favorite, Product
+from ..specs import DISPLAY_FIELDS
 from ..utils import authenticate, get_active_categories
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -35,6 +35,8 @@ async def product_page(
     result = await session.exec(statement)
     product = result.one()
 
+    similar_products = await get_similar_products(product, session)
+
     print("Product Specs: ", product.specs)
 
     await session.commit()
@@ -46,6 +48,7 @@ async def product_page(
             "product": product,
             "is_favorited": is_favorited,
             "categories": await get_active_categories(session),
+            "similar_products": similar_products,  # <-- injected for the template
         },
     )
 
