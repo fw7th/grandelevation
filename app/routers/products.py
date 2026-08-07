@@ -1,7 +1,6 @@
-from typing import Iterable
-
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func, or_
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -122,46 +121,59 @@ async def get_similar_products(
     product: Product,
     session: AsyncSession,
     limit: int = 10,
+    candidate_pool: int = 80,
 ) -> list[Product]:
     """
-    Return products similar to `product`:
-      - Same category
-      - AND (similar name  OR  >=2 matching customer-facing specs)
+    Return similar products with two performance guards:
+      1. Only pull a small candidate pool from the DB (not the whole table).
+      2. Pre-filter by name similarity in SQL so Python only scores relevant rows.
     """
-    stmt = select(Product).where(
-        Product.category == product.category,
-        Product.id != product.id,
+    current_name = product.name.lower()
+    name_words = [
+        w.strip("()-,:;")
+        for w in current_name.split()
+        if len(w.strip("()-,:;")) > 2 and w.strip("()-,:;") not in COMMON_NAME_WORDS
+    ][:6]  # cap at 6 words to avoid exploding the WHERE clause
+
+    # Build name-matching filters (case-insensitive substring match)
+    name_filters = []
+    for word in name_words:
+        pattern = f"%{word}%"
+        name_filters.append(func.lower(Product.name).like(pattern))
+
+    # Fetch a limited pool of same-category candidates.
+    # We OR the name filters so we get products that share *any* significant word.
+    # If no name words were extracted, we just grab the newest N items in the category.
+    stmt = (
+        select(Product)
+        .where(
+            Product.category == product.category,
+            Product.id != product.id,
+        )
+        .where(or_(*name_filters) if name_filters else True)
+        .order_by(Product.id.desc())  # newest first as a sensible default
+        .limit(candidate_pool)
     )
+
     result = await session.exec(stmt)
-    candidates: Iterable[Product] = result.all()
+    candidates = result.all()
 
     if not candidates:
         return []
 
     current_specs = product.specs or {}
-    current_name = product.name.lower()
-
-    # Significant words in the current product name
-    current_words = {
-        w.strip("()-,:;")
-        for w in current_name.split()
-        if len(w.strip("()-,:;")) > 2 and w.strip("()-,:;") not in COMMON_NAME_WORDS
-    }
-
     display_fields = DISPLAY_FIELDS.get(product.category, [])
+    current_words = set(name_words)
+
     scored: list[tuple[int, Product]] = []
 
     for candidate in candidates:
         cand_name = candidate.name.lower()
         cand_specs = candidate.specs or {}
 
-        # ---- Name similarity ----
-        name_match = False
+        # ---- Name score ----
         name_score = 0
-
-        # Strong signal: one name contains the other
         if current_name in cand_name or cand_name in current_name:
-            name_match = True
             name_score = 5
         else:
             cand_words = {
@@ -171,10 +183,9 @@ async def get_similar_products(
             }
             shared = current_words & cand_words
             if shared:
-                name_match = True
                 name_score = len(shared) * 2
 
-        # ---- Spec similarity (customer-facing fields only) ----
+        # ---- Spec matches (customer-facing only) ----
         spec_matches = 0
         for key in display_fields:
             if key not in current_specs or key not in cand_specs:
@@ -184,10 +195,8 @@ async def get_similar_products(
             if a and a != "none" and a == b:
                 spec_matches += 1
 
-        # ---- Keep if name matches OR >=2 spec matches ----
-        if name_match or spec_matches >= 2:
-            total_score = name_score + spec_matches
-            scored.append((total_score, candidate))
+        if name_score > 0 or spec_matches >= 2:
+            scored.append((name_score + spec_matches, candidate))
 
     if not scored:
         return []
