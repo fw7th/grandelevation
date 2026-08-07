@@ -99,7 +99,6 @@ COMMON_NAME_WORDS = {
     "v",
     "volt",
     "volts",
-    "a",
     "ah",
     "wh",
     "kw",
