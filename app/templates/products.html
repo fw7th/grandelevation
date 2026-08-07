@@ -305,7 +305,7 @@
     </div>
 
     <!-- Buy Rail -->
-    <form class="buy-rail" action="/cart/add" method="post">
+    <form class="buy-rail" action="/cart/add" method="post" {% if not username %}id="guestBuyForm"{% endif %}>
       <input type="hidden" name="product_id" value="{{ product.id }}">
 
       <div class="buy-price">₦{{ "{:,.2f}".format(product.price) }}</div>
@@ -443,6 +443,22 @@
         current = (current + 1) % IMAGES.length;
         render();
       });
-    })();
-  </script>
+})();
+
+/* ===== NEW: Auth guard for Add-to-Cart / Buy-Now ===== */
+{% if not username %}
+(function () {
+  var form = document.getElementById('guestBuyForm');
+  var modal = document.getElementById('authModal');
+  if (!form || !modal) return;
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();                       // stop the POST to /cart/add or /checkout
+    modal.classList.add('is-visible');        // same classes base.html uses
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';  // lock scroll
+  });
+})();
+{% endif %}
+</script>
 {% endblock %}
