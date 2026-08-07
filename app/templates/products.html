@@ -445,6 +445,17 @@
       });
 })();
 
+(function () {
+  var buyNowBtn = document.getElementById('buyNowBtn');
+  if (!buyNowBtn) return;
+
+  buyNowBtn.addEventListener('click', function () {
+    var qty = document.getElementById('qtySelect').value;
+    var url = '/checkout?product_id={{ product.id }}&quantity=' + encodeURIComponent(qty);
+    window.location.href = url;
+  });
+})();
+
 /* ===== NEW: Auth guard for Add-to-Cart / Buy-Now ===== */
 {% if not username %}
 (function () {
