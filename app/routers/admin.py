@@ -113,7 +113,9 @@ async def admin_product_create(
         name=name,
         price=price,
         description=description,
-        image_url=image_url or None,
+        image_url=[u.strip() for u in image_url.split(",") if u.strip()]
+        if image_url
+        else [],
         specs=specs,
     )
     session.add(product)
