@@ -271,8 +271,11 @@
   <div class="product-hero">
     <!-- Gallery -->
     <div class="gallery" id="productGallery">
-      {% if product.image_url %}
-      <img src="{{ product.image_url }}" alt="{{ product.name }}" id="galleryImage">
+      {% set images = product.image_url or [] %}
+      {% set first_image = images[0] if images else None %}
+
+      {% if first_image %}
+      <img src="{{ first_image }}" alt="{{ product.name }}" id="galleryImage">
       {% else %}
       <div class="gallery-placeholder">No image available</div>
       {% endif %}
@@ -281,8 +284,7 @@
         {% include "_favorite_button.html" %}
       {% endwith %}
 
-
-      {% if images and images|length > 1 %}
+      {% if images|length > 1 %}
       <button type="button" class="gallery-nav prev" id="galleryPrev" aria-label="Previous image">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>

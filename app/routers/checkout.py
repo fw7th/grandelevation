@@ -26,6 +26,16 @@ async def checkout(
     if not user:
         return RedirectResponse("/catalog")
 
+    statement = (
+        select(CartItem, Product)
+        .join(Product, CartItem.product_id == Product.id)
+        .where(CartItem.user_id == user.id)
+        .order_by(CartItem.updated_at.desc())  # LIFO: newest first
+    )
+
+    results = await session.exec(statement)
+    cart_items = results.all()
+
     return templates.TemplateResponse(
         request=request,
         name="checkout.html",
