@@ -35,7 +35,7 @@ class Product(SQLModel, table=True):
     name: str
     price: float
     description: str
-    image_url: str | None = None
+    image_url: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     specs: dict = Field(default_factory=dict, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
