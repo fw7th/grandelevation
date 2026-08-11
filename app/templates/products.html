@@ -271,7 +271,6 @@
   <div class="product-hero">
     <!-- Gallery -->
     <div class="gallery" id="productGallery">
-      {% set images = product.image_url or [] %}
       {% set first_image = images[0] if images else None %}
 
       {% if first_image %}
@@ -376,7 +375,8 @@
       <div class="related-card-wrap">
         <a href="/products/{{ item.id }}" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }}">
+            {% set item_img = item.image_url[0] if item.image_url is sequence and item.image_url is not string else item.image_url %}
+            {% if item_img %}<img src="{{ item_img }}" alt="{{ item.name }}">
             {% else %}<div class="related-card-image-placeholder">No image</div>{% endif %}
           </div>
           <div class="related-card-info">
@@ -403,7 +403,8 @@
       <div class="related-card-wrap">
         <a href="/products/{{ item.id }}" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }}">
+            {% set item_img = item.image_url[0] if item.image_url is sequence and item.image_url is not string else item.image_url %}
+            {% if item_img %}<img src="{{ item_img }}" alt="{{ item.name }}">
             {% else %}<div class="related-card-image-placeholder">No image</div>{% endif %}
           </div>
           <div class="related-card-info">
