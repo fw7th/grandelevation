@@ -271,8 +271,10 @@
   <div class="product-hero">
     <!-- Gallery -->
     <div class="gallery" id="productGallery">
-      {% if product.image_url %}
-      <img src="{{ product.image_url }}" alt="{{ product.name }}" id="galleryImage">
+      {% set first_image = images[0] if images else None %}
+
+      {% if first_image %}
+      <img src="{{ first_image }}" alt="{{ product.name }}" id="galleryImage">
       {% else %}
       <div class="gallery-placeholder">No image available</div>
       {% endif %}
@@ -281,8 +283,7 @@
         {% include "_favorite_button.html" %}
       {% endwith %}
 
-
-      {% if images and images|length > 1 %}
+      {% if images|length > 1 %}
       <button type="button" class="gallery-nav prev" id="galleryPrev" aria-label="Previous image">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
@@ -337,12 +338,12 @@
         Add to cart
       </button>
 
-      <button type="submit" formaction="/checkout" name="action" value="buy_now" class="btn-pill-detail btn-add-cart" id="buyNowBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-        </svg>
-        Buy now
-      </button>
+    <button type="button" class="btn-pill-detail btn-add-cart" id="buyNowBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      Buy now
+    </button>
     </form>
   </div>
 
@@ -374,7 +375,8 @@
       <div class="related-card-wrap">
         <a href="/products/{{ item.id }}" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }}">
+            {% set item_img = item.image_url[0] if item.image_url is sequence and item.image_url is not string else item.image_url %}
+            {% if item_img %}<img src="{{ item_img }}" alt="{{ item.name }}">
             {% else %}<div class="related-card-image-placeholder">No image</div>{% endif %}
           </div>
           <div class="related-card-info">
@@ -401,7 +403,8 @@
       <div class="related-card-wrap">
         <a href="/products/{{ item.id }}" class="related-card">
           <div class="related-card-image">
-            {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }}">
+            {% set item_img = item.image_url[0] if item.image_url is sequence and item.image_url is not string else item.image_url %}
+            {% if item_img %}<img src="{{ item_img }}" alt="{{ item.name }}">
             {% else %}<div class="related-card-image-placeholder">No image</div>{% endif %}
           </div>
           <div class="related-card-info">
@@ -443,6 +446,17 @@
         current = (current + 1) % IMAGES.length;
         render();
       });
+})();
+
+(function () {
+  var buyNowBtn = document.getElementById('buyNowBtn');
+  if (!buyNowBtn) return;
+
+  buyNowBtn.addEventListener('click', function () {
+    var qty = document.getElementById('qtySelect').value;
+    var url = '/checkout?product_id={{ product.id }}&quantity=' + encodeURIComponent(qty);
+    window.location.href = url;
+  });
 })();
 
 /* ===== NEW: Auth guard for Add-to-Cart / Buy-Now ===== */

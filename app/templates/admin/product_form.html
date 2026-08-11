@@ -97,9 +97,12 @@
     </div>
 
     <div class="field">
-      <label for="image_url">Image path</label>
-      <input type="text" id="image_url" name="image_url" placeholder="/static/products/panel-450w.jpg"
-             value="{{ form_values.get('image_url', '') }}">
+      <label for="image_url">Image paths</label>
+      {% set raw_img = form_values.get('image_url', '') %}
+      <input type="text" id="image_url" name="image_url"
+             placeholder="/static/products/panel-450w.jpg, /static/products/panel-450w-side.jpg"
+             value="{% if raw_img is sequence and raw_img is not string %}{{ raw_img | join(', ') }}{% else %}{{ raw_img or '' }}{% endif %}">
+      <small class="field-hint">Comma-separated URLs. The first image is used as the main thumbnail.</small>
     </div>
 
     <div id="specs-fields">
