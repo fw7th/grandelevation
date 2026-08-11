@@ -36,7 +36,7 @@ async def product_page(
 
     similar_products = await get_similar_products(product, session)
 
-    print("Product Specs: ", product.specs)
+    print("Product Images: ", product.image_url)
 
     await session.commit()
     return templates.TemplateResponse(
@@ -45,9 +45,10 @@ async def product_page(
         context={
             "username": user.username if user else None,
             "product": product,
+            "images": product.image_url or [],
             "is_favorited": is_favorited,
             "categories": await get_active_categories(session),
-            "similar_products": similar_products,  # <-- injected for the template
+            "similar_products": similar_products,
         },
     )
 
