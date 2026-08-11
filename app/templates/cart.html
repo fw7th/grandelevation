@@ -247,8 +247,9 @@
 <div id="add-toast" class="add-toast">
   <div class="add-toast-inner">
     <div class="add-toast-img">
-      {% if added_product.image_url %}
-      <img src="{{ added_product.image_url }}" alt="{{ added_product.name }}">
+      {% set toast_img = added_product.image_url[0] if added_product.image_url is sequence and added_product.image_url is not string else added_product.image_url %}
+      {% if toast_img %}
+      <img src="{{ toast_img }}" alt="{{ added_product.name }}">
       {% else %}
       <div class="add-toast-img-placeholder">⚡</div>
       {% endif %}
@@ -295,8 +296,9 @@
         {% for product, item in cart_items %}
         <div class="cart-item" data-item-id="{{ item.id }}">
           <div class="cart-item-image">
-            {% if item.image_url %}
-            <img src="{{ item.image_url }}" alt="{{ item.name }}">
+            {% set cart_img = item.image_url[0] if item.image_url is sequence and item.image_url is not string else item.image_url %}
+            {% if cart_img %}
+            <img src="{{ cart_img }}" alt="{{ item.name }}">
             {% else %}
             <div class="cart-item-image-placeholder">No image</div>
             {% endif %}
