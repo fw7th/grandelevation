@@ -52,9 +52,12 @@
     background: rgba(74,58,26,0.4);
   }
   .delivery-option .icon {
-    font-size: 24px;
     margin-bottom: 8px;
     line-height: 1;
+    color: var(--gold-deep);
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   .delivery-option .label {
     font-weight: 600;
@@ -111,6 +114,24 @@
     min-height: 80px;
   }
 
+  .calc-btn {
+    margin-top: 4px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--gold-deep);
+    background: transparent;
+    color: var(--gold-deep);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: 'Inter', sans-serif;
+  }
+  .calc-btn:hover {
+    background: var(--gold-deep);
+    color: var(--bg);
+  }
+
   .estimate-row {
     display: flex;
     justify-content: space-between;
@@ -162,6 +183,18 @@
     text-underline-offset: 2px;
     font-weight: 600;
   }
+    .pod-notice {
+      display: inline-block;
+      background: #dc2626;        /* red badge */
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      line-height: 1.4;
+    }
 
   /* ─── ORDER ITEMS ─── */
   .order-list {
@@ -261,6 +294,11 @@
     cursor: pointer; padding: 2px; font-size: 13px;
     font-weight: 600; text-decoration: underline;
     text-underline-offset: 2px;
+    transition: color 0.15s ease;
+  }
+  .copy-btn.copied {
+    color: #22c55e;
+    text-decoration: none;
   }
 
   /* ─── PICKUP DETAILS ─── */
@@ -276,6 +314,9 @@
   .pickup-details h4 {
     font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .pickup-details p {
     font-size: 13px; color: var(--gray-mid); line-height: 1.7; margin: 0;
@@ -383,6 +424,9 @@
   .invoice-section h4 {
     font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
     margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .invoice-list {
     display: flex; flex-direction: column; gap: 10px;
@@ -410,6 +454,21 @@
     font-family: 'Sora', sans-serif; color: var(--ink); font-size: 20px; margin-bottom: 8px;
   }
 
+  /* ─── ICON SVGs ─── */
+  .icon-svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+  .wa-icon .icon-svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5;
+  }
+
   @media (max-width: 900px) {
     .checkout-layout { grid-template-columns: 1fr; }
     .summary-rail { position: static; }
@@ -428,6 +487,11 @@
   </div>
 
   {% if cart_items %}
+  {% set ns = namespace(total_qty=0) %}
+  {% for cart_item, product in cart_items %}
+    {% set ns.total_qty = ns.total_qty + cart_item.quantity %}
+  {% endfor %}
+
   <div class="checkout-layout">
     <!-- LEFT COLUMN -->
     <div class="checkout-section">
@@ -435,10 +499,12 @@
       <!-- WhatsApp CTA (before payment) -->
       <a href="https://wa.me/2348107730018?text=Hi%20Grand%20Elevation%20Solar%2C%20I%27m%20about%20to%20place%20an%20order%20and%20I%20have%20some%20questions."
          target="_blank" class="whatsapp-cta">
-        <div class="wa-icon">💬</div>
+        <div class="wa-icon">
+          <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
         <div class="wa-text">
           <div class="wa-title">Questions before you pay?</div>
-          <div class="wa-hint">Chat with us on WhatsApp — we'll reply fast.</div>
+          <div class="wa-hint">Chat with us on WhatsApp, we'll reply fast.</div>
         </div>
       </a>
 
@@ -448,19 +514,23 @@
 
       <div class="delivery-toggle">
         <div class="delivery-option active" onclick="setDelivery('delivery')" id="opt-delivery">
-          <div class="icon">🚚</div>
+          <div class="icon">
+            <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
           <div class="label">Delivery</div>
           <div class="hint">We'll calculate an estimate</div>
         </div>
         <div class="delivery-option" onclick="setDelivery('pickup')" id="opt-pickup">
-          <div class="icon">🏪</div>
+          <div class="icon">
+            <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/></svg>
+          </div>
           <div class="label">Pickup</div>
           <div class="hint">Collect from Tradefair, Lagos</div>
         </div>
       </div>
 
       <!-- Delivery Form -->
-      <div class="delivery-form visible" id="delivery-form">
+      <div class="delivery-form visible" id="delivery-form" data-total-quantity="{{ ns.total_qty }}">
         <div class="form-group">
           <label for="location">Your location / address</label>
           <input type="text" id="location" name="location" placeholder="e.g. Ikeja, Lagos">
@@ -469,9 +539,10 @@
           <label for="delivery-note">Additional details (optional)</label>
           <textarea id="delivery-note" name="delivery_note" placeholder="Landmark, gate code, preferred delivery time..."></textarea>
         </div>
+        <button type="button" class="calc-btn" onclick="calculateDelivery()">Calculate delivery</button>
         <div class="estimate-row">
           <span class="label">Estimated delivery</span>
-          <span class="value" id="delivery-estimate">₦0.00</span>
+          <span class="value" id="delivery-estimate">—</span>
         </div>
         <p style="font-size:12px;color:var(--gray-mid);margin-top:10px;">
           This is an estimate. Final pricing will be confirmed via 
@@ -481,11 +552,14 @@
 
       <!-- Pickup Details -->
       <div class="pickup-details" id="pickup-details">
-        <h4>📍 Pickup location</h4>
+        <h4>
+          <svg class="icon-svg" style="width:18px;height:18px;vertical-align:-4px;" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Pickup location
+        </h4>
         <p>Come collect your order in person. No delivery fees apply.</p>
         <div class="address">
-          Tradefair Complex, Lagos<br>
-          <span style="font-weight:500;font-size:13px;color:var(--gray-mid);">Open Mon–Sat, 9am–6pm</span>
+            ATT034, Yobe Plaza, Tradefair,<br> Lagos, Nigeria<br>
+          <span style="font-weight:500;font-size:13px;color:var(--gray-mid);">Open Mon–Sat, 9am–5pm</span>
         </div>
         <p style="margin-top:10px;">
           <a href="https://wa.me/2348107730018?text=Hi%2C%20I%27d%20like%20to%20confirm%20pickup%20for%20my%20order" target="_blank" style="color:var(--gold-deep);font-weight:600;">Message us on WhatsApp</a> before coming.
@@ -494,13 +568,16 @@
 
       <!-- Disclaimer -->
       <div class="disclaimer-box">
-        <div class="title">⚠️ Important — Delivery is independent</div>
+        <div class="title">
+          <svg style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Important — Delivery is independent
+        </div>
         <p>
           Delivery pricing is <strong>independent from Grand Elevation Solar</strong>. 
           You are free to arrange your own logistics, or we can handle it for you. 
           Either way, <a href="https://wa.me/2348107730018" target="_blank">text us on WhatsApp</a> 
-          to discuss delivery options and pricing before or after payment. 
-          <strong>Payment on delivery is not accepted.</strong>
+          to discuss delivery options and pricing before or after payment.
+          <span class="pod-notice">Payment on delivery is not accepted.</span>
         </p>
       </div>
 
@@ -511,11 +588,12 @@
         {% for cart_item, product in cart_items %}
         <div class="order-item">
           <div class="order-item-image">
-            {% if product.image_url %}
-            <img src="{{ product.image_url }}" alt="{{ product.name }}">
-            {% else %}
-            <div class="order-item-image-placeholder">No image</div>
-            {% endif %}
+          {% set order_img = product.image_url[0] if product.image_url is sequence and product.image_url is not string else product.image_url %}
+          {% if order_img %}
+          <img src="{{ order_img }}" alt="{{ product.name }}">
+          {% else %}
+          <div class="order-item-image-placeholder">No image</div>
+          {% endif %}
           </div>
           <div class="order-item-details">
             <div class="order-item-name">{{ product.name }}</div>
@@ -533,7 +611,6 @@
       <div class="payment-methods">
         <label class="payment-method active" onclick="setPayment('transfer')" id="pm-transfer">
           <input type="radio" name="payment_method" value="transfer" checked>
-          <div class="pm-icon">🏦</div>
           <div class="pm-info">
             <div class="pm-name">Bank Transfer</div>
             <div class="pm-desc">Pay to our business account (demo)</div>
@@ -542,7 +619,6 @@
 
         <label class="payment-method" onclick="setPayment('pickup')" id="pm-pickup">
           <input type="radio" name="payment_method" value="pickup">
-          <div class="pm-icon">🏪</div>
           <div class="pm-info">
             <div class="pm-name">Pay on Pickup</div>
             <div class="pm-desc">Pay when you collect from our address</div>
@@ -552,19 +628,19 @@
 
       <!-- Bank Transfer Details (demo) -->
       <div class="bank-details visible" id="bank-details">
-        <h4>🏦 Transfer to this account</h4>
+        <h4>Transfer to this account</h4>
         <div class="bank-row">
           <span class="bk-label">Bank</span>
           <span class="bk-value">
             Zenith Bank
-            <button class="copy-btn" onclick="copyText('Zenith Bank')">Copy</button>
+            <button class="copy-btn" onclick="copyText('Zenith Bank', this)">Copy</button>
           </span>
         </div>
         <div class="bank-row">
           <span class="bk-label">Account Number</span>
           <span class="bk-value">
             0123456789
-            <button class="copy-btn" onclick="copyText('0123456789')">Copy</button>
+            <button class="copy-btn" onclick="copyText('0123456789', this)">Copy</button>
           </span>
         </div>
         <div class="bank-row">
@@ -573,7 +649,10 @@
         </div>
         <div class="bank-row">
           <span class="bk-label">Amount</span>
-          <span class="bk-value" id="bank-amount">₦{{ "{:,.2f}".format(total) }}</span>
+          <span class="bk-value">
+            <span id="bank-amount-text">₦{{ "{:,.2f}".format(total) }}</span>
+            <button class="copy-btn" onclick="copyAmount(this)">Copy</button>
+          </span>
         </div>
         <p style="font-size:12px;color:var(--gray-mid);margin-top:14px;line-height:1.6;">
           After transferring, send your receipt to our 
@@ -584,7 +663,7 @@
 
       <!-- Pickup Payment Details -->
       <div class="pickup-details" id="pickup-pay-details">
-        <h4>🏪 Pay when you pick up</h4>
+        <h4>Pay when you pick up</h4>
         <p>No payment needed now. Just come to our address and pay on collection.</p>
         <p style="margin-top:10px;">
           We recommend 
@@ -596,7 +675,10 @@
       <!-- Invoice / Receipt Section -->
       {% if invoices %}
       <div class="invoice-section">
-        <h4>📄 Invoices & Receipts</h4>
+        <h4>
+          <svg class="icon-svg" style="width:18px;height:18px;vertical-align:-4px;" viewBox="0 0 24 24" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Invoices & Receipts
+        </h4>
         <div class="invoice-list">
           {% for inv in invoices %}
           <div class="invoice-row">
@@ -614,7 +696,7 @@
     </div>
 
     <!-- RIGHT COLUMN: SUMMARY -->
-    <div class="summary-rail">
+    <div class="summary-rail" id="summary-rail" data-subtotal="{{ total }}">
       <h3>Order summary</h3>
 
       <div class="summary-row">
@@ -623,7 +705,7 @@
       </div>
       <div class="summary-row" id="delivery-line" style="display:flex;">
         <span class="label">Delivery</span>
-        <span class="value" id="summary-delivery">Calculated after payment</span>
+        <span class="value" id="summary-delivery">Enter location to calculate</span>
       </div>
       <div class="summary-row" id="pickup-line" style="display:none;">
         <span class="label">Pickup</span>
@@ -640,7 +722,9 @@
       <!-- WhatsApp (after payment context) -->
       <a href="https://wa.me/2348107730018?text=Hi%20Grand%20Elevation%20Solar%2C%20I%27ve%20just%20placed%20an%20order."
          target="_blank" class="whatsapp-cta" style="margin-top:4px;">
-        <div class="wa-icon">💬</div>
+        <div class="wa-icon">
+          <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
         <div class="wa-text">
           <div class="wa-title">Send receipt on WhatsApp</div>
           <div class="wa-hint">We'll confirm and arrange delivery.</div>
@@ -652,7 +736,7 @@
       </button>
 
       <p class="secure-note">
-        🔒 Your order is secured. For questions, 
+        Your order is secured. For questions, 
         <a href="https://wa.me/2348107730018" target="_blank" style="color:var(--gold-deep);">WhatsApp us</a>.
       </p>
     </div>
@@ -672,6 +756,12 @@
 <script>
   let deliveryMode = 'delivery';
   let paymentMode = 'transfer';
+  let calculatedDelivery = 0;
+  const perItemRate = 4000;
+
+  function formatMoney(amount) {
+    return '₦' + amount.toLocaleString('en-NG', {minimumFractionDigits: 2});
+  }
 
   function setDelivery(mode) {
     deliveryMode = mode;
@@ -684,10 +774,22 @@
     document.getElementById('delivery-line').style.display = mode === 'delivery' ? 'flex' : 'none';
     document.getElementById('pickup-line').style.display = mode === 'pickup' ? 'flex' : 'none';
 
+    const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
+
     if (mode === 'pickup') {
       document.getElementById('summary-delivery').textContent = 'Free';
+      document.getElementById('summary-total').textContent = formatMoney(subtotal);
+      document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
     } else {
-      document.getElementById('summary-delivery').textContent = 'Calculated after payment';
+      if (calculatedDelivery > 0) {
+        document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
+        document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
+        document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
+      } else {
+        document.getElementById('summary-delivery').textContent = 'Enter location to calculate';
+        document.getElementById('summary-total').textContent = formatMoney(subtotal);
+        document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
+      }
     }
   }
 
@@ -703,10 +805,46 @@
     btnText.textContent = mode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
   }
 
-  function copyText(text) {
+  function copyText(text, btn) {
     navigator.clipboard.writeText(text).then(() => {
-      // brief flash feedback could go here
+      if (btn) {
+        const original = btn.textContent;
+        btn.textContent = '✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 2000);
+      }
     });
+  }
+
+  function copyAmount(btn) {
+    const text = document.getElementById('bank-amount-text').textContent.trim();
+    copyText(text, btn);
+  }
+
+  function calculateDelivery() {
+    const location = document.getElementById('location').value.trim();
+    if (!location) {
+      alert('Please enter your location first.');
+      document.getElementById('location').focus();
+      return;
+    }
+
+    const totalQty = parseInt(document.getElementById('delivery-form').dataset.totalQuantity) || 0;
+    calculatedDelivery = totalQty * perItemRate;
+
+    // Update estimate row
+    document.getElementById('delivery-estimate').textContent = formatMoney(calculatedDelivery);
+
+    // Update summary rail
+    const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
+    if (deliveryMode === 'delivery') {
+      document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
+      document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
+      document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
+    }
   }
 
   function submitOrder() {
@@ -714,7 +852,7 @@
     btn.disabled = true;
     btn.querySelector('#pay-btn-text').textContent = 'Processing...';
 
-    // TODO: POST to /checkout/complete with deliveryMode, paymentMode, location, note
+    // TODO: POST to /checkout/complete with deliveryMode, paymentMode, location, note, calculatedDelivery
     // For demo, just redirect or show confirmation
     setTimeout(() => {
       alert('Order submitted! (Demo — hook up the backend next.)');
@@ -722,17 +860,5 @@
       btn.querySelector('#pay-btn-text').textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
     }, 800);
   }
-
-  // Simple delivery estimate demo
-  document.getElementById('location')?.addEventListener('input', function(e) {
-    const val = e.target.value.trim().toLowerCase();
-    let estimate = 0;
-    if (val.includes('lagos')) estimate = 3500;
-    else if (val.includes('abuja')) estimate = 8500;
-    else if (val.includes('portharcourt') || val.includes('ph')) estimate = 7500;
-    else if (val.length > 3) estimate = 5000;
-
-    document.getElementById('delivery-estimate').textContent = '₦' + estimate.toLocaleString('en-NG', {minimumFractionDigits: 2});
-  });
 </script>
 {% endblock %}
