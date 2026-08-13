@@ -122,3 +122,36 @@ async def admin_product_create(
     await session.commit()
 
     return RedirectResponse(url="/admin/products", status_code=303)
+
+
+@router.get("/products/{product_id}/edit")
+async def admin_product_edit(
+    request: Request,
+    product_id: int,
+    admin: Users = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+):
+    product = await session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404)
+
+    image_url_str = ", ".join(product.image_url) if product.image_url else ""
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/product_form.html",
+        context={
+            "errors": {},
+            "product": product,
+            "form_values": {
+                "category": product.category,
+                "name": product.name,
+                "price": product.price,
+                "description": product.description,
+                "image_url": image_url_str,
+            },
+            "values": product.specs,
+            "choices": FIELD_CHOICES,
+            "fields": ADMIN_FORM_FIELDS.get(product.category, []),
+        },
+    )
