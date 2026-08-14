@@ -217,3 +217,63 @@ def _search_custom_mode(
                         best_bundle = bundle
 
     return best_bundle
+
+
+def _search_generator_mode(
+    config: SystemConfiguration,
+    daily_wh: float,
+    peak_w: float,
+    autonomy_days: float,
+    generators: list[Product],
+    accessories: list[Product],
+) -> SystemBundle | None:
+    min_gen_w = peak_w * 1.2
+    best_bundle: SystemBundle | None = None
+
+    for gen in generators:
+        try:
+            gs = SolarGeneratorSpecs(**gen.specs)
+        except Exception:
+            continue
+
+        if gs.rated_output_power < min_gen_w:
+            continue
+
+        usable_wh_needed = daily_wh * autonomy_days
+        total_wh = usable_wh_needed / _dod(gs.battery_chemistry)
+        if gs.capacity_wh < total_wh:
+            continue
+
+        for acc in accessories:
+            try:
+                ac = AccessoryBundleSpecs(**acc.specs)
+            except Exception:
+                continue
+
+            if ac.max_system_watts < gs.rated_output_power:
+                continue
+
+            total = gen.price + acc.price
+            if config.budget_max is not None and total > config.budget_max:
+                continue
+
+            bundle = SystemBundle(
+                configuration=config,
+                selections=SystemProductSelection(
+                    generator_id=gen.id,
+                    accessory_bundle_id=acc.id,
+                ),
+                products={
+                    "generator": _product_to_dict(gen),
+                    "accessory": _product_to_dict(acc),
+                },
+                total_price=total,
+                compatibility_warnings=[],
+                estimated_daily_wh=daily_wh,
+                estimated_peak_w=peak_w,
+            )
+
+            if best_bundle is None or total < best_bundle.total_price:
+                best_bundle = bundle
+
+    return best_bundle
