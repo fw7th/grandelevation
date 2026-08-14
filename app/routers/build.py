@@ -1,43 +1,52 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.templating import Jinja2Templates
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.build_model import (
+    SystemBundle,
+    SystemConfiguration,
+    SystemProductSelection,
+)
 from app.database import get_session
-
-from ..utils import authenticate
+from app.models import Product
+from app.specs import (
+    AccessoryBundleSpecs,
+    BatterySpecs,
+    InverterSpecs,
+    PanelSpecs,
+    SolarGeneratorSpecs,
+)
 
 router = APIRouter(tags=["build"])
+templates = Jinja2Templates(directory="app/templates")
+
+PEAK_SUN_HOURS = 4.5
+SYSTEM_EFFICIENCY = 0.80
+VOC_TEMP_MARGIN = 1.15
+
+
+def _dod(chemistry: str) -> float:
+    return 0.85 if chemistry == "lithium" else 0.50
+
+
+def _product_to_dict(product: Product, quantity: int = 1) -> dict:
+    return {
+        "id": product.id,
+        "name": product.name,
+        "price": product.price * quantity,
+        "image_url": product.image_url[0] if product.image_url else "",
+        "specs": {**product.specs, "quantity": quantity},
+    }
 
 
 @router.get("/build")
 async def build_page(request: Request, session: AsyncSession = Depends(get_session)):
-    from fastapi.templating import Jinja2Templates
+    from app.utils import authenticate
 
-    templates = Jinja2Templates(directory="app/templates")
-
-    # Public page — no auth required
-    # If logged in, we can load their saved favorites as starting products
     user = await authenticate(request, session)
-    products = []
-
-    if user:
-        from sqlmodel import select
-
-        from app.models import Favorite, Product
-
-        result = await session.exec(
-            select(Product)
-            .join(Favorite, Favorite.product_id == Product.id)
-            .where(Favorite.user_id == user.id)
-            .order_by(Favorite.created_at.desc())
-        )
-        products = result.all()
-
     return templates.TemplateResponse(
         request=request,
         name="build.html",
-        context={
-            "products": products,
-            "username": user.username if user else None,
-            "favorite_ids": {p.id for p in products} if user else set(),
-        },
+        context={"username": user.username if user else None},
     )
