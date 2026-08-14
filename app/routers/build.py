@@ -50,3 +50,309 @@ async def build_page(request: Request, session: AsyncSession = Depends(get_sessi
         name="build.html",
         context={"username": user.username if user else None},
     )
+
+
+@router.post("/build/recommend")
+async def recommend_system(
+    config: SystemConfiguration,
+    session: AsyncSession = Depends(get_session),
+) -> SystemBundle:
+    daily_wh = sum(a.qty * a.watts * a.hours_per_day for a in config.appliances)
+    peak_w = sum(a.qty * a.watts for a in config.appliances)
+    autonomy_days = config.autonomy_hours / 24
+
+    result = await session.exec(select(Product))
+    all_products = result.all()
+
+    panels = [p for p in all_products if p.category == "panel"]
+    inverters = [p for p in all_products if p.category == "inverter"]
+    batteries = [p for p in all_products if p.category == "battery"]
+    generators = [p for p in all_products if p.category == "solar_generator"]
+    accessories = [p for p in all_products if p.category == "accessory"]
+
+    if config.preferred_chemistry != "any":
+        batteries = [
+            b
+            for b in batteries
+            if b.specs.get("chemistry") == config.preferred_chemistry
+        ]
+
+    inverters = [
+        inv for inv in inverters if inv.specs.get("type") in ("hybrid", "off_grid")
+    ]
+
+    best: SystemBundle | None = None
+
+    if config.build_mode == "generator":
+        best = _search_generator_mode(
+            config, daily_wh, peak_w, autonomy_days, generators, accessories
+        )
+    else:
+        best = _search_custom_mode(
+            config,
+            daily_wh,
+            peak_w,
+            autonomy_days,
+            panels,
+            inverters,
+            batteries,
+            accessories,
+        )
+
+    if best is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No valid system found for your requirements and budget.",
+        )
+
+    return best
+
+
+def _search_custom_mode(
+    config: SystemConfiguration,
+    daily_wh: float,
+    peak_w: float,
+    autonomy_days: float,
+    panels: list[Product],
+    inverters: list[Product],
+    batteries: list[Product],
+    accessories: list[Product],
+) -> SystemBundle | None:
+    required_array_w = daily_wh / PEAK_SUN_HOURS / SYSTEM_EFFICIENCY
+    min_inverter_w = peak_w * 1.2
+    best_bundle: SystemBundle | None = None
+
+    for panel in panels:
+        try:
+            ps = PanelSpecs(**panel.specs)
+        except Exception:
+            continue
+
+        count = max(
+            1,
+            int(required_array_w // ps.wattage)
+            + (1 if required_array_w % ps.wattage else 0),
+        )
+        total_panel_w = ps.wattage * count
+        panel_cost = panel.price * count
+
+        for inv in inverters:
+            try:
+                iv = InverterSpecs(**inv.specs)
+            except Exception:
+                continue
+
+            voc_max = ps.voc * VOC_TEMP_MARGIN
+            if voc_max > iv.max_input_voltage:
+                continue
+            if not (iv.mppt_range_min <= ps.vmp <= iv.mppt_range_max):
+                continue
+            if ps.imp > iv.max_input_current:
+                continue
+            if iv.rated_output_power < min_inverter_w:
+                continue
+
+            for batt in batteries:
+                try:
+                    bs = BatterySpecs(**batt.specs)
+                except Exception:
+                    continue
+
+                if bs.nominal_voltage != iv.output_voltage:
+                    continue
+
+                usable_wh_needed = daily_wh * autonomy_days
+                total_batt_wh = usable_wh_needed / _dod(bs.chemistry)
+                unit_wh = bs.nominal_voltage * bs.capacity_ah
+                batt_count = max(
+                    1,
+                    int(total_batt_wh // unit_wh)
+                    + (1 if total_batt_wh % unit_wh else 0),
+                )
+                batt_cost = batt.price * batt_count
+
+                for acc in accessories:
+                    try:
+                        ac = AccessoryBundleSpecs(**acc.specs)
+                    except Exception:
+                        continue
+
+                    if ac.max_system_watts < total_panel_w:
+                        continue
+                    if ac.max_panel_count < count:
+                        continue
+
+                    total = panel_cost + inv.price + batt_cost + acc.price
+                    if config.budget_max is not None and total > config.budget_max:
+                        continue
+
+                    warnings = []
+                    if not iv.has_charge_controller:
+                        warnings.append(
+                            "Inverter has no built-in charge controller — "
+                            "ensure a separate charge controller is installed."
+                        )
+
+                    bundle = SystemBundle(
+                        configuration=config,
+                        selections=SystemProductSelection(
+                            panel_id=panel.id,
+                            inverter_id=inv.id,
+                            battery_id=batt.id,
+                            accessory_bundle_id=acc.id,
+                        ),
+                        products={
+                            "panel": _product_to_dict(panel, count),
+                            "inverter": _product_to_dict(inv),
+                            "battery": _product_to_dict(batt, batt_count),
+                            "accessory": _product_to_dict(acc),
+                        },
+                        total_price=total,
+                        compatibility_warnings=warnings,
+                        estimated_daily_wh=daily_wh,
+                        estimated_peak_w=peak_w,
+                    )
+
+                    if best_bundle is None or total < best_bundle.total_price:
+                        best_bundle = bundle
+
+    return best_bundle
+
+
+def _search_generator_mode(
+    config: SystemConfiguration,
+    daily_wh: float,
+    peak_w: float,
+    autonomy_days: float,
+    generators: list[Product],
+    accessories: list[Product],
+) -> SystemBundle | None:
+    min_gen_w = peak_w * 1.2
+    best_bundle: SystemBundle | None = None
+
+    for gen in generators:
+        try:
+            gs = SolarGeneratorSpecs(**gen.specs)
+        except Exception:
+            continue
+
+        if gs.rated_output_power < min_gen_w:
+            continue
+
+        usable_wh_needed = daily_wh * autonomy_days
+        total_wh = usable_wh_needed / _dod(gs.battery_chemistry)
+        if gs.capacity_wh < total_wh:
+            continue
+
+        for acc in accessories:
+            try:
+                ac = AccessoryBundleSpecs(**acc.specs)
+            except Exception:
+                continue
+
+            if ac.max_system_watts < gs.rated_output_power:
+                continue
+
+            total = gen.price + acc.price
+            if config.budget_max is not None and total > config.budget_max:
+                continue
+
+            bundle = SystemBundle(
+                configuration=config,
+                selections=SystemProductSelection(
+                    generator_id=gen.id,
+                    accessory_bundle_id=acc.id,
+                ),
+                products={
+                    "generator": _product_to_dict(gen),
+                    "accessory": _product_to_dict(acc),
+                },
+                total_price=total,
+                compatibility_warnings=[],
+                estimated_daily_wh=daily_wh,
+                estimated_peak_w=peak_w,
+            )
+
+            if best_bundle is None or total < best_bundle.total_price:
+                best_bundle = bundle
+
+    return best_bundle
+
+
+@router.post("/build/validate")
+async def validate_selections(
+    selections: SystemProductSelection,
+    config: SystemConfiguration,
+    session: AsyncSession = Depends(get_session),
+):
+    warnings: list[str] = []
+    ids = [
+        selections.panel_id,
+        selections.inverter_id,
+        selections.battery_id,
+        selections.generator_id,
+    ]
+    ids = [i for i in ids if i is not None]
+
+    if not ids:
+        return {"warnings": ["No components selected."], "is_compatible": False}
+
+    products = {}
+    for pid in ids:
+        p = await session.get(Product, pid)
+        if p:
+            products[p.category] = p
+
+    if "panel" in products and "inverter" in products:
+        ps = PanelSpecs(**products["panel"].specs)
+        iv = InverterSpecs(**products["inverter"].specs)
+        if ps.voc * VOC_TEMP_MARGIN > iv.max_input_voltage:
+            warnings.append("Panel voltage exceeds inverter limit at low temperatures.")
+        if not (iv.mppt_range_min <= ps.vmp <= iv.mppt_range_max):
+            warnings.append("Panel voltage is outside inverter MPPT range.")
+        if ps.imp > iv.max_input_current:
+            warnings.append("Panel current exceeds inverter input limit.")
+
+    if "battery" in products and "inverter" in products:
+        bs = BatterySpecs(**products["battery"].specs)
+        iv = InverterSpecs(**products["inverter"].specs)
+        if bs.nominal_voltage != iv.output_voltage:
+            warnings.append("Battery voltage does not match inverter output voltage.")
+        if not iv.has_charge_controller:
+            warnings.append("Inverter lacks built-in charge controller.")
+
+    if "panel" in products and "generator" in products:
+        ps = PanelSpecs(**products["panel"].specs)
+        gs = SolarGeneratorSpecs(**products["generator"].specs)
+        if ps.wattage > gs.max_input_charging_watts:
+            warnings.append("Panel wattage exceeds generator solar input limit.")
+
+    return {
+        "warnings": warnings,
+        "is_compatible": len(warnings) == 0,
+    }
+
+
+@router.get("/build/alternatives/{category}")
+async def list_alternatives(
+    category: str,
+    budget_max: float | None = None,
+    session: AsyncSession = Depends(get_session),
+):
+    statement = select(Product).where(Product.category == category)
+    result = await session.exec(statement)
+    products = result.all()
+
+    if budget_max is not None:
+        products = [p for p in products if p.price <= budget_max]
+
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "price": p.price,
+            "image_url": p.image_url[0] if p.image_url else "",
+            "specs": p.specs,
+        }
+        for p in products
+    ]
