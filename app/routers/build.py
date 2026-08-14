@@ -106,3 +106,114 @@ async def recommend_system(
         )
 
     return best
+
+
+def _search_custom_mode(
+    config: SystemConfiguration,
+    daily_wh: float,
+    peak_w: float,
+    autonomy_days: float,
+    panels: list[Product],
+    inverters: list[Product],
+    batteries: list[Product],
+    accessories: list[Product],
+) -> SystemBundle | None:
+    required_array_w = daily_wh / PEAK_SUN_HOURS / SYSTEM_EFFICIENCY
+    min_inverter_w = peak_w * 1.2
+    best_bundle: SystemBundle | None = None
+
+    for panel in panels:
+        try:
+            ps = PanelSpecs(**panel.specs)
+        except Exception:
+            continue
+
+        count = max(
+            1,
+            int(required_array_w // ps.wattage)
+            + (1 if required_array_w % ps.wattage else 0),
+        )
+        total_panel_w = ps.wattage * count
+        panel_cost = panel.price * count
+
+        for inv in inverters:
+            try:
+                iv = InverterSpecs(**inv.specs)
+            except Exception:
+                continue
+
+            voc_max = ps.voc * VOC_TEMP_MARGIN
+            if voc_max > iv.max_input_voltage:
+                continue
+            if not (iv.mppt_range_min <= ps.vmp <= iv.mppt_range_max):
+                continue
+            if ps.imp > iv.max_input_current:
+                continue
+            if iv.rated_output_power < min_inverter_w:
+                continue
+
+            for batt in batteries:
+                try:
+                    bs = BatterySpecs(**batt.specs)
+                except Exception:
+                    continue
+
+                if bs.nominal_voltage != iv.output_voltage:
+                    continue
+
+                usable_wh_needed = daily_wh * autonomy_days
+                total_batt_wh = usable_wh_needed / _dod(bs.chemistry)
+                unit_wh = bs.nominal_voltage * bs.capacity_ah
+                batt_count = max(
+                    1,
+                    int(total_batt_wh // unit_wh)
+                    + (1 if total_batt_wh % unit_wh else 0),
+                )
+                batt_cost = batt.price * batt_count
+
+                for acc in accessories:
+                    try:
+                        ac = AccessoryBundleSpecs(**acc.specs)
+                    except Exception:
+                        continue
+
+                    if ac.max_system_watts < total_panel_w:
+                        continue
+                    if ac.max_panel_count < count:
+                        continue
+
+                    total = panel_cost + inv.price + batt_cost + acc.price
+                    if config.budget_max is not None and total > config.budget_max:
+                        continue
+
+                    warnings = []
+                    if not iv.has_charge_controller:
+                        warnings.append(
+                            "Inverter has no built-in charge controller — "
+                            "ensure a separate charge controller is installed."
+                        )
+
+                    bundle = SystemBundle(
+                        configuration=config,
+                        selections=SystemProductSelection(
+                            panel_id=panel.id,
+                            inverter_id=inv.id,
+                            battery_id=batt.id,
+                            accessory_bundle_id=acc.id,
+                        ),
+                        products={
+                            "panel": _product_to_dict(panel, count),
+                            "inverter": _product_to_dict(inv),
+                            "battery": _product_to_dict(batt, batt_count),
+                            "accessory": _product_to_dict(acc),
+                        },
+                        total_price=total,
+                        compatibility_warnings=warnings,
+                        estimated_daily_wh=daily_wh,
+                        estimated_peak_w=peak_w,
+                    )
+
+                    if best_bundle is None or total < best_bundle.total_price:
+                        best_bundle = bundle
+
+    return best_bundle
