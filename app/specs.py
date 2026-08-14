@@ -2,55 +2,63 @@ from pydantic import BaseModel, ValidationError
 
 
 class PanelSpecs(BaseModel):
-    wattage: float  # rated power, W
-    voc: float  # open-circuit voltage, V -- compat only, not shown
-    vmp: float  # voltage at max power, V
-    imp: float  # current at max power, A
-    panel_type: str  # "monocrystalline" | "polycrystalline"
+    wattage: float
+    voc: float
+    vmp: float
+    imp: float
+    panel_type: str
+    temp_coefficient_voc: float | None = None  # %/°C, e.g. -0.30
     dimensions: str | None = None
 
 
 class InverterSpecs(BaseModel):
-    max_input_voltage: float  # V -- compat only, not shown
-    mppt_range_min: float  # V
-    mppt_range_max: float  # V
-    max_input_current: float  # A
-    rated_output_power: float  # W
-    output_voltage: float  # V, e.g. 220
+    max_input_voltage: float
+    mppt_range_min: float
+    mppt_range_max: float
+    max_input_current: float
+    rated_output_power: float
+    output_voltage: float
+    has_charge_controller: bool = True
+    type: str  # "hybrid" | "off_grid" | "grid_tie"
 
 
 class BatterySpecs(BaseModel):
     nominal_voltage: float
     capacity_ah: float
-    max_charge_current: float  # A -- compat only, not shown
+    max_charge_current: float
     chemistry: str  # "lithium" | "lead_acid"
 
 
-class AccessorySpecs(BaseModel):
-    pass  # no compat-relevant fields
+class AccessoryBundleSpecs(BaseModel):
+    max_system_watts: float
+    max_panel_count: int
+    dc_wire_gauge_mm2: float
+    ac_wire_gauge_mm2: float
+    includes_disconnect: bool = False
+    includes_mounting: bool = False
 
 
 class SolarGeneratorSpecs(BaseModel):
-    capacity_wh: float  # total energy storage, Wh
-    rated_output_power: float  # continuous output, W
-    peak_output_power: float  # surge rating, W -- compat only
-    max_input_charging_watts: float  # solar input limit, W
-    output_voltage: float  # V, e.g. 220
-    battery_chemistry: str  # "lithium" | "lead_acid"
+    capacity_wh: float
+    rated_output_power: float
+    peak_output_power: float
+    max_input_charging_watts: float
+    output_voltage: float
+    battery_chemistry: str
 
 
 class SolarStreetLightSpecs(BaseModel):
-    panel_wattage: float  # attached panel rating, W
+    panel_wattage: float
     lumen_output: float
     battery_capacity_ah: float
-    battery_voltage: float  # V -- compat only
-    lighting_mode: str  # "dusk_to_dawn" | "motion_sensor" | "timer"
+    battery_voltage: float
+    lighting_mode: str
     pole_height_m: float | None = None
 
 
 class FanSpecs(BaseModel):
     wattage: float
-    voltage: float  # V -- compat only, must match battery/inverter output
+    voltage: float
     airflow_cfm: float | None = None
     noise_level_db: float | None = None
     blade_span_cm: float | None = None
@@ -60,15 +68,11 @@ SPEC_MODELS = {
     "panel": PanelSpecs,
     "inverter": InverterSpecs,
     "battery": BatterySpecs,
-    "accessory": AccessorySpecs,
+    "accessory": AccessoryBundleSpecs,
     "solar_generator": SolarGeneratorSpecs,
     "solar_street_light": SolarStreetLightSpecs,
     "fan": FanSpecs,
 }
-
-# Fields shown on the customer-facing product page, per category.
-# Anything compat-relevant but not listed here (e.g. voc, max_input_voltage,
-# max_charge_current) is used by the compatibility engine only.
 
 DISPLAY_FIELDS = {
     "panel": ["wattage", "vmp", "imp", "panel_type", "dimensions"],
@@ -78,9 +82,18 @@ DISPLAY_FIELDS = {
         "max_input_current",
         "rated_output_power",
         "output_voltage",
+        "has_charge_controller",
+        "type",
     ],
     "battery": ["nominal_voltage", "capacity_ah", "chemistry"],
-    "accessory": [],
+    "accessory": [
+        "max_system_watts",
+        "max_panel_count",
+        "dc_wire_gauge_mm2",
+        "ac_wire_gauge_mm2",
+        "includes_disconnect",
+        "includes_mounting",
+    ],
     "solar_generator": [
         "capacity_wh",
         "rated_output_power",
@@ -96,15 +109,6 @@ DISPLAY_FIELDS = {
     "fan": ["wattage", "airflow_cfm", "noise_level_db", "blade_span_cm"],
 }
 
-
-# Field metadata for the ADMIN form. Unlike DISPLAY_FIELDS (customer-facing
-# subset), this lists EVERY field per category -- including compat-only
-# ones like voc, max_input_voltage -- since the admin is the one entering
-# raw spec-sheet numbers.
-#
-# Each entry: (field_name, label, input_type, required)
-# input_type is a plain HTML input type ("number", "text") or "select"
-# for fields with a fixed set of choices.
 ADMIN_FORM_FIELDS = {
     "panel": [
         ("wattage", "Wattage (W)", "number", True),
@@ -112,6 +116,7 @@ ADMIN_FORM_FIELDS = {
         ("vmp", "Voltage at max power — Vmp (V)", "number", True),
         ("imp", "Current at max power — Imp (A)", "number", True),
         ("panel_type", "Panel type", "select", True),
+        ("temp_coefficient_voc", "Temp coefficient Voc (%/°C)", "number", False),
         ("dimensions", "Dimensions", "text", False),
     ],
     "inverter": [
@@ -121,6 +126,8 @@ ADMIN_FORM_FIELDS = {
         ("max_input_current", "Max input current (A)", "number", True),
         ("rated_output_power", "Rated output power (W)", "number", True),
         ("output_voltage", "Output voltage (V)", "number", True),
+        ("has_charge_controller", "Built-in charge controller", "select", True),
+        ("type", "Inverter type", "select", True),
     ],
     "battery": [
         ("nominal_voltage", "Nominal voltage (V)", "number", True),
@@ -128,7 +135,14 @@ ADMIN_FORM_FIELDS = {
         ("max_charge_current", "Max charge current (A)", "number", True),
         ("chemistry", "Chemistry", "select", True),
     ],
-    "accessory": [],
+    "accessory": [
+        ("max_system_watts", "Max system watts (W)", "number", True),
+        ("max_panel_count", "Max panel count", "number", True),
+        ("dc_wire_gauge_mm2", "DC wire gauge (mm²)", "number", True),
+        ("ac_wire_gauge_mm2", "AC wire gauge (mm²)", "number", True),
+        ("includes_disconnect", "Includes disconnect", "select", True),
+        ("includes_mounting", "Includes mounting", "select", True),
+    ],
     "solar_generator": [
         ("capacity_wh", "Capacity (Wh)", "number", True),
         ("rated_output_power", "Rated output power (W)", "number", True),
@@ -154,35 +168,24 @@ ADMIN_FORM_FIELDS = {
     ],
 }
 
-
-# Choices for "select" type fields above.
 FIELD_CHOICES = {
     "panel_type": ["monocrystalline", "polycrystalline"],
     "chemistry": ["lithium", "lead_acid"],
     "battery_chemistry": ["lithium", "lead_acid"],
     "lighting_mode": ["dusk_to_dawn", "motion_sensor", "timer"],
+    "has_charge_controller": ["true", "false"],
+    "type": ["hybrid", "off_grid", "grid_tie"],
+    "includes_disconnect": ["true", "false"],
+    "includes_mounting": ["true", "false"],
 }
 
 
 def validate_specs(category: str, raw_specs: dict) -> dict:
-    """
-    Validate raw specs data against the Pydantic model for the given
-    category. Returns a clean dict ready to store in Product.specs.
-    Raises ValueError (with a readable message) if category is unknown
-    or specs data doesn't match the required shape.
-
-    This is the single choke point both the admin create/edit routes
-    and any future bulk-import path should call before writing to the
-    DB -- specs should never reach Product.specs unvalidated.
-    """
     model = SPEC_MODELS.get(category)
-
     if model is None:
         raise ValueError(f"Unknown product category: {category!r}")
-
     try:
         validated = model(**raw_specs)
     except ValidationError as e:
         raise ValueError(f"Invalid specs for category {category!r}: {e}")
-
     return validated.model_dump()
