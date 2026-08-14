@@ -277,3 +277,57 @@ def _search_generator_mode(
                 best_bundle = bundle
 
     return best_bundle
+
+
+@router.post("/build/validate")
+async def validate_selections(
+    selections: SystemProductSelection,
+    config: SystemConfiguration,
+    session: AsyncSession = Depends(get_session),
+):
+    warnings: list[str] = []
+    ids = [
+        selections.panel_id,
+        selections.inverter_id,
+        selections.battery_id,
+        selections.generator_id,
+    ]
+    ids = [i for i in ids if i is not None]
+
+    if not ids:
+        return {"warnings": ["No components selected."], "is_compatible": False}
+
+    products = {}
+    for pid in ids:
+        p = await session.get(Product, pid)
+        if p:
+            products[p.category] = p
+
+    if "panel" in products and "inverter" in products:
+        ps = PanelSpecs(**products["panel"].specs)
+        iv = InverterSpecs(**products["inverter"].specs)
+        if ps.voc * VOC_TEMP_MARGIN > iv.max_input_voltage:
+            warnings.append("Panel voltage exceeds inverter limit at low temperatures.")
+        if not (iv.mppt_range_min <= ps.vmp <= iv.mppt_range_max):
+            warnings.append("Panel voltage is outside inverter MPPT range.")
+        if ps.imp > iv.max_input_current:
+            warnings.append("Panel current exceeds inverter input limit.")
+
+    if "battery" in products and "inverter" in products:
+        bs = BatterySpecs(**products["battery"].specs)
+        iv = InverterSpecs(**products["inverter"].specs)
+        if bs.nominal_voltage != iv.output_voltage:
+            warnings.append("Battery voltage does not match inverter output voltage.")
+        if not iv.has_charge_controller:
+            warnings.append("Inverter lacks built-in charge controller.")
+
+    if "panel" in products and "generator" in products:
+        ps = PanelSpecs(**products["panel"].specs)
+        gs = SolarGeneratorSpecs(**products["generator"].specs)
+        if ps.wattage > gs.max_input_charging_watts:
+            warnings.append("Panel wattage exceeds generator solar input limit.")
+
+    return {
+        "warnings": warnings,
+        "is_compatible": len(warnings) == 0,
+    }
