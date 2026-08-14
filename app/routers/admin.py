@@ -122,3 +122,92 @@ async def admin_product_create(
     await session.commit()
 
     return RedirectResponse(url="/admin/products", status_code=303)
+
+
+@router.get("/products/{product_id}/edit")
+async def admin_product_edit(
+    request: Request,
+    product_id: int,
+    admin: Users = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+):
+    product = await session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404)
+
+    image_url_str = ", ".join(product.image_url) if product.image_url else ""
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/product_form.html",
+        context={
+            "errors": {},
+            "product": product,
+            "form_values": {
+                "category": product.category,
+                "name": product.name,
+                "price": product.price,
+                "description": product.description,
+                "image_url": image_url_str,
+            },
+            "values": product.specs,
+            "choices": FIELD_CHOICES,
+            "fields": ADMIN_FORM_FIELDS.get(product.category, []),
+        },
+    )
+
+
+@router.post("/products/{product_id}/edit")
+async def admin_product_update(
+    request: Request,
+    product_id: int,
+    admin: Users = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+    category: str = Form(...),
+    name: str = Form(...),
+    price: float = Form(...),
+    description: str = Form(...),
+    image_url: str = Form(""),
+):
+    product = await session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404)
+
+    form = await request.form()
+    known = {"category", "name", "price", "description", "image_url"}
+    raw_specs = {k: v for k, v in form.items() if k not in known}
+
+    try:
+        specs = validate_specs(category, raw_specs)
+    except ValueError as e:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/product_form.html",
+            context={
+                "errors": {"specs": str(e)},
+                "product": product,
+                "form_values": {
+                    "category": category,
+                    "name": name,
+                    "price": price,
+                    "description": description,
+                    "image_url": image_url,
+                },
+                "values": raw_specs,
+                "choices": FIELD_CHOICES,
+                "fields": ADMIN_FORM_FIELDS.get(category, []),
+            },
+        )
+
+    product.category = category
+    product.name = name
+    product.price = price
+    product.description = description
+    product.image_url = (
+        [u.strip() for u in image_url.split(",") if u.strip()] if image_url else []
+    )
+    product.specs = specs
+    session.add(product)
+    await session.commit()
+
+    return RedirectResponse(url="/admin/products", status_code=303)
