@@ -94,6 +94,55 @@
   }
   .estimated-load strong { color: var(--ink); font-weight: 700; }
 
+  /* ─── PREFERENCES ROW ─── */
+  .prefs-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .pref-field { display: flex; flex-direction: column; gap: 6px; }
+  .pref-field label {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--gray-mid);
+  }
+  .pref-field select,
+  .pref-field input[type="range"] {
+    width: 100%;
+    padding: 10px 14px; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
+    outline: none;
+  }
+  .pref-field input[type="range"] { padding: 6px 0; }
+  .range-readout { font-size: 13px; font-weight: 600; color: var(--ink); }
+
+  .mode-toggle {
+    display: flex; gap: 8px;
+    flex-wrap: wrap;
+  }
+  .mode-toggle label {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 999px;
+    border: 1.5px solid var(--border);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; user-select: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .mode-toggle input { display: none; }
+  .mode-toggle input:checked + span {
+    background: var(--gold-light);
+    border-color: var(--gold-deep);
+    color: var(--ink);
+  }
+  .mode-toggle label:has(input:checked) {
+    border-color: var(--gold-deep);
+    background: var(--gold-light);
+  }
+
   /* ─── BUDGET ─── */
   .budget-section {
     border: 1.5px solid var(--border);
@@ -305,6 +354,7 @@
 
   @media (max-width: 860px) {
     .builder-grid { grid-template-columns: repeat(2, 1fr); }
+    .prefs-row { grid-template-columns: 1fr; }
   }
   @media (max-width: 640px) {
     .builder-grid { grid-template-columns: 1fr; }
@@ -364,6 +414,36 @@
           Add appliance
         </button>
       </div>
+
+      <!-- Preferences -->
+      <div class="prefs-row">
+        <div class="pref-field">
+          <label>Build mode</label>
+          <div class="mode-toggle" id="buildModeToggle">
+            <label>
+              <input type="radio" name="buildMode" value="custom" checked>
+              <span>Custom system</span>
+            </label>
+            <label>
+              <input type="radio" name="buildMode" value="generator">
+              <span>All-in-one generator</span>
+            </label>
+          </div>
+        </div>
+        <div class="pref-field">
+          <label for="autonomyHours">Backup without sun: <span class="range-readout" id="autonomyReadout">24 h</span></label>
+          <input type="range" id="autonomyHours" min="0" max="72" step="6" value="24">
+        </div>
+        <div class="pref-field">
+          <label for="preferredChemistry">Battery chemistry</label>
+          <select id="preferredChemistry">
+            <option value="any">Any</option>
+            <option value="lithium">Lithium only</option>
+            <option value="lead_acid">Lead-acid only</option>
+          </select>
+        </div>
+      </div>
+
       <div class="estimated-load">
         Estimated daily need: <strong id="totalWattHours">0 Wh</strong> / <strong id="totalWatts">0 W</strong> peak
       </div>
@@ -410,6 +490,7 @@
         ('panel', 'Panels', 'M3 3h18v12H3zM3 9h18M9 3v12M15 3v12'),
         ('inverter', 'Inverter', 'M4 12h4l2-6 4 12 2-6h4'),
         ('battery', 'Battery', 'M7 7h10v10H7zM7 10h10M7 13h10'),
+        ('generator', 'Generator', 'M13 2 4 14h6l-1 8 9-12h-6l1-8z'),
         ('accessory', 'Accessories', 'M12 2l3 6 6 1-4.5 4.5 1 6-5.5-3-5.5 3 1-6L3 9l6-1z')
       ] %}
 
@@ -442,7 +523,7 @@
         <div class="slot-alternatives" id="slot-alts-{{ cat_key }}" style="display:none;">
           <div class="slot-alt-label">Alternatives</div>
           <div class="slot-alt-scroll" id="slot-scroll-{{ cat_key }}">
-            <!-- Populated by JS or HTMX -->
+            <!-- Populated by JS -->
           </div>
         </div>
 
@@ -500,6 +581,7 @@ const DEFAULT_APPLIANCES = [
 // ─── STATE ───
 let appliances = [];
 let selectedProducts = {}; // { category: { id, name, price, image_url, specs } }
+let buildMode = 'custom';
 
 // ─── APPLIANCE TABLE ───
 const applianceBody = document.getElementById('applianceBody');
@@ -565,6 +647,32 @@ useDefaultCheckbox.addEventListener('change', function () {
 
 document.getElementById('addApplianceBtn').addEventListener('click', () => addAppliance());
 
+// ─── MODE & PREFERENCES ───
+function updateModeVisibility() {
+  const isGen = buildMode === 'generator';
+  ['panel', 'inverter', 'battery'].forEach(cat => {
+    document.getElementById('slot-' + cat).style.display = isGen ? 'none' : '';
+  });
+  document.getElementById('slot-generator').style.display = isGen ? '' : 'none';
+}
+
+document.querySelectorAll('input[name="buildMode"]').forEach(radio => {
+  radio.addEventListener('change', function () {
+    buildMode = this.value;
+    updateModeVisibility();
+    saveToLocalStorage();
+  });
+});
+
+const autonomySlider = document.getElementById('autonomyHours');
+const autonomyReadout = document.getElementById('autonomyReadout');
+autonomySlider.addEventListener('input', function () {
+  autonomyReadout.textContent = this.value + ' h';
+  saveToLocalStorage();
+});
+
+document.getElementById('preferredChemistry').addEventListener('change', saveToLocalStorage);
+
 // ─── PRODUCT SELECTION ───
 function selectProduct(category, product) {
   selectedProducts[category] = product;
@@ -578,15 +686,14 @@ function selectProduct(category, product) {
   empty.style.display = 'none';
   alts.style.display = '';
 
-  document.getElementById('slot-name-' + category).textContent = product.name;
-  document.getElementById('slot-price-' + category).textContent = '₦' + product.price.toLocaleString();
+  document.getElementById('slot-name-' + category).textContent = product.name || '—';
+  document.getElementById('slot-price-' + category).textContent = '₦' + (product.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   document.getElementById('slot-img-' + category).src = product.image_url || '';
   document.getElementById('slot-specs-' + category).textContent = formatSpecs(product.specs);
 
   updateTotal();
   saveToLocalStorage();
 
-  // Highlight in alternatives
   document.querySelectorAll('#slot-scroll-' + category + ' .slot-alt-card').forEach(card => {
     card.classList.toggle('is-selected', parseInt(card.dataset.id) === product.id);
   });
@@ -595,6 +702,7 @@ function selectProduct(category, product) {
 function clearSlot(category) {
   delete selectedProducts[category];
   const slot = document.getElementById('slot-' + category);
+  if (!slot) return;
   document.getElementById('slot-current-' + category).style.display = 'none';
   document.getElementById('slot-empty-' + category).style.display = '';
   document.getElementById('slot-alts-' + category).style.display = 'none';
@@ -605,7 +713,8 @@ function clearSlot(category) {
 
 function formatSpecs(specs) {
   if (!specs || typeof specs !== 'object') return '';
-  return Object.entries(specs).slice(0, 2).map(([k, v]) => `${k}: ${v}`).join(' · ');
+  const entries = Object.entries(specs).filter(([k]) => k !== 'quantity').slice(0, 3);
+  return entries.map(([k, v]) => `${k}: ${v}`).join(' · ');
 }
 
 function updateTotal() {
@@ -624,7 +733,7 @@ function hideCompatWarning() {
   document.getElementById('compatBanner').classList.remove('is-visible');
 }
 
-// ─── LOCAL STORAGE PERSISTENCE ───
+// ─── LOCAL STORAGE ───
 function saveToLocalStorage() {
   const payload = {
     appliances: appliances,
@@ -632,6 +741,9 @@ function saveToLocalStorage() {
     budgetMin: document.getElementById('budgetMin').value,
     budgetMax: document.getElementById('budgetMax').value,
     useDefault: useDefaultCheckbox.checked,
+    buildMode: buildMode,
+    autonomyHours: autonomySlider.value,
+    preferredChemistry: document.getElementById('preferredChemistry').value,
     timestamp: Date.now()
   };
   localStorage.setItem('ges_system_builder', JSON.stringify(payload));
@@ -649,12 +761,173 @@ function loadFromLocalStorage() {
         if (prod) selectProduct(cat, prod);
       });
     }
-    if (data.budgetMin) document.getElementById('budgetMin').value = data.budgetMin;
-    if (data.budgetMax) document.getElementById('budgetMax').value = data.budgetMax;
+    if (data.budgetMin !== undefined) document.getElementById('budgetMin').value = data.budgetMin;
+    if (data.budgetMax !== undefined) document.getElementById('budgetMax').value = data.budgetMax;
     if (typeof data.useDefault === 'boolean') useDefaultCheckbox.checked = data.useDefault;
+    if (data.buildMode) {
+      buildMode = data.buildMode;
+      document.querySelector(`input[name="buildMode"][value="${buildMode}"]`).checked = true;
+    }
+    if (data.autonomyHours !== undefined) {
+      autonomySlider.value = data.autonomyHours;
+      autonomyReadout.textContent = data.autonomyHours + ' h';
+    }
+    if (data.preferredChemistry) document.getElementById('preferredChemistry').value = data.preferredChemistry;
     return true;
   } catch (e) { return false; }
 }
+
+// ─── BACKEND INTEGRATION ───
+function browseCategory(category) {
+  const budgetMax = parseFloat(document.getElementById('budgetMax').value) || 99999999;
+  fetch(`/build/alternatives/${category}?budget_max=${budgetMax}`)
+    .then(r => r.json())
+    .then(products => {
+      const scroll = document.getElementById('slot-scroll-' + category);
+      scroll.innerHTML = '';
+      products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'slot-alt-card';
+        card.dataset.id = p.id;
+        card.innerHTML = `
+          <img src="${p.image_url || ''}" alt="" onerror="this.style.display='none'">
+          <div class="alt-name">${escapeHtml(p.name)}</div>
+          <div class="alt-price">₦${p.price.toLocaleString()}</div>
+        `;
+        card.addEventListener('click', () => selectProduct(category, p));
+        scroll.appendChild(card);
+      });
+      document.getElementById('slot-alts-' + category).style.display = '';
+    })
+    .catch(err => console.error('Failed to load alternatives:', err));
+}
+
+document.getElementById('autoBuildBtn').addEventListener('click', async function () {
+  if (appliances.length === 0) {
+    alert('Add at least one appliance first.');
+    return;
+  }
+  const payload = {
+    appliances: appliances.map(a => ({
+      name: a.name,
+      qty: a.qty,
+      watts: a.watts,
+      hours_per_day: a.hours
+    })),
+    use_default_household: useDefaultCheckbox.checked,
+    autonomy_hours: parseFloat(autonomySlider.value),
+    preferred_chemistry: document.getElementById('preferredChemistry').value,
+    budget_min: parseFloat(document.getElementById('budgetMin').value) || null,
+    budget_max: parseFloat(document.getElementById('budgetMax').value) || null,
+    build_mode: buildMode
+  };
+
+  try {
+    const res = await fetch('/build/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.detail || 'No valid system found for your budget. Try increasing the maximum budget.');
+      return;
+    }
+    const bundle = await res.json();
+
+    // Clear old selections
+    Object.keys(selectedProducts).forEach(clearSlot);
+
+    // Populate new selections
+    if (bundle.products) {
+      Object.entries(bundle.products).forEach(([cat, prod]) => {
+        if (prod) selectProduct(cat, prod);
+      });
+    }
+
+    // Show warnings
+    if (bundle.compatibility_warnings && bundle.compatibility_warnings.length) {
+      showCompatWarning(bundle.compatibility_warnings.join(' '));
+    } else {
+      hideCompatWarning();
+    }
+
+  } catch (e) {
+    console.error(e);
+    alert('Auto-build failed. Please try again.');
+  }
+});
+
+document.getElementById('saveSystemBtn').addEventListener('click', function () {
+  saveToLocalStorage();
+  // If logged in, also POST to server
+  const username = {{ username | tojson }};
+  if (username) {
+    const bundle = buildCurrentBundle();
+    fetch('/build/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bundle)
+    }).then(r => {
+      if (r.ok) alert('Saved to your account.');
+      else alert('Saved locally, but failed to sync to account.');
+    });
+  } else {
+    alert('System saved to your browser. Sign in to sync across devices.');
+  }
+});
+
+document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
+  const bundle = buildCurrentBundle();
+  const ids = Object.values(selectedProducts).map(p => p.id).filter(Boolean);
+  if (ids.length === 0) {
+    alert('Select at least one component.');
+    return;
+  }
+  fetch('/cart/system', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bundle)
+  }).then(r => {
+    if (r.ok) {
+      window.location.href = '/cart';
+    } else if (r.status === 401) {
+      // Save state and redirect to sign-in
+      saveToLocalStorage();
+      window.location.href = '/signin?next=/build';
+    } else {
+      alert('Failed to add system to cart.');
+    }
+  });
+});
+
+function buildCurrentBundle() {
+  return {
+    configuration: {
+      appliances: appliances.map(a => ({ name: a.name, qty: a.qty, watts: a.watts, hours_per_day: a.hours })),
+      use_default_household: useDefaultCheckbox.checked,
+      autonomy_hours: parseFloat(autonomySlider.value),
+      preferred_chemistry: document.getElementById('preferredChemistry').value,
+      budget_min: parseFloat(document.getElementById('budgetMin').value) || null,
+      budget_max: parseFloat(document.getElementById('budgetMax').value) || null,
+      build_mode: buildMode
+    },
+    selections: {
+      panel_id: selectedProducts.panel?.id || null,
+      inverter_id: selectedProducts.inverter?.id || null,
+      battery_id: selectedProducts.battery?.id || null,
+      generator_id: selectedProducts.generator?.id || null,
+      accessory_bundle_id: selectedProducts.accessory?.id || null
+    },
+    total_price: Object.values(selectedProducts).reduce((s, p) => s + (p.price || 0), 0),
+    estimated_daily_wh: parseFloat(document.getElementById('totalWattHours').textContent.replace(/[^\d]/g, '')) || 0,
+    estimated_peak_w: parseFloat(document.getElementById('totalWatts').textContent.replace(/[^\d]/g, '')) || 0
+  };
+}
+
+// ─── BUDGET LISTENERS ───
+document.getElementById('budgetMin').addEventListener('change', saveToLocalStorage);
+document.getElementById('budgetMax').addEventListener('change', saveToLocalStorage);
 
 // ─── INIT ───
 if (!loadFromLocalStorage()) {
@@ -662,41 +935,7 @@ if (!loadFromLocalStorage()) {
   useDefaultCheckbox.checked = true;
 }
 renderAppliances();
-
-// ─── BUDGET LISTENERS ───
-document.getElementById('budgetMin').addEventListener('change', saveToLocalStorage);
-document.getElementById('budgetMax').addEventListener('change', saveToLocalStorage);
-
-// ─── PLACEHOLDERS FOR BACKEND INTEGRATION ───
-function browseCategory(category) {
-  // HTMX call: load alternatives into slot-scroll-{category}
-  // Example: htmx.ajax('GET', '/build/alternatives/' + category, {target: '#slot-scroll-' + category, swap: 'innerHTML'});
-  window.location.href = '/catalog/category/' + category;
-}
-
-document.getElementById('autoBuildBtn').addEventListener('click', function () {
-  // HTMX call: POST /build/recommend with appliances + budget
-  // Response populates all 4 slots
-  alert('Auto-build will call your backend with: ' + JSON.stringify({
-    appliances: appliances,
-    budgetMin: document.getElementById('budgetMin').value,
-    budgetMax: document.getElementById('budgetMax').value
-  }));
-});
-
-document.getElementById('saveSystemBtn').addEventListener('click', function () {
-  saveToLocalStorage();
-  // If logged in: POST /build/save with payload
-  // If anon: show auth modal or just confirm it's saved locally
-  alert('System saved to your browser. Sign in to sync across devices.');
-});
-
-document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
-  const ids = Object.values(selectedProducts).map(p => p.id).filter(Boolean);
-  if (ids.length === 0) { alert('Select at least one component.'); return; }
-  // If anon: show auth modal, but pass ?return_to=/build&system_state=...
-  // If logged in: POST /cart/system with { product_ids: ids }
-  alert('Adding to cart: ' + ids.join(', '));
-});
+updateModeVisibility();
+updateTotal();
 </script>
 {% endblock %}
