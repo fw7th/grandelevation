@@ -17,6 +17,8 @@ class Users(SQLModel, table=True):
     role: str = Field(default="customer")  # "customer" | "admin"
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+    invoices: List["Invoice"] = Relationship(back_populates="user")
+
 
 class Session(SQLModel, table=True):
     __tablename__ = "sessions"
