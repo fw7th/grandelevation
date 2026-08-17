@@ -4,12 +4,12 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlmodel import select
+from sqlmodel import delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 
-from ..models import CartItem, Invoice, Product
+from ..models import CartItem, Invoice, Product, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["checkout"])
@@ -124,7 +124,11 @@ async def complete_checkout(
     await session.commit()
     await session.refresh(invoice)
 
-    # (Optional: clear the cart? Leave it; user can re-order)
+    # Clear the user's cart
+    stmt = delete(CartItem).where(CartItem.user_id == user.id)
+    await session.exec(stmt)
+    await session.commit()
+
     # We'll return the invoice ID so the frontend can redirect
     return {"invoice_id": invoice.id, "invoice_number": invoice_number}
 
@@ -135,6 +139,8 @@ async def view_invoice(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
+    user_page = await authenticate(request, session)
+
     invoice = await session.get(Invoice, invoice_id)
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
@@ -153,6 +159,7 @@ async def view_invoice(
         request=request,
         name="invoice.html",
         context={
+            "username": user_page.username if user_page else None,
             "invoice": invoice,
             "user": user,
             "invoice_url": invoice_url,
