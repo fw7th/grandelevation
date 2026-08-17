@@ -109,8 +109,8 @@ class Invoice(SQLModel, table=True):
     total: float
     payment_method: str  # 'transfer' or 'pickup'
     delivery_method: str  # 'delivery' or 'pickup'
-    delivery_location: Optional[str] = None
-    delivery_note: Optional[str] = None
+    delivery_location: str | None = None
+    delivery_note: str | None = None
     status: str = "pending"  # pending, paid, etc.
 
     # optional relationship back to user (not required for public view)
