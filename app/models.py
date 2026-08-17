@@ -1,6 +1,6 @@
 # models.py
 from datetime import datetime, timedelta
-from typing import Any, List, Optional
+from typing import Any, Optional, list
 
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
@@ -17,7 +17,7 @@ class Users(SQLModel, table=True):
     role: str = Field(default="customer")  # "customer" | "admin"
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    invoices: List["Invoice"] = Relationship(back_populates="user")
+    invoices: list["Invoice"] = Relationship(back_populates="user")
 
 
 class Session(SQLModel, table=True):
@@ -103,7 +103,7 @@ class Invoice(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id")
     invoice_number: str = Field(index=True, unique=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    items: List[dict] = Field(default=[], sa_column=Column(JSON))
+    items: list[dict] = Field(default=[], sa_column=Column(JSON))
     subtotal: float
     delivery_fee: float = 0.0
     total: float
