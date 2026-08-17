@@ -1,10 +1,9 @@
 # models.py
-import enum
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, List, Optional
 
 from sqlalchemy import JSON, Column
-from sqlmodel import Field, SQLModel, UniqueConstraint
+from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 
 
 class Users(SQLModel, table=True):
@@ -71,13 +70,6 @@ class PasswordResetToken(SQLModel, table=True):
     used_at: datetime | None = Field(default=None)
 
 
-class OrderStatus(str, enum.Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-
-
 class CartItem(SQLModel, table=True):
     __tablename__ = "cart_items"
 
@@ -87,27 +79,6 @@ class CartItem(SQLModel, table=True):
     quantity: int = Field(default=1, ge=1)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-class Order(SQLModel, table=True):
-    __tablename__ = "orders"
-
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id", index=True)
-    status: OrderStatus = Field(default=OrderStatus.PENDING)
-    total: float = Field(default=0.0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-class OrderItem(SQLModel, table=True):
-    __tablename__ = "order_items"
-
-    id: int | None = Field(default=None, primary_key=True)
-    order_id: int = Field(foreign_key="orders.id", index=True)
-    product_id: int = Field(foreign_key="product.id")
-    quantity: int = Field(ge=1)
-    unit_price: float  # snapshot at purchase time
 
 
 class SavedSystem(SQLModel, table=True):
@@ -122,3 +93,23 @@ class SavedSystem(SQLModel, table=True):
     estimated_peak_w: float | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Invoice(SQLModel, table=True):
+    __tablename__ = "invoices"
+    id: int = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id")
+    invoice_number: str = Field(index=True, unique=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    items: List[dict] = Field(default=[], sa_column=Column(JSON))
+    subtotal: float
+    delivery_fee: float = 0.0
+    total: float
+    payment_method: str  # 'transfer' or 'pickup'
+    delivery_method: str  # 'delivery' or 'pickup'
+    delivery_location: Optional[str] = None
+    delivery_note: Optional[str] = None
+    status: str = "pending"  # pending, paid, etc.
+
+    # optional relationship back to user (not required for public view)
+    user: Optional["Users"] = Relationship(back_populates="invoices")
