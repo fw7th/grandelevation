@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice {{ invoice.invoice_number }} — Grand Elevation Solar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .invoice-wrapper {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 40px 48px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+  }
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+  }
+  .invoice-brand h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 1.2;
+  }
+  .invoice-brand .tagline {
+    color: var(--gray-mid);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .invoice-meta {
+    text-align: right;
+  }
+  .invoice-meta .number {
+    font-family: 'Sora', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .invoice-meta .date {
+    color: var(--gray-mid);
+    font-size: 14px;
+  }
+
+  .invoice-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 32px;
+    padding: 16px 0;
+    background: var(--gold-light);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .invoice-info .label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-mid);
+  }
+  .invoice-info .value {
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0 32px;
+  }
+  .invoice-table th {
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-mid);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .invoice-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .invoice-table .right {
+    text-align: right;
+  }
+  .invoice-table .total-row td {
+    font-weight: 700;
+    font-size: 16px;
+    border-bottom: none;
+    padding-top: 16px;
+  }
+  .invoice-table .total-row .grand-total {
+    font-size: 20px;
+    color: var(--gold-deep);
+  }
+
+  .invoice-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid var(--border);
+  }
+  .btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #25D366;
+    color: white;
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.1s ease;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-whatsapp:hover {
+    background: #128C7E;
+    transform: scale(1.02);
+  }
+  .btn-whatsapp svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+  .btn-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .btn-copy:hover {
+    border-color: var(--gold-deep);
+  }
+  .btn-copy.copied {
+    border-color: #22c55e;
+    color: #22c55e;
+  }
+
+  .invoice-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--gray-mid);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .invoice-wrapper { padding: 24px 16px; }
+    .invoice-header { flex-direction: column; align-items: stretch; }
+    .invoice-meta { text-align: left; }
+    .invoice-info { grid-template-columns: 1fr; gap: 16px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="invoice-wrapper">
+    <div class="invoice-header">
+      <div class="invoice-brand">
+        <h1>Grand Elevation Solar</h1>
+        <div class="tagline">Powering tomorrow, today</div>
+      </div>
+      <div class="invoice-meta">
+        <div class="number">#{{ invoice.invoice_number }}</div>
+        <div class="date">{{ invoice.created_at.strftime('%d %b %Y, %H:%M') }}</div>
+      </div>
+    </div>
+
+    <div class="invoice-info">
+      <div>
+        <div class="label">Customer</div>
+        <div class="value">{{ user.username if user else 'Guest' }}</div>
+        <div style="font-size:13px;color:var(--gray-mid);">{{ user.email if user else '' }}</div>
+      </div>
+      <div>
+        <div class="label">Delivery</div>
+        <div class="value">{{ invoice.delivery_method|capitalize }}</div>
+        {% if invoice.delivery_location %}
+          <div style="font-size:13px;color:var(--gray-mid);">{{ invoice.delivery_location }}</div>
+        {% endif %}
+        {% if invoice.delivery_note %}
+          <div style="font-size:13px;color:var(--gray-mid);">Note: {{ invoice.delivery_note }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th class="right">Qty</th>
+          <th class="right">Price</th>
+          <th class="right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in invoice.items %}
+        <tr>
+          <td>{{ item.name }}</td>
+          <td class="right">{{ item.quantity }}</td>
+          <td class="right">₦{{ "{:,.2f}".format(item.price) }}</td>
+          <td class="right">₦{{ "{:,.2f}".format(item.subtotal) }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="3" class="right" style="padding-top:16px;">Subtotal</td>
+          <td class="right" style="padding-top:16px;">₦{{ "{:,.2f}".format(invoice.subtotal) }}</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="right">Delivery</td>
+          <td class="right">₦{{ "{:,.2f}".format(invoice.delivery_fee) }}</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3" class="right">Total</td>
+          <td class="right grand-total">₦{{ "{:,.2f}".format(invoice.total) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin: 12px 0 0; font-size:13px;color:var(--gray-mid);">
+      Payment method: <strong>{{ invoice.payment_method|capitalize }}</strong>
+      {% if invoice.payment_method == 'transfer' %}
+        – Please transfer the total amount to the account provided on checkout.
+      {% else %}
+        – You will pay when you pick up the order.
+      {% endif %}
+    </div>
+
+    <div class="invoice-actions">
+      <a href="https://wa.me/{{ whatsapp_number }}?text={{ 
+        ('I have ' + ('transferred ₦' + '{:,.2f}'.format(invoice.total) if invoice.payment_method == 'transfer' else 'placed an order for pickup of ₦' + '{:,.2f}'.format(invoice.total)) + 
+        ' for the following products:%0A' +
+        invoice.items|map(attribute='name')|join(', ') + '%0A' +
+        'Here is my invoice: ' + invoice_url) | urlencode 
+      }}" target="_blank" class="btn-whatsapp">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Share on WhatsApp
+      </a>
+
+      <button class="btn-copy" id="copyLinkBtn" onclick="copyInvoiceLink()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy invoice link
+      </button>
+    </div>
+
+    <div class="invoice-footer">
+      This invoice is generated automatically. For any questions, please contact us on WhatsApp.
+    </div>
+  </div>
+</div>
+
+<script>
+  function copyInvoiceLink() {
+    const url = '{{ invoice_url }}';
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('copyLinkBtn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy invoice link`;
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+{% endblock %}

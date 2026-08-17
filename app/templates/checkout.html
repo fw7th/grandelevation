@@ -847,18 +847,45 @@
     }
   }
 
-  function submitOrder() {
+function submitOrder() {
     const btn = document.getElementById('pay-btn');
     btn.disabled = true;
-    btn.querySelector('#pay-btn-text').textContent = 'Processing...';
+    const btnText = document.getElementById('pay-btn-text');
+    btnText.textContent = 'Processing...';
 
-    // TODO: POST to /checkout/complete with deliveryMode, paymentMode, location, note, calculatedDelivery
-    // For demo, just redirect or show confirmation
-    setTimeout(() => {
-      alert('Order submitted! (Demo — hook up the backend next.)');
-      btn.disabled = false;
-      btn.querySelector('#pay-btn-text').textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
-    }, 800);
-  }
+    // Gather delivery and payment info
+    const deliveryMode = document.querySelector('.delivery-option.active')?.id?.replace('opt-', '') || 'delivery';
+    const paymentMode = document.querySelector('.payment-method.active')?.id?.replace('pm-', '') || 'transfer';
+    const location = document.getElementById('location').value.trim();
+    const deliveryNote = document.getElementById('delivery-note').value.trim();
+
+    const payload = {
+        delivery_method: deliveryMode,
+        payment_method: paymentMode,
+        location: location,
+        delivery_note: deliveryNote,
+    };
+
+    fetch('/checkout/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.detail || 'Failed to complete order'); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Redirect to the public invoice
+        window.location.href = `/invoice/${data.invoice_id}`;
+    })
+    .catch(error => {
+        alert(error.message);
+        btn.disabled = false;
+        btnText.textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
+    });
+}
 </script>
 {% endblock %}

@@ -10,7 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.database import get_session
 from app.security import password_hash
 
-from ..models import CartItem, Product, Users
+from ..models import CartItem, Invoice, Product, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
@@ -151,6 +151,15 @@ async def account(request: Request, session: AsyncSession = Depends(get_session)
 
     success = request.query_params.get("updated") == "1"
 
+    # ─── FETCH INVOICES ───
+    stmt = (
+        select(Invoice)
+        .where(Invoice.user_id == user.id)
+        .order_by(Invoice.created_at.desc())
+    )
+    result = await session.exec(stmt)
+    invoices = result.all()
+
     return templates.TemplateResponse(
         request=request,
         name="account.html",
@@ -161,7 +170,7 @@ async def account(request: Request, session: AsyncSession = Depends(get_session)
             "success": success,
             "rate_limited": False,
             "errors": {},
-            "orders": [],
+            "orders": invoices,  # <-- must be 'orders'
             "saved_systems": [],
         },
     )
