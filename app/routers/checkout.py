@@ -118,7 +118,7 @@ async def complete_checkout(
         delivery_method=delivery_method,
         delivery_location=delivery_location,
         delivery_note=delivery_note,
-        status="pending",
+        status="completed",
     )
     session.add(invoice)
     await session.commit()

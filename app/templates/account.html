@@ -234,7 +234,7 @@
   <div class="account-layout">
     <aside class="account-sidebar">
       <nav class="account-nav">
-        <a href="#profile" class="is-active" onclick="switchTab(event, 'profile')">
+        <a href="/account" class="is-active" onclick="switchTab(event, 'profile')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
           Profile
         </a>
@@ -319,31 +319,27 @@
       </section>
 
       <!-- ORDERS -->
-      <section class="account-card" id="tab-orders" style="display:none;">
-        <h2>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          Order history
-        </h2>
-        {% if orders %}
-        <div class="order-list">
-          {% for order in orders %}
-          <div class="order-row">
-            <div class="order-info">
-              <div class="order-id">Order #{{ order.id }}</div>
-              <div class="order-meta">{{ order.created_at.strftime('%d %b %Y') }} · {{ order.items_count }} item{% if order.items_count != 1 %}s{% endif %}</div>
-            </div>
-            <span class="order-status status-{{ order.status }}">
-              {% if order.status == 'completed' %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>{% endif %}
-              {{ order.status }}
-            </span>
-            <div class="order-amount">₦{{ "{:,.2f}".format(order.total) }}</div>
+        <section class="account-card" id="tab-orders" style="display:none;">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            Order history
+          </h2>
+          {% if orders %}
+          <div class="order-list">
+            {% for invoice in orders %}
+            <a href="/invoice/{{ invoice.id }}" class="order-row" style="text-decoration:none;color:inherit;">
+              <div class="order-info">
+                <div class="order-id">{{ invoice.invoice_number }}</div>
+                <div class="order-meta">{{ invoice.created_at.strftime('%d %b %Y, %H:%M') }} · {{ invoice.items|length }} item{% if invoice.items|length != 1 %}s{% endif %}</div>
+              </div>
+              <div class="order-amount">₦{{ "{:,.2f}".format(invoice.total) }}</div>
+            </a>
+            {% endfor %}
           </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <p style="color:var(--gray-mid); font-size:14px;">No orders yet. When you make a purchase, it will show up here.</p>
-        {% endif %}
-      </section>
+          {% else %}
+          <p style="color:var(--gray-mid); font-size:14px;">No orders yet. When you place an order, it will show up here.</p>
+          {% endif %}
+        </section>
 
       <!-- SAVED SYSTEMS -->
       <section class="account-card" id="tab-systems" style="display:none;">
