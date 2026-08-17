@@ -127,3 +127,35 @@ async def complete_checkout(
     # (Optional: clear the cart? Leave it; user can re-order)
     # We'll return the invoice ID so the frontend can redirect
     return {"invoice_id": invoice.id, "invoice_number": invoice_number}
+
+
+@router.get("/invoice/{invoice_id}")
+async def view_invoice(
+    invoice_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    invoice = await session.get(Invoice, invoice_id)
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    # Load user details (for display name/email)
+    user = await session.get(Users, invoice.user_id)
+
+    # Generate the full URL for this invoice (to include in WhatsApp message)
+    invoice_url = str(request.url_for("view_invoice", invoice_id=invoice.id))
+    # But request.url_for may not work if we don't name the route; we'll construct manually
+    # Actually, we can use request.url.path and replace, but easier:
+    base_url = str(request.base_url).rstrip("/")
+    invoice_url = f"{base_url}/invoice/{invoice.id}"
+
+    return templates.TemplateResponse(
+        request=request,
+        name="invoice.html",
+        context={
+            "invoice": invoice,
+            "user": user,
+            "invoice_url": invoice_url,
+            "whatsapp_number": "2348107730018",  # from checkout.html
+        },
+    )
