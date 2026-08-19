@@ -855,48 +855,54 @@ function setDelivery(mode) {
 }
 
 function submitOrder() {
-    const btn = document.getElementById('pay-btn');
-    btn.disabled = true;
-    const btnText = document.getElementById('pay-btn-text');
-    btnText.textContent = 'Processing...';
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  const btnText = document.getElementById('pay-btn-text');
+  btnText.textContent = 'Processing...';
 
-    // Gather delivery and payment info
-    const deliveryMode = document.querySelector('.delivery-option.active')?.id?.replace('opt-', '') || 'delivery';
-    const paymentMode = document.querySelector('.payment-method.active')?.id?.replace('pm-', '') || 'transfer';
-    const location = document.getElementById('location').value.trim();
-    const deliveryNote = document.getElementById('delivery-note').value.trim();
+  const deliveryMode = document.querySelector('.delivery-option.active')?.id?.replace('opt-', '') || 'delivery';
+  const paymentMode = document.querySelector('.payment-method.active')?.id?.replace('pm-', '') || 'transfer';
+  const location = document.getElementById('location').value.trim();
+  const deliveryNote = document.getElementById('delivery-note').value.trim();
 
-    const payload = {
-        delivery_method: deliveryMode,
-        payment_method: paymentMode,
-        location: location,
-        delivery_note: deliveryNote,
-    };
+  const payload = {
+    delivery_method: deliveryMode,
+    payment_method: paymentMode,
+    location: location,
+    delivery_note: deliveryNote,
+  };
 
-    // If buy‑now mode, send the product list instead of using cart
-    if (buyNowMode && buyNowProductId && buyNowQuantity > 0) {
-        payload.items = [{ product_id: buyNowProductId, quantity: buyNowQuantity }];
+  // ─── ONLY ADD DELIVERY FEE IF CALCULATED ───
+  if (deliveryMode === 'delivery' && deliveryCalculated && calculatedDelivery > 0) {
+    payload.delivery_fee = calculatedDelivery;
+  } else {
+    payload.delivery_fee = 0;
+  }
+
+  // Buy‑now items (if any)
+  if (buyNowMode && buyNowProductId && buyNowQuantity > 0) {
+    payload.items = [{ product_id: buyNowProductId, quantity: buyNowQuantity }];
+  }
+
+  fetch('/checkout/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw new Error(err.detail || 'Failed to complete order'); });
     }
-
-    fetch('/checkout/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => { throw new Error(err.detail || 'Failed to complete order'); });
-        }
-        return response.json();
-    })
-    .then(data => {
-        window.location.href = `/invoice/${data.invoice_id}`;
-    })
-    .catch(error => {
-        alert(error.message);
-        btn.disabled = false;
-        btnText.textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
-    });
+    return response.json();
+  })
+  .then(data => {
+    window.location.href = `/invoice/${data.invoice_id}`;
+  })
+  .catch(error => {
+    alert(error.message);
+    btn.disabled = false;
+    btnText.textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
+  });
 }
 </script>
 
