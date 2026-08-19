@@ -481,15 +481,21 @@
 
 {% block content %}
 <div class="wrap">
-  <div class="page-header">
-    <h1 class="display">Checkout</h1>
-    <p>{% if cart_items %}{{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %} ready{% else %}Your cart is empty{% endif %}</p>
-  </div>
+    <div class="page-header">
+      <h1 class="display">Checkout</h1>
+      <p>
+        {% if checkout_items %}
+          {{ checkout_items|length }} item{% if checkout_items|length != 1 %}s{% endif %} ready
+        {% else %}
+            No items to checkout
+        {% endif %}
+      </p>
+    </div>
 
-  {% if cart_items %}
+{% if checkout_items %}
   {% set ns = namespace(total_qty=0) %}
-  {% for cart_item, product in cart_items %}
-    {% set ns.total_qty = ns.total_qty + cart_item.quantity %}
+  {% for item in checkout_items %}
+    {% set ns.total_qty = ns.total_qty + item.quantity %}
   {% endfor %}
 
   <div class="checkout-layout">
@@ -584,25 +590,26 @@
       <!-- Order Items -->
       <h2 class="display">Your order</h2>
       <p class="checkout-subhead">Review your items before paying.</p>
-      <div class="order-list">
-        {% for cart_item, product in cart_items %}
-        <div class="order-item">
-          <div class="order-item-image">
-          {% set order_img = product.image_url[0] if product.image_url is sequence and product.image_url is not string else product.image_url %}
-          {% if order_img %}
-          <img src="{{ order_img }}" alt="{{ product.name }}">
-          {% else %}
-          <div class="order-item-image-placeholder">No image</div>
-          {% endif %}
+        <div class="order-list">
+          {% for item in checkout_items %}
+          {% set product = item.product %}
+          <div class="order-item">
+            <div class="order-item-image">
+              {% set order_img = product.image_url[0] if product.image_url is sequence and product.image_url is not string else product.image_url %}
+              {% if order_img %}
+              <img src="{{ order_img }}" alt="{{ product.name }}">
+              {% else %}
+              <div class="order-item-image-placeholder">No image</div>
+              {% endif %}
+            </div>
+            <div class="order-item-details">
+              <div class="order-item-name">{{ product.name }}</div>
+              <div class="order-item-meta">Qty: {{ item.quantity }} · {{ product.category.replace('_', ' ') }}</div>
+            </div>
+            <div class="order-item-price">₦{{ "{:,.2f}".format(item.subtotal) }}</div>
           </div>
-          <div class="order-item-details">
-            <div class="order-item-name">{{ product.name }}</div>
-            <div class="order-item-meta">Qty: {{ cart_item.quantity }} · {{ product.category.replace('_', ' ') }}</div>
-          </div>
-          <div class="order-item-price">₦{{ "{:,.2f}".format(product.price * cart_item.quantity) }}</div>
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
 
       <!-- Payment Methods -->
       <h2 class="display" style="margin-top:32px;">Payment method</h2>
@@ -866,6 +873,11 @@ function submitOrder() {
         delivery_note: deliveryNote,
     };
 
+    // If buy‑now mode, send the product list instead of using cart
+    if (buyNowMode && buyNowProductId && buyNowQuantity > 0) {
+        payload.items = [{ product_id: buyNowProductId, quantity: buyNowQuantity }];
+    }
+
     fetch('/checkout/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -878,7 +890,6 @@ function submitOrder() {
         return response.json();
     })
     .then(data => {
-        // Redirect to the public invoice
         window.location.href = `/invoice/${data.invoice_id}`;
     })
     .catch(error => {
@@ -887,5 +898,12 @@ function submitOrder() {
         btnText.textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
     });
 }
+</script>
+
+<script>
+  // Buy‑Now mode flags (passed from backend)
+  const buyNowMode = {{ buy_now_mode|tojson }};
+  const buyNowProductId = {{ buy_now_product_id|tojson }};
+  const buyNowQuantity = {{ buy_now_quantity|tojson }};
 </script>
 {% endblock %}
