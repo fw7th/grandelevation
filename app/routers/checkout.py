@@ -154,9 +154,6 @@ async def complete_checkout(
     total = subtotal + delivery_fee
 
     # Generate invoice number
-    import random
-    import time
-
     invoice_number = f"INV-{int(time.time())}-{random.randint(1000, 9999)}"
 
     invoice = Invoice(

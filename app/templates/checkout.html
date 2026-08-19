@@ -761,6 +761,7 @@
 
 {% block extra_js %}
 <script>
+  let deliveryCalculated = false;
   let deliveryMode = 'delivery';
   let paymentMode = 'transfer';
   let calculatedDelivery = 0;
@@ -770,35 +771,33 @@
     return '₦' + amount.toLocaleString('en-NG', {minimumFractionDigits: 2});
   }
 
-  function setDelivery(mode) {
-    deliveryMode = mode;
-    document.getElementById('opt-delivery').classList.toggle('active', mode === 'delivery');
-    document.getElementById('opt-pickup').classList.toggle('active', mode === 'pickup');
+function setDelivery(mode) {
+  deliveryMode = mode;
+  document.getElementById('opt-delivery').classList.toggle('active', mode === 'delivery');
+  document.getElementById('opt-pickup').classList.toggle('active', mode === 'pickup');
 
-    document.getElementById('delivery-form').classList.toggle('visible', mode === 'delivery');
-    document.getElementById('pickup-details').classList.toggle('visible', mode === 'pickup');
+  document.getElementById('delivery-form').classList.toggle('visible', mode === 'delivery');
+  document.getElementById('pickup-details').classList.toggle('visible', mode === 'pickup');
 
-    document.getElementById('delivery-line').style.display = mode === 'delivery' ? 'flex' : 'none';
-    document.getElementById('pickup-line').style.display = mode === 'pickup' ? 'flex' : 'none';
+  document.getElementById('delivery-line').style.display = mode === 'delivery' ? 'flex' : 'none';
+  document.getElementById('pickup-line').style.display = mode === 'pickup' ? 'flex' : 'none';
 
-    const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
-
-    if (mode === 'pickup') {
-      document.getElementById('summary-delivery').textContent = 'Free';
-      document.getElementById('summary-total').textContent = formatMoney(subtotal);
-      document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
-    } else {
-      if (calculatedDelivery > 0) {
-        document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
-        document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
-        document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
-      } else {
-        document.getElementById('summary-delivery').textContent = 'Enter location to calculate';
-        document.getElementById('summary-total').textContent = formatMoney(subtotal);
-        document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
-      }
-    }
+  // ─── RESET CALCULATED FEE ───
+  if (mode === 'pickup') {
+    deliveryCalculated = false;
+    calculatedDelivery = 0;
+    document.getElementById('summary-delivery').textContent = 'Free';
+  } else {
+    // Switching to delivery – require recalculation
+    deliveryCalculated = false;
+    calculatedDelivery = 0;
+    document.getElementById('summary-delivery').textContent = 'Enter location to calculate';
   }
+
+  const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
+  document.getElementById('summary-total').textContent = formatMoney(subtotal);
+  document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
+}
 
   function setPayment(mode) {
     paymentMode = mode;
