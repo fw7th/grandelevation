@@ -831,27 +831,28 @@ function setDelivery(mode) {
   }
 
   function calculateDelivery() {
-    const location = document.getElementById('location').value.trim();
-    if (!location) {
-      alert('Please enter your location first.');
-      document.getElementById('location').focus();
-      return;
-    }
-
-    const totalQty = parseInt(document.getElementById('delivery-form').dataset.totalQuantity) || 0;
-    calculatedDelivery = totalQty * perItemRate;
-
-    // Update estimate row
-    document.getElementById('delivery-estimate').textContent = formatMoney(calculatedDelivery);
-
-    // Update summary rail
-    const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
-    if (deliveryMode === 'delivery') {
-      document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
-      document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
-      document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
-    }
+  const location = document.getElementById('location').value.trim();
+  if (!location) {
+    alert('Please enter your location first.');
+    document.getElementById('location').focus();
+    return;
   }
+
+  const totalQty = parseInt(document.getElementById('delivery-form').dataset.totalQuantity) || 0;
+  calculatedDelivery = totalQty * perItemRate;
+  deliveryCalculated = true;   // <-- mark as calculated
+
+  // Update estimate row
+  document.getElementById('delivery-estimate').textContent = formatMoney(calculatedDelivery);
+
+  // Update summary rail
+  const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
+  if (deliveryMode === 'delivery') {
+    document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
+    document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
+    document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
+  }
+}
 
 function submitOrder() {
     const btn = document.getElementById('pay-btn');
