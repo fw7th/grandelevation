@@ -27,20 +27,26 @@ async def checkout(
     if not user:
         return RedirectResponse("/catalog")
 
-    buy_now_items = []
-    cart_items = []
+    checkout_items = []
+    subtotal = 0.0
+    buy_now_mode = product_id is not None
 
-    if product_id is not None:
-        # Buy Now mode – fetch the single product
+    if buy_now_mode:
+        # Single product – fetch and build item
         product = await session.get(Product, product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
-        # Build a list that mimics cart_items structure: (CartItem, Product)
-        # but we don't have a CartItem – we create a dummy one.
-        # We'll store the product and quantity in a separate variable.
-        buy_now_items = [(product, quantity)]
+        # We need a dummy "cart_item" only for consistency
+        # but we can just create a dict
+        item = {
+            "product": product,
+            "quantity": quantity,
+            "subtotal": product.price * quantity,
+        }
+        checkout_items.append(item)
+        subtotal = item["subtotal"]
     else:
-        # Normal cart mode
+        # Cart mode
         statement = (
             select(CartItem, Product)
             .join(Product, CartItem.product_id == Product.id)
@@ -49,27 +55,29 @@ async def checkout(
         )
         results = await session.exec(statement)
         cart_items = results.all()
-
-    # Compute subtotal
-    subtotal = 0.0
-    if buy_now_items:
-        for product, qty in buy_now_items:
-            subtotal += product.price * qty
-    else:
         for cart_item, product in cart_items:
-            subtotal += cart_item.quantity * product.price
+            item = {
+                "product": product,
+                "quantity": cart_item.quantity,
+                "subtotal": cart_item.quantity * product.price,
+                # optionally store cart_item_id if needed
+            }
+            checkout_items.append(item)
+            subtotal += item["subtotal"]
 
     return templates.TemplateResponse(
         request=request,
         name="checkout.html",
         context={
             "username": user.username,
-            "cart_items": cart_items,  # existing
-            "buy_now_items": buy_now_items,  # new
+            "checkout_items": checkout_items,
+            "buy_now_mode": buy_now_mode,
+            # If buy_now_mode, we also need to pass the product_id and quantity for JS
+            "buy_now_product_id": product_id if buy_now_mode else None,
+            "buy_now_quantity": quantity if buy_now_mode else None,
             "system_bundles": [],
             "total": subtotal,
             "subtotal": subtotal,
-            "buy_now_mode": product_id is not None,  # flag for JS
         },
     )
 
