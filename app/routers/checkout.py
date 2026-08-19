@@ -97,6 +97,7 @@ async def complete_checkout(
     delivery_location = data.get("location", "")
     delivery_note = data.get("delivery_note", "")
     items_payload = data.get("items")  # optional list of {product_id, quantity}
+    delivery_fee = data.get("delivery_fee", 0.0)  # <-- use provided fee, default 0
 
     items_list = []
     subtotal = 0.0
