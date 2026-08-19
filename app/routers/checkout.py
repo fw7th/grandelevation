@@ -20,35 +20,56 @@ templates = Jinja2Templates(directory="app/templates")
 async def checkout(
     request: Request,
     session: AsyncSession = Depends(get_session),
+    product_id: int | None = None,
+    quantity: int = 1,
 ):
     user = await authenticate(request, session)
     if not user:
         return RedirectResponse("/catalog")
 
-    statement = (
-        select(CartItem, Product)
-        .join(Product, CartItem.product_id == Product.id)
-        .where(CartItem.user_id == user.id)
-        .order_by(CartItem.updated_at.desc())  # LIFO: newest first
-    )
+    buy_now_items = []
+    cart_items = []
 
-    results = await session.exec(statement)
-    cart_items = results.all()
+    if product_id is not None:
+        # Buy Now mode – fetch the single product
+        product = await session.get(Product, product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+        # Build a list that mimics cart_items structure: (CartItem, Product)
+        # but we don't have a CartItem – we create a dummy one.
+        # We'll store the product and quantity in a separate variable.
+        buy_now_items = [(product, quantity)]
+    else:
+        # Normal cart mode
+        statement = (
+            select(CartItem, Product)
+            .join(Product, CartItem.product_id == Product.id)
+            .where(CartItem.user_id == user.id)
+            .order_by(CartItem.updated_at.desc())
+        )
+        results = await session.exec(statement)
+        cart_items = results.all()
 
+    # Compute subtotal
     subtotal = 0.0
-    # Each result is (CartItem, Product)
-    for cart_item, product in cart_items:
-        subtotal += cart_item.quantity * product.price
+    if buy_now_items:
+        for product, qty in buy_now_items:
+            subtotal += product.price * qty
+    else:
+        for cart_item, product in cart_items:
+            subtotal += cart_item.quantity * product.price
 
     return templates.TemplateResponse(
         request=request,
         name="checkout.html",
         context={
-            "username": user.username if user else None,
-            "cart_items": cart_items,
+            "username": user.username,
+            "cart_items": cart_items,  # existing
+            "buy_now_items": buy_now_items,  # new
             "system_bundles": [],
             "total": subtotal,
             "subtotal": subtotal,
+            "buy_now_mode": product_id is not None,  # flag for JS
         },
     )
 
