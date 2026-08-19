@@ -20,32 +20,61 @@ templates = Jinja2Templates(directory="app/templates")
 async def checkout(
     request: Request,
     session: AsyncSession = Depends(get_session),
+    product_id: int | None = None,
+    quantity: int = 1,
 ):
     user = await authenticate(request, session)
     if not user:
         return RedirectResponse("/catalog")
 
-    statement = (
-        select(CartItem, Product)
-        .join(Product, CartItem.product_id == Product.id)
-        .where(CartItem.user_id == user.id)
-        .order_by(CartItem.updated_at.desc())  # LIFO: newest first
-    )
-
-    results = await session.exec(statement)
-    cart_items = results.all()
-
+    checkout_items = []
     subtotal = 0.0
-    # Each result is (CartItem, Product)
-    for cart_item, product in cart_items:
-        subtotal += cart_item.quantity * product.price
+    buy_now_mode = product_id is not None
+
+    if buy_now_mode:
+        # Single product – fetch and build item
+        product = await session.get(Product, product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+        # We need a dummy "cart_item" only for consistency
+        # but we can just create a dict
+        item = {
+            "product": product,
+            "quantity": quantity,
+            "subtotal": product.price * quantity,
+        }
+        checkout_items.append(item)
+        subtotal = item["subtotal"]
+    else:
+        # Cart mode
+        statement = (
+            select(CartItem, Product)
+            .join(Product, CartItem.product_id == Product.id)
+            .where(CartItem.user_id == user.id)
+            .order_by(CartItem.updated_at.desc())
+        )
+        results = await session.exec(statement)
+        cart_items = results.all()
+        for cart_item, product in cart_items:
+            item = {
+                "product": product,
+                "quantity": cart_item.quantity,
+                "subtotal": cart_item.quantity * product.price,
+                # optionally store cart_item_id if needed
+            }
+            checkout_items.append(item)
+            subtotal += item["subtotal"]
 
     return templates.TemplateResponse(
         request=request,
         name="checkout.html",
         context={
-            "username": user.username if user else None,
-            "cart_items": cart_items,
+            "username": user.username,
+            "checkout_items": checkout_items,
+            "buy_now_mode": buy_now_mode,
+            # If buy_now_mode, we also need to pass the product_id and quantity for JS
+            "buy_now_product_id": product_id if buy_now_mode else None,
+            "buy_now_quantity": quantity if buy_now_mode else None,
             "system_bundles": [],
             "total": subtotal,
             "subtotal": subtotal,
@@ -67,44 +96,65 @@ async def complete_checkout(
     payment_method = data.get("payment_method", "transfer")
     delivery_location = data.get("location", "")
     delivery_note = data.get("delivery_note", "")
+    items_payload = data.get("items")  # optional list of {product_id, quantity}
+    delivery_fee = data.get("delivery_fee", 0.0)  # <-- use provided fee, default 0
 
-    # Fetch current cart items
-    statement = (
-        select(CartItem, Product)
-        .join(Product, CartItem.product_id == Product.id)
-        .where(CartItem.user_id == user.id)
-        .order_by(CartItem.updated_at.desc())
-    )
-    results = await session.exec(statement)
-    cart_items = results.all()
-
-    if not cart_items:
-        raise HTTPException(status_code=400, detail="Cart is empty")
-
-    subtotal = 0.0
     items_list = []
-    for cart_item, product in cart_items:
-        item_total = cart_item.quantity * product.price
-        subtotal += item_total
-        items_list.append(
-            {
-                "product_id": product.id,
-                "name": product.name,
-                "price": product.price,
-                "quantity": cart_item.quantity,
-                "subtotal": item_total,
-            }
+    subtotal = 0.0
+
+    if items_payload:
+        # Buy‑Now mode – use the provided items
+        for item in items_payload:
+            product_id = item.get("product_id")
+            qty = item.get("quantity", 1)
+            product = await session.get(Product, product_id)
+            if not product:
+                raise HTTPException(
+                    status_code=400, detail=f"Product {product_id} not found"
+                )
+            item_subtotal = product.price * qty
+            subtotal += item_subtotal
+            items_list.append(
+                {
+                    "product_id": product.id,
+                    "name": product.name,
+                    "price": product.price,
+                    "quantity": qty,
+                    "subtotal": item_subtotal,
+                }
+            )
+    else:
+        # Cart mode – load from cart
+        statement = (
+            select(CartItem, Product)
+            .join(Product, CartItem.product_id == Product.id)
+            .where(CartItem.user_id == user.id)
         )
+        results = await session.exec(statement)
+        cart_items = results.all()
 
-    # Delivery fee – match client calculation (₦4000 per item)
-    delivery_fee = 0.0
-    if delivery_method == "delivery":
-        total_qty = sum(item["quantity"] for item in items_list)
-        delivery_fee = total_qty * 4000
+        if not cart_items:
+            raise HTTPException(status_code=400, detail="Cart is empty")
 
+        for cart_item, product in cart_items:
+            item_subtotal = cart_item.quantity * product.price
+            subtotal += item_subtotal
+            items_list.append(
+                {
+                    "product_id": product.id,
+                    "name": product.name,
+                    "price": product.price,
+                    "quantity": cart_item.quantity,
+                    "subtotal": item_subtotal,
+                }
+            )
+
+    # Delivery fee – same calculation
+    total_qty = sum(item["quantity"] for item in items_list)
+    delivery_fee = total_qty * 4000 if delivery_method == "delivery" else 0.0
     total = subtotal + delivery_fee
 
-    # Generate unique invoice number
+    # Generate invoice number
     invoice_number = f"INV-{int(time.time())}-{random.randint(1000, 9999)}"
 
     invoice = Invoice(
@@ -118,18 +168,19 @@ async def complete_checkout(
         delivery_method=delivery_method,
         delivery_location=delivery_location,
         delivery_note=delivery_note,
-        status="completed",
+        status="pending",  # or "completed" if you prefer
     )
     session.add(invoice)
     await session.commit()
     await session.refresh(invoice)
 
-    # Clear the user's cart
-    stmt = delete(CartItem).where(CartItem.user_id == user.id)
-    await session.exec(stmt)
-    await session.commit()
+    # Clear the cart ONLY if we used cart mode (i.e., no items_payload)
+    if not items_payload:
+        stmt = delete(CartItem).where(CartItem.user_id == user.id)
+        await session.exec(stmt)
+        await session.commit()
+    # If it's buy‑now, we don't touch the cart (user might have other items)
 
-    # We'll return the invoice ID so the frontend can redirect
     return {"invoice_id": invoice.id, "invoice_number": invoice_number}
 
 

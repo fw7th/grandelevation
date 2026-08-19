@@ -481,15 +481,21 @@
 
 {% block content %}
 <div class="wrap">
-  <div class="page-header">
-    <h1 class="display">Checkout</h1>
-    <p>{% if cart_items %}{{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %} ready{% else %}Your cart is empty{% endif %}</p>
-  </div>
+    <div class="page-header">
+      <h1 class="display">Checkout</h1>
+      <p>
+        {% if checkout_items %}
+          {{ checkout_items|length }} item{% if checkout_items|length != 1 %}s{% endif %} ready
+        {% else %}
+            No items to checkout
+        {% endif %}
+      </p>
+    </div>
 
-  {% if cart_items %}
+{% if checkout_items %}
   {% set ns = namespace(total_qty=0) %}
-  {% for cart_item, product in cart_items %}
-    {% set ns.total_qty = ns.total_qty + cart_item.quantity %}
+  {% for item in checkout_items %}
+    {% set ns.total_qty = ns.total_qty + item.quantity %}
   {% endfor %}
 
   <div class="checkout-layout">
@@ -584,25 +590,26 @@
       <!-- Order Items -->
       <h2 class="display">Your order</h2>
       <p class="checkout-subhead">Review your items before paying.</p>
-      <div class="order-list">
-        {% for cart_item, product in cart_items %}
-        <div class="order-item">
-          <div class="order-item-image">
-          {% set order_img = product.image_url[0] if product.image_url is sequence and product.image_url is not string else product.image_url %}
-          {% if order_img %}
-          <img src="{{ order_img }}" alt="{{ product.name }}">
-          {% else %}
-          <div class="order-item-image-placeholder">No image</div>
-          {% endif %}
+        <div class="order-list">
+          {% for item in checkout_items %}
+          {% set product = item.product %}
+          <div class="order-item">
+            <div class="order-item-image">
+              {% set order_img = product.image_url[0] if product.image_url is sequence and product.image_url is not string else product.image_url %}
+              {% if order_img %}
+              <img src="{{ order_img }}" alt="{{ product.name }}">
+              {% else %}
+              <div class="order-item-image-placeholder">No image</div>
+              {% endif %}
+            </div>
+            <div class="order-item-details">
+              <div class="order-item-name">{{ product.name }}</div>
+              <div class="order-item-meta">Qty: {{ item.quantity }} · {{ product.category.replace('_', ' ') }}</div>
+            </div>
+            <div class="order-item-price">₦{{ "{:,.2f}".format(item.subtotal) }}</div>
           </div>
-          <div class="order-item-details">
-            <div class="order-item-name">{{ product.name }}</div>
-            <div class="order-item-meta">Qty: {{ cart_item.quantity }} · {{ product.category.replace('_', ' ') }}</div>
-          </div>
-          <div class="order-item-price">₦{{ "{:,.2f}".format(product.price * cart_item.quantity) }}</div>
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
 
       <!-- Payment Methods -->
       <h2 class="display" style="margin-top:32px;">Payment method</h2>
@@ -719,18 +726,6 @@
         <span class="value" id="summary-total">₦{{ "{:,.2f}".format(total) }}</span>
       </div>
 
-      <!-- WhatsApp (after payment context) -->
-      <a href="https://wa.me/2348107730018?text=Hi%20Grand%20Elevation%20Solar%2C%20I%27ve%20just%20placed%20an%20order."
-         target="_blank" class="whatsapp-cta" style="margin-top:4px;">
-        <div class="wa-icon">
-          <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        </div>
-        <div class="wa-text">
-          <div class="wa-title">Send receipt on WhatsApp</div>
-          <div class="wa-hint">We'll confirm and arrange delivery.</div>
-        </div>
-      </a>
-
       <button type="button" class="pay-btn" id="pay-btn" onclick="submitOrder()">
         <span id="pay-btn-text">Complete order</span>
       </button>
@@ -754,6 +749,7 @@
 
 {% block extra_js %}
 <script>
+  let deliveryCalculated = false;
   let deliveryMode = 'delivery';
   let paymentMode = 'transfer';
   let calculatedDelivery = 0;
@@ -763,35 +759,33 @@
     return '₦' + amount.toLocaleString('en-NG', {minimumFractionDigits: 2});
   }
 
-  function setDelivery(mode) {
-    deliveryMode = mode;
-    document.getElementById('opt-delivery').classList.toggle('active', mode === 'delivery');
-    document.getElementById('opt-pickup').classList.toggle('active', mode === 'pickup');
+function setDelivery(mode) {
+  deliveryMode = mode;
+  document.getElementById('opt-delivery').classList.toggle('active', mode === 'delivery');
+  document.getElementById('opt-pickup').classList.toggle('active', mode === 'pickup');
 
-    document.getElementById('delivery-form').classList.toggle('visible', mode === 'delivery');
-    document.getElementById('pickup-details').classList.toggle('visible', mode === 'pickup');
+  document.getElementById('delivery-form').classList.toggle('visible', mode === 'delivery');
+  document.getElementById('pickup-details').classList.toggle('visible', mode === 'pickup');
 
-    document.getElementById('delivery-line').style.display = mode === 'delivery' ? 'flex' : 'none';
-    document.getElementById('pickup-line').style.display = mode === 'pickup' ? 'flex' : 'none';
+  document.getElementById('delivery-line').style.display = mode === 'delivery' ? 'flex' : 'none';
+  document.getElementById('pickup-line').style.display = mode === 'pickup' ? 'flex' : 'none';
 
-    const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
-
-    if (mode === 'pickup') {
-      document.getElementById('summary-delivery').textContent = 'Free';
-      document.getElementById('summary-total').textContent = formatMoney(subtotal);
-      document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
-    } else {
-      if (calculatedDelivery > 0) {
-        document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
-        document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
-        document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
-      } else {
-        document.getElementById('summary-delivery').textContent = 'Enter location to calculate';
-        document.getElementById('summary-total').textContent = formatMoney(subtotal);
-        document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
-      }
-    }
+  // ─── RESET CALCULATED FEE ───
+  if (mode === 'pickup') {
+    deliveryCalculated = false;
+    calculatedDelivery = 0;
+    document.getElementById('summary-delivery').textContent = 'Free';
+  } else {
+    // Switching to delivery – require recalculation
+    deliveryCalculated = false;
+    calculatedDelivery = 0;
+    document.getElementById('summary-delivery').textContent = 'Enter location to calculate';
   }
+
+  const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
+  document.getElementById('summary-total').textContent = formatMoney(subtotal);
+  document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
+}
 
   function setPayment(mode) {
     paymentMode = mode;
@@ -825,67 +819,85 @@
   }
 
   function calculateDelivery() {
-    const location = document.getElementById('location').value.trim();
-    if (!location) {
-      alert('Please enter your location first.');
-      document.getElementById('location').focus();
-      return;
-    }
-
-    const totalQty = parseInt(document.getElementById('delivery-form').dataset.totalQuantity) || 0;
-    calculatedDelivery = totalQty * perItemRate;
-
-    // Update estimate row
-    document.getElementById('delivery-estimate').textContent = formatMoney(calculatedDelivery);
-
-    // Update summary rail
-    const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
-    if (deliveryMode === 'delivery') {
-      document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
-      document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
-      document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
-    }
+  const location = document.getElementById('location').value.trim();
+  if (!location) {
+    alert('Please enter your location first.');
+    document.getElementById('location').focus();
+    return;
   }
 
-function submitOrder() {
-    const btn = document.getElementById('pay-btn');
-    btn.disabled = true;
-    const btnText = document.getElementById('pay-btn-text');
-    btnText.textContent = 'Processing...';
+  const totalQty = parseInt(document.getElementById('delivery-form').dataset.totalQuantity) || 0;
+  calculatedDelivery = totalQty * perItemRate;
+  deliveryCalculated = true;   // <-- mark as calculated
 
-    // Gather delivery and payment info
-    const deliveryMode = document.querySelector('.delivery-option.active')?.id?.replace('opt-', '') || 'delivery';
-    const paymentMode = document.querySelector('.payment-method.active')?.id?.replace('pm-', '') || 'transfer';
-    const location = document.getElementById('location').value.trim();
-    const deliveryNote = document.getElementById('delivery-note').value.trim();
+  // Update estimate row
+  document.getElementById('delivery-estimate').textContent = formatMoney(calculatedDelivery);
 
-    const payload = {
-        delivery_method: deliveryMode,
-        payment_method: paymentMode,
-        location: location,
-        delivery_note: deliveryNote,
-    };
-
-    fetch('/checkout/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => { throw new Error(err.detail || 'Failed to complete order'); });
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Redirect to the public invoice
-        window.location.href = `/invoice/${data.invoice_id}`;
-    })
-    .catch(error => {
-        alert(error.message);
-        btn.disabled = false;
-        btnText.textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
-    });
+  // Update summary rail
+  const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
+  if (deliveryMode === 'delivery') {
+    document.getElementById('summary-delivery').textContent = formatMoney(calculatedDelivery);
+    document.getElementById('summary-total').textContent = formatMoney(subtotal + calculatedDelivery);
+    document.getElementById('bank-amount-text').textContent = formatMoney(subtotal + calculatedDelivery);
+  }
 }
+
+function submitOrder() {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  const btnText = document.getElementById('pay-btn-text');
+  btnText.textContent = 'Processing...';
+
+  const deliveryMode = document.querySelector('.delivery-option.active')?.id?.replace('opt-', '') || 'delivery';
+  const paymentMode = document.querySelector('.payment-method.active')?.id?.replace('pm-', '') || 'transfer';
+  const location = document.getElementById('location').value.trim();
+  const deliveryNote = document.getElementById('delivery-note').value.trim();
+
+  const payload = {
+    delivery_method: deliveryMode,
+    payment_method: paymentMode,
+    location: location,
+    delivery_note: deliveryNote,
+  };
+
+  // ─── ONLY ADD DELIVERY FEE IF CALCULATED ───
+  if (deliveryMode === 'delivery' && deliveryCalculated && calculatedDelivery > 0) {
+    payload.delivery_fee = calculatedDelivery;
+  } else {
+    payload.delivery_fee = 0;
+  }
+
+  // Buy‑now items (if any)
+  if (buyNowMode && buyNowProductId && buyNowQuantity > 0) {
+    payload.items = [{ product_id: buyNowProductId, quantity: buyNowQuantity }];
+  }
+
+  fetch('/checkout/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => { throw new Error(err.detail || 'Failed to complete order'); });
+    }
+    return response.json();
+  })
+  .then(data => {
+    window.location.href = `/invoice/${data.invoice_id}`;
+  })
+  .catch(error => {
+    alert(error.message);
+    btn.disabled = false;
+    btnText.textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
+  });
+}
+</script>
+
+<script>
+  // Buy‑Now mode flags (passed from backend)
+  const buyNowMode = {{ buy_now_mode|tojson }};
+  const buyNowProductId = {{ buy_now_product_id|tojson }};
+  const buyNowQuantity = {{ buy_now_quantity|tojson }};
 </script>
 {% endblock %}
