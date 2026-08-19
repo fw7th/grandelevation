@@ -5,7 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from ..database import get_session
-from ..models import Product, Users
+from ..models import CartItem, Favorite, Product, Users
 from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
 from ..utils import authenticate
 
@@ -208,6 +208,29 @@ async def admin_product_update(
     )
     product.specs = specs
     session.add(product)
+    await session.commit()
+
+    return RedirectResponse(url="/admin/products", status_code=303)
+
+
+@router.post("/products/{product_id}/delete")
+async def admin_product_delete(
+    product_id: int,
+    admin: Users = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+):
+    product = await session.get(Product, product_id)
+    if not product:
+        raise HTTPException(status_code=404)
+
+    # Delete related favorites and cart items to avoid FK errors
+    stmt_fav = delete(Favorite).where(Favorite.product_id == product_id)
+    await session.exec(stmt_fav)
+
+    stmt_cart = delete(CartItem).where(CartItem.product_id == product_id)
+    await session.exec(stmt_cart)
+
+    await session.delete(product)
     await session.commit()
 
     return RedirectResponse(url="/admin/products", status_code=303)
