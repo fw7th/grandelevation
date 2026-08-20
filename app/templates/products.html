@@ -481,7 +481,8 @@
   if (!buyNowBtn) return;
 
   buyNowBtn.addEventListener('click', function () {
-    var qty = document.getElementById('qtySelect').value;
+    var sel = document.getElementById('qtySelect');
+    var qty = sel.value === 'custom' ? (parseInt(document.getElementById('qtyCustom').value, 10) || 1) : sel.value;
     var url = '/checkout?product_id={{ product.id }}&quantity=' + encodeURIComponent(qty);
     window.location.href = url;
   });
