@@ -229,9 +229,11 @@ def _search_generator_mode(
     peak_w: float,
     autonomy_days: float,
     generators: list[Product],
+    panels: list[Product],
     accessories: list[Product],
 ) -> SystemBundle | None:
     min_gen_w = peak_w * 1.2
+    required_panel_w = daily_wh / PEAK_SUN_HOURS / SYSTEM_EFFICIENCY
     best_bundle: SystemBundle | None = None
 
     for gen in generators:
@@ -240,47 +242,95 @@ def _search_generator_mode(
         except Exception:
             continue
 
-        if gs.rated_output_power < min_gen_w:
+        # Power check (single unit first — we'll scale if needed)
+        if gs.rated_output_power < min_gen_w and gs.rated_output_power * 2 < min_gen_w:
+            # If even 2 units can't handle peak, skip this model
             continue
 
         usable_wh_needed = daily_wh * autonomy_days
         total_wh = usable_wh_needed / _dod(gs.battery_chemistry)
-        if gs.capacity_wh < total_wh:
-            continue
 
-        for acc in accessories:
+        for panel in panels:
             try:
-                ac = AccessoryBundleSpecs(**acc.specs)
+                ps = PanelSpecs(**panel.specs)
             except Exception:
                 continue
 
-            if ac.max_system_watts < gs.rated_output_power:
-                continue
+            # Panels needed to recharge daily consumption
+            panel_count = max(
+                1,
+                int(required_panel_w // ps.wattage)
+                + (1 if required_panel_w % ps.wattage else 0),
+            )
+            total_panel_w = ps.wattage * panel_count
 
-            total = gen.price + acc.price
-            if config.budget_max is not None and total > config.budget_max:
-                continue
-
-            bundle = SystemBundle(
-                configuration=config,
-                selections=SystemProductSelection(
-                    generator_id=gen.id,
-                    generator_quantity=1,
-                    accessory_bundle_id=acc.id,
-                    accessory_bundle_quantity=1,
-                ),
-                products={
-                    "generator": _product_to_dict(gen),
-                    "accessory": _product_to_dict(acc),
-                },
-                total_price=total,
-                compatibility_warnings=[],
-                estimated_daily_wh=daily_wh,
-                estimated_peak_w=peak_w,
+            # Generators needed for battery capacity
+            gen_count_for_capacity = max(
+                1,
+                int(total_wh // gs.capacity_wh)
+                + (1 if total_wh % gs.capacity_wh else 0),
             )
 
-            if best_bundle is None or total < best_bundle.total_price:
-                best_bundle = bundle
+            # Generators needed to accept all those panels
+            gen_count_for_panels = max(
+                1,
+                int(total_panel_w // gs.max_input_charging_watts)
+                + (1 if total_panel_w % gs.max_input_charging_watts else 0),
+            )
+
+            # Generators needed for peak power
+            gen_count_for_power = max(
+                1,
+                int(min_gen_w // gs.rated_output_power)
+                + (1 if min_gen_w % gs.rated_output_power else 0),
+            )
+
+            # Final count is the highest constraint
+            gen_count = max(
+                gen_count_for_capacity, gen_count_for_panels, gen_count_for_power
+            )
+
+            for acc in accessories:
+                try:
+                    ac = AccessoryBundleSpecs(**acc.specs)
+                except Exception:
+                    continue
+
+                # Accessory must handle total panel wattage
+                if ac.max_system_watts < total_panel_w:
+                    continue
+                if ac.max_panel_count < panel_count:
+                    continue
+
+                total = (
+                    (gen.price * gen_count) + (panel.price * panel_count) + acc.price
+                )
+                if config.budget_max is not None and total > config.budget_max:
+                    continue
+
+                bundle = SystemBundle(
+                    configuration=config,
+                    selections=SystemProductSelection(
+                        generator_id=gen.id,
+                        generator_quantity=gen_count,
+                        panel_id=panel.id,
+                        panel_quantity=panel_count,
+                        accessory_bundle_id=acc.id,
+                        accessory_bundle_quantity=1,
+                    ),
+                    products={
+                        "generator": _product_to_dict(gen, gen_count),
+                        "panel": _product_to_dict(panel, panel_count),
+                        "accessory": _product_to_dict(acc),
+                    },
+                    total_price=total,
+                    compatibility_warnings=[],
+                    estimated_daily_wh=daily_wh,
+                    estimated_peak_w=peak_w,
+                )
+
+                if best_bundle is None or total < best_bundle.total_price:
+                    best_bundle = bundle
 
     return best_bundle
 
