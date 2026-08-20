@@ -583,14 +583,13 @@ document.querySelectorAll('input[name="buildMode"]').forEach(radio => {
   radio.addEventListener('change', function () {
     buildMode = this.value;
     updateModeVisibility();
-    if (buildMode === 'generator') {
-      ['panel', 'inverter', 'battery'].forEach(clearSlot);
-    } else {
-      clearSlot('generator');
-    }
+    // Clear everything when switching modes so old selections don't leak
+    Object.keys(selectedProducts).forEach(clearSlot);
+    hideCompatWarning();
     saveToLocalStorage();
   });
 });
+
 
 const autonomySlider = document.getElementById('autonomyHours');
 const autonomyReadout = document.getElementById('autonomyReadout');
