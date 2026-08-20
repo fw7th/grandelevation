@@ -85,7 +85,13 @@ async def recommend_system(
 
     if config.build_mode == "generator":
         best = _search_generator_mode(
-            config, daily_wh, peak_w, autonomy_days, generators, accessories
+            config,
+            daily_wh,
+            peak_w,
+            autonomy_days,
+            generators,
+            panels,
+            accessories,
         )
     else:
         best = _search_custom_mode(
