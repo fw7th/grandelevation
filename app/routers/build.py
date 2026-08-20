@@ -34,7 +34,7 @@ def _product_to_dict(product: Product, quantity: int = 1) -> dict:
     return {
         "id": product.id,
         "name": product.name,
-        "price": product.price * quantity,
+        "price": product.price,  # unit price — let frontend multiply
         "image_url": product.image_url[0] if product.image_url else "",
         "specs": {**product.specs, "quantity": quantity},
     }
