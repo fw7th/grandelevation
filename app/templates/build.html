@@ -566,16 +566,12 @@ document.getElementById('addApplianceBtn').addEventListener('click', () => addAp
 // ─── MODE & PREFERENCES ───
 function updateModeVisibility() {
   const isGen = buildMode === 'generator';
-  // In generator mode: hide inverter & battery (built into generator)
-  // Show panel, generator, accessory (panels charge the generator)
   ['inverter', 'battery'].forEach(cat => {
     const el = document.getElementById('slot-' + cat);
     if (el) el.style.display = isGen ? 'none' : '';
   });
-  ['panel', 'generator', 'accessory'].forEach(cat => {
-    const el = document.getElementById('slot-' + cat);
-    if (el) el.style.display = '';
-  });
+  const genEl = document.getElementById('slot-generator');
+  if (genEl) genEl.style.display = isGen ? '' : 'none';
 }
 
 
