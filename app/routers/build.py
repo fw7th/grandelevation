@@ -197,9 +197,13 @@ def _search_custom_mode(
                         configuration=config,
                         selections=SystemProductSelection(
                             panel_id=panel.id,
+                            panel_quantity=count,
                             inverter_id=inv.id,
+                            inverter_quantity=1,
                             battery_id=batt.id,
+                            battery_quantity=batt_count,
                             accessory_bundle_id=acc.id,
+                            accessory_bundle_quantity=1,
                         ),
                         products={
                             "panel": _product_to_dict(panel, count),
@@ -261,7 +265,9 @@ def _search_generator_mode(
                 configuration=config,
                 selections=SystemProductSelection(
                     generator_id=gen.id,
+                    generator_quantity=1,
                     accessory_bundle_id=acc.id,
+                    accessory_bundle_quantity=1,
                 ),
                 products={
                     "generator": _product_to_dict(gen),
