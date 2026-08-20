@@ -457,7 +457,16 @@
 (function () {
   var select = document.getElementById('qtySelect');
   var custom = document.getElementById('qtyCustom');
-  if (!select || !custom) return;
+  var hidden = document.getElementById('qtyHidden');
+  if (!select || !hidden) return;
+
+  function updateHidden() {
+    if (select.value === 'custom') {
+      hidden.value = Math.max(1, parseInt(custom.value, 10) || 1);
+    } else {
+      hidden.value = select.value;
+    }
+  }
 
   select.addEventListener('change', function () {
     if (this.value === 'custom') {
@@ -466,32 +475,32 @@
     } else {
       custom.style.display = 'none';
     }
+    updateHidden();
   });
 
-  // Ensure form submits the right qty
+  if (custom) {
+    custom.addEventListener('input', updateHidden);
+    custom.addEventListener('change', updateHidden);
+  }
+
+  // Guard form submit so hidden is always correct
   var form = select.closest('form');
   if (form) {
-    form.addEventListener('submit', function () {
-      if (select.value === 'custom') {
-        select.value = Math.max(1, parseInt(custom.value, 10) || 1);
-      }
+    form.addEventListener('submit', updateHidden);
+  }
+
+  // Buy Now reads hidden input
+  var buyNowBtn = document.getElementById('buyNowBtn');
+  if (buyNowBtn) {
+    buyNowBtn.addEventListener('click', function () {
+      updateHidden();
+      var url = '/checkout?product_id={{ product.id }}&quantity=' + encodeURIComponent(hidden.value);
+      window.location.href = url;
     });
   }
 })();
 
-(function () {
-  var buyNowBtn = document.getElementById('buyNowBtn');
-  if (!buyNowBtn) return;
-
-  buyNowBtn.addEventListener('click', function () {
-    var sel = document.getElementById('qtySelect');
-    var qty = sel.value === 'custom' ? (parseInt(document.getElementById('qtyCustom').value, 10) || 1) : sel.value;
-    var url = '/checkout?product_id={{ product.id }}&quantity=' + encodeURIComponent(qty);
-    window.location.href = url;
-  });
-})();
-
-/* ===== NEW: Auth guard for Add-to-Cart / Buy-Now ===== */
+/* ===== Auth guard for guest Add-to-Cart ===== */
 {% if not username %}
 (function () {
   var form = document.getElementById('guestBuyForm');
@@ -499,10 +508,10 @@
   if (!form || !modal) return;
 
   form.addEventListener('submit', function (e) {
-    e.preventDefault();                       // stop the POST to /cart/add or /checkout
-    modal.classList.add('is-visible');        // same classes base.html uses
+    e.preventDefault();
+    modal.classList.add('is-visible');
     modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';  // lock scroll
+    document.body.style.overflow = 'hidden';
   });
 })();
 {% endif %}
