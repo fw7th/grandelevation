@@ -248,13 +248,23 @@ def _search_generator_mode(
         except Exception:
             continue
 
-        # Power check (single unit first — we'll scale if needed)
-        if gs.rated_output_power < min_gen_w and gs.rated_output_power * 2 < min_gen_w:
-            # If even 2 units can't handle peak, skip this model
-            continue
-
         usable_wh_needed = daily_wh * autonomy_days
         total_wh = usable_wh_needed / _dod(gs.battery_chemistry)
+
+        # Generators needed for battery capacity
+        gen_count_for_capacity = max(
+            1,
+            int(total_wh // gs.capacity_wh) + (1 if total_wh % gs.capacity_wh else 0),
+        )
+
+        # Generators needed for peak power
+        gen_count_for_power = max(
+            1,
+            int(min_gen_w // gs.rated_output_power)
+            + (1 if min_gen_w % gs.rated_output_power else 0),
+        )
+
+        gen_count = max(gen_count_for_capacity, gen_count_for_power)
 
         for panel in panels:
             try:
@@ -270,39 +280,12 @@ def _search_generator_mode(
             )
             total_panel_w = ps.wattage * panel_count
 
-            # Generators needed for battery capacity
-            gen_count_for_capacity = max(
-                1,
-                int(total_wh // gs.capacity_wh)
-                + (1 if total_wh % gs.capacity_wh else 0),
-            )
-
-            # Generators needed to accept all those panels
-            gen_count_for_panels = max(
-                1,
-                int(total_panel_w // gs.max_input_charging_watts)
-                + (1 if total_panel_w % gs.max_input_charging_watts else 0),
-            )
-
-            # Generators needed for peak power
-            gen_count_for_power = max(
-                1,
-                int(min_gen_w // gs.rated_output_power)
-                + (1 if min_gen_w % gs.rated_output_power else 0),
-            )
-
-            # Final count is the highest constraint
-            gen_count = max(
-                gen_count_for_capacity, gen_count_for_panels, gen_count_for_power
-            )
-
             for acc in accessories:
                 try:
                     ac = AccessoryBundleSpecs(**acc.specs)
                 except Exception:
                     continue
 
-                # Accessory must handle total panel wattage
                 if ac.max_system_watts < total_panel_w:
                     continue
                 if ac.max_panel_count < panel_count:
@@ -313,6 +296,16 @@ def _search_generator_mode(
                 )
                 if config.budget_max is not None and total > config.budget_max:
                     continue
+
+                # Warning if panels exceed what the fleet can charge from
+                fleet_max_input = gen_count * gs.max_input_charging_watts
+                warnings = []
+                if total_panel_w > fleet_max_input:
+                    warnings.append(
+                        f"Panel array ({total_panel_w:.0f}W) exceeds total generator "
+                        f"solar input ({fleet_max_input:.0f}W). Some panel output will be "
+                        f"wasted during peak sun."
+                    )
 
                 bundle = SystemBundle(
                     configuration=config,
@@ -330,7 +323,7 @@ def _search_generator_mode(
                         "accessory": _product_to_dict(acc),
                     },
                     total_price=total,
-                    compatibility_warnings=[],
+                    compatibility_warnings=warnings,
                     estimated_daily_wh=daily_wh,
                     estimated_peak_w=peak_w,
                 )
