@@ -674,8 +674,8 @@ autonomySlider.addEventListener('input', function () {
 document.getElementById('preferredChemistry').addEventListener('change', saveToLocalStorage);
 
 // ─── PRODUCT SELECTION ───
-function selectProduct(category, product) {
-  selectedProducts[category] = product;
+function selectProduct(category, product, quantity = 1) {
+  selectedProducts[category] = { ...product, quantity };
   const slot = document.getElementById('slot-' + category);
   const current = document.getElementById('slot-current-' + category);
   const empty = document.getElementById('slot-empty-' + category);
@@ -686,8 +686,9 @@ function selectProduct(category, product) {
   empty.style.display = 'none';
   alts.style.display = '';
 
-  document.getElementById('slot-name-' + category).textContent = product.name || '—';
-  document.getElementById('slot-price-' + category).textContent = '₦' + (product.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const qtyLabel = quantity > 1 ? `${quantity}x ` : '';
+  document.getElementById('slot-name-' + category).textContent = qtyLabel + (product.name || '—');
+  document.getElementById('slot-price-' + category).textContent = '₦' + ((product.price || 0) * quantity).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   document.getElementById('slot-img-' + category).src = product.image_url || '';
   document.getElementById('slot-specs-' + category).textContent = formatSpecs(product.specs);
 
@@ -697,6 +698,12 @@ function selectProduct(category, product) {
   document.querySelectorAll('#slot-scroll-' + category + ' .slot-alt-card').forEach(card => {
     card.classList.toggle('is-selected', parseInt(card.dataset.id) === product.id);
   });
+}
+
+function updateTotal() {
+  let total = 0;
+  Object.values(selectedProducts).forEach(p => total += ((p.price || 0) * (p.quantity || 1)));
+  document.getElementById('systemTotal').textContent = '₦' + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
 function clearSlot(category) {
