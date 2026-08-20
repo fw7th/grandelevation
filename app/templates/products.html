@@ -319,19 +319,22 @@
         </button>
       </div>
 
-      <div class="qty-row">
-        <label for="qtySelect" class="qty-label">Quantity</label>
-        <div class="qty-wrap">
-          <select name="quantity" id="qtySelect" class="qty-select">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-          <svg class="qty-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+        <div class="qty-row">
+          <label for="qtySelect" class="qty-label">Quantity</label>
+          <div class="qty-wrap" style="display:flex;gap:8px;align-items:center;">
+            <select name="quantity" id="qtySelect" class="qty-select" style="max-width:100px;">
+              <option value="1" selected>1</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+              <option value="7">7</option>
+              <option value="9">9</option>
+              <option value="custom">Custom…</option>
+            </select>
+            <input type="number" id="qtyCustom" min="1" value="10"
+                   style="display:none;width:80px;padding:10px 14px;border-radius:999px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;">
+            <svg class="qty-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
         </div>
-      </div>
 
       <button type="submit" name="action" value="add" class="btn-pill-detail btn-add-list" id="addToCartBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
@@ -446,6 +449,31 @@
         current = (current + 1) % IMAGES.length;
         render();
       });
+})();
+
+(function () {
+  var select = document.getElementById('qtySelect');
+  var custom = document.getElementById('qtyCustom');
+  if (!select || !custom) return;
+
+  select.addEventListener('change', function () {
+    if (this.value === 'custom') {
+      custom.style.display = '';
+      custom.focus();
+    } else {
+      custom.style.display = 'none';
+    }
+  });
+
+  // Ensure form submits the right qty
+  var form = select.closest('form');
+  if (form) {
+    form.addEventListener('submit', function () {
+      if (select.value === 'custom') {
+        select.value = Math.max(1, parseInt(custom.value, 10) || 1);
+      }
+    });
+  }
 })();
 
 (function () {
