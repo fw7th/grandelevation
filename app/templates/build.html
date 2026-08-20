@@ -921,12 +921,17 @@ function buildCurrentBundle() {
     },
     selections: {
       panel_id: selectedProducts.panel?.id || null,
+      panel_quantity: selectedProducts.panel?.quantity || 1,
       inverter_id: selectedProducts.inverter?.id || null,
+      inverter_quantity: selectedProducts.inverter?.quantity || 1,
       battery_id: selectedProducts.battery?.id || null,
+      battery_quantity: selectedProducts.battery?.quantity || 1,
       generator_id: selectedProducts.generator?.id || null,
-      accessory_bundle_id: selectedProducts.accessory?.id || null
+      generator_quantity: selectedProducts.generator?.quantity || 1,
+      accessory_bundle_id: selectedProducts.accessory?.id || null,
+      accessory_bundle_quantity: selectedProducts.accessory?.quantity || 1,
     },
-    total_price: Object.values(selectedProducts).reduce((s, p) => s + (p.price || 0), 0),
+    total_price: Object.values(selectedProducts).reduce((s, p) => s + ((p.price || 0) * (p.quantity || 1)), 0),
     estimated_daily_wh: parseFloat(document.getElementById('totalWattHours').textContent.replace(/[^\d]/g, '')) || 0,
     estimated_peak_w: parseFloat(document.getElementById('totalWatts').textContent.replace(/[^\d]/g, '')) || 0
   };
