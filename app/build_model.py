@@ -20,10 +20,15 @@ class SystemConfiguration(BaseModel):
 
 class SystemProductSelection(BaseModel):
     panel_id: int | None = None
+    panel_quantity: int = Field(default=1, ge=1)
     inverter_id: int | None = None
+    inverter_quantity: int = Field(default=1, ge=1)
     battery_id: int | None = None
+    battery_quantity: int = Field(default=1, ge=1)
     generator_id: int | None = None
+    generator_quantity: int = Field(default=1, ge=1)
     accessory_bundle_id: int | None = None
+    accessory_bundle_quantity: int = Field(default=1, ge=1)
 
 
 class SystemBundle(BaseModel):
