@@ -842,17 +842,21 @@ document.getElementById('autoBuildBtn').addEventListener('click', async function
     }
     const bundle = await res.json();
 
-    // Clear old selections
+    // ─── 1. Clear old selections ───
     Object.keys(selectedProducts).forEach(clearSlot);
 
-    // Populate new selections
+    // ─── 2. Populate new selections (QUANTITY UNPACKING GOES HERE) ───
     if (bundle.products) {
       Object.entries(bundle.products).forEach(([cat, prod]) => {
-        if (prod) selectProduct(cat, prod);
+        if (prod) {
+          // Pull quantity from backend-calculated specs, default to 1
+          const qty = prod.specs?.quantity || 1;
+          selectProduct(cat, prod, qty);
+        }
       });
     }
 
-    // Show warnings
+    // ─── 3. Show warnings ───
     if (bundle.compatibility_warnings && bundle.compatibility_warnings.length) {
       showCompatWarning(bundle.compatibility_warnings.join(' '));
     } else {
