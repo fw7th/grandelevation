@@ -84,9 +84,6 @@ async def recommend_system(
         inv for inv in inverters if inv.specs.get("type") in ("hybrid", "off_grid")
     ]
 
-    best: SystemBundle | None = None
-    best_effective_total: float | None = None
-
     if config.build_mode == "generator":
         best = _search_generator_mode(
             config,
