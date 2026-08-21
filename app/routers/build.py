@@ -1,3 +1,5 @@
+import math
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.templating import Jinja2Templates
 from sqlmodel import select
@@ -24,6 +26,7 @@ templates = Jinja2Templates(directory="app/templates")
 PEAK_SUN_HOURS = 4.5
 SYSTEM_EFFICIENCY = 0.80
 VOC_TEMP_MARGIN = 1.15
+COMPONENT_PENALTY = 25000  # ₦25k per extra unit beyond the first
 
 
 def _dod(chemistry: str) -> float:
@@ -34,7 +37,7 @@ def _product_to_dict(product: Product, quantity: int = 1) -> dict:
     return {
         "id": product.id,
         "name": product.name,
-        "price": product.price,  # unit price — let frontend multiply
+        "price": product.price,
         "image_url": product.image_url[0] if product.image_url else "",
         "specs": {**product.specs, "quantity": quantity},
     }
@@ -82,6 +85,7 @@ async def recommend_system(
     ]
 
     best: SystemBundle | None = None
+    best_effective_total: float | None = None
 
     if config.build_mode == "generator":
         best = _search_generator_mode(
@@ -127,6 +131,7 @@ def _search_custom_mode(
     required_array_w = daily_wh / PEAK_SUN_HOURS / SYSTEM_EFFICIENCY
     min_inverter_w = peak_w * 1.2
     best_bundle: SystemBundle | None = None
+    best_effective: float | None = None
 
     for panel in panels:
         try:
@@ -134,13 +139,10 @@ def _search_custom_mode(
         except Exception:
             continue
 
-        count = max(
-            1,
-            int(required_array_w // ps.wattage)
-            + (1 if required_array_w % ps.wattage else 0),
-        )
-        total_panel_w = ps.wattage * count
-        panel_cost = panel.price * count
+        panel_count = max(1, math.ceil(required_array_w / ps.wattage))
+        total_panel_w = ps.wattage * panel_count
+        panel_cost = panel.price * panel_count
+        panel_penalty = max(0, panel_count - 1) * COMPONENT_PENALTY
 
         for inv in inverters:
             try:
@@ -170,12 +172,9 @@ def _search_custom_mode(
                 usable_wh_needed = daily_wh * autonomy_days
                 total_batt_wh = usable_wh_needed / _dod(bs.chemistry)
                 unit_wh = bs.nominal_voltage * bs.capacity_ah
-                batt_count = max(
-                    1,
-                    int(total_batt_wh // unit_wh)
-                    + (1 if total_batt_wh % unit_wh else 0),
-                )
+                batt_count = max(1, math.ceil(total_batt_wh / unit_wh))
                 batt_cost = batt.price * batt_count
+                batt_penalty = max(0, batt_count - 1) * COMPONENT_PENALTY
 
                 for acc in accessories:
                     try:
@@ -185,12 +184,14 @@ def _search_custom_mode(
 
                     if ac.max_system_watts < total_panel_w:
                         continue
-                    if ac.max_panel_count < count:
+                    if ac.max_panel_count < panel_count:
                         continue
 
-                    total = panel_cost + inv.price + batt_cost + acc.price
-                    if config.budget_max is not None and total > config.budget_max:
+                    real_total = panel_cost + inv.price + batt_cost + acc.price
+                    if config.budget_max is not None and real_total > config.budget_max:
                         continue
+
+                    effective_total = real_total + panel_penalty + batt_penalty
 
                     warnings = []
                     if not iv.has_charge_controller:
@@ -203,7 +204,7 @@ def _search_custom_mode(
                         configuration=config,
                         selections=SystemProductSelection(
                             panel_id=panel.id,
-                            panel_quantity=count,
+                            panel_quantity=panel_count,
                             inverter_id=inv.id,
                             inverter_quantity=1,
                             battery_id=batt.id,
@@ -212,19 +213,20 @@ def _search_custom_mode(
                             accessory_bundle_quantity=1,
                         ),
                         products={
-                            "panel": _product_to_dict(panel, count),
+                            "panel": _product_to_dict(panel, panel_count),
                             "inverter": _product_to_dict(inv),
                             "battery": _product_to_dict(batt, batt_count),
                             "accessory": _product_to_dict(acc),
                         },
-                        total_price=total,
+                        total_price=real_total,
                         compatibility_warnings=warnings,
                         estimated_daily_wh=daily_wh,
                         estimated_peak_w=peak_w,
                     )
 
-                    if best_bundle is None or total < best_bundle.total_price:
+                    if best_bundle is None or effective_total < best_effective:
                         best_bundle = bundle
+                        best_effective = effective_total
 
     return best_bundle
 
@@ -241,6 +243,7 @@ def _search_generator_mode(
     min_gen_w = peak_w * 1.2
     required_panel_w = daily_wh / PEAK_SUN_HOURS / SYSTEM_EFFICIENCY
     best_bundle: SystemBundle | None = None
+    best_effective: float | None = None
 
     for gen in generators:
         try:
@@ -251,20 +254,10 @@ def _search_generator_mode(
         usable_wh_needed = daily_wh * autonomy_days
         total_wh = usable_wh_needed / _dod(gs.battery_chemistry)
 
-        # Generators needed for battery capacity
-        gen_count_for_capacity = max(
-            1,
-            int(total_wh // gs.capacity_wh) + (1 if total_wh % gs.capacity_wh else 0),
-        )
-
-        # Generators needed for peak power
-        gen_count_for_power = max(
-            1,
-            int(min_gen_w // gs.rated_output_power)
-            + (1 if min_gen_w % gs.rated_output_power else 0),
-        )
-
+        gen_count_for_capacity = max(1, math.ceil(total_wh / gs.capacity_wh))
+        gen_count_for_power = max(1, math.ceil(min_gen_w / gs.rated_output_power))
         gen_count = max(gen_count_for_capacity, gen_count_for_power)
+        gen_penalty = max(0, gen_count - 1) * COMPONENT_PENALTY
 
         for panel in panels:
             try:
@@ -272,13 +265,9 @@ def _search_generator_mode(
             except Exception:
                 continue
 
-            # Panels needed to recharge daily consumption
-            panel_count = max(
-                1,
-                int(required_panel_w // ps.wattage)
-                + (1 if required_panel_w % ps.wattage else 0),
-            )
+            panel_count = max(1, math.ceil(required_panel_w / ps.wattage))
             total_panel_w = ps.wattage * panel_count
+            panel_penalty = max(0, panel_count - 1) * COMPONENT_PENALTY
 
             for acc in accessories:
                 try:
@@ -291,13 +280,14 @@ def _search_generator_mode(
                 if ac.max_panel_count < panel_count:
                     continue
 
-                total = (
+                real_total = (
                     (gen.price * gen_count) + (panel.price * panel_count) + acc.price
                 )
-                if config.budget_max is not None and total > config.budget_max:
+                if config.budget_max is not None and real_total > config.budget_max:
                     continue
 
-                # Warning if panels exceed what the fleet can charge from
+                effective_total = real_total + gen_penalty + panel_penalty
+
                 fleet_max_input = gen_count * gs.max_input_charging_watts
                 warnings = []
                 if total_panel_w > fleet_max_input:
@@ -322,14 +312,15 @@ def _search_generator_mode(
                         "panel": _product_to_dict(panel, panel_count),
                         "accessory": _product_to_dict(acc),
                     },
-                    total_price=total,
+                    total_price=real_total,
                     compatibility_warnings=warnings,
                     estimated_daily_wh=daily_wh,
                     estimated_peak_w=peak_w,
                 )
 
-                if best_bundle is None or total < best_bundle.total_price:
+                if best_bundle is None or effective_total < best_effective:
                     best_bundle = bundle
+                    best_effective = effective_total
 
     return best_bundle
 
