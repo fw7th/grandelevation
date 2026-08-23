@@ -6,12 +6,14 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.build_model import (
+    SavedProductItem,
+    SavedSystemPayload,
     SystemBundle,
     SystemConfiguration,
     SystemProductSelection,
 )
 from app.database import get_session
-from app.models import Product
+from app.models import Product, SavedSystem
 from app.specs import (
     AccessoryBundleSpecs,
     BatterySpecs,
@@ -48,10 +50,32 @@ async def build_page(request: Request, session: AsyncSession = Depends(get_sessi
     from app.utils import authenticate
 
     user = await authenticate(request, session)
+
+    latest_draft_id = None
+    latest_draft_date = None
+    if user:
+        statement = (
+            select(SavedSystem)
+            .where(SavedSystem.user_id == user.id)
+            .order_by(SavedSystem.created_at.desc())
+            .limit(1)
+        )
+        result = await session.exec(statement)
+        draft = result.first()
+        if draft:
+            latest_draft_id = draft.id
+            latest_draft_date = (
+                draft.created_at.isoformat() if draft.created_at else None
+            )
+
     return templates.TemplateResponse(
         request=request,
         name="build.html",
-        context={"username": user.username if user else None},
+        context={
+            "username": user.username if user else None,
+            "latest_draft_id": latest_draft_id,
+            "latest_draft_date": latest_draft_date,
+        },
     )
 
 
