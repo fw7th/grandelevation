@@ -234,15 +234,15 @@
   <div class="account-layout">
     <aside class="account-sidebar">
       <nav class="account-nav">
-        <a href="/account" class="is-active" onclick="switchTab(event, 'profile')">
+        <a href="/account" class="is-active" data-tab="profile" onclick="switchTab(event, 'profile')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
           Profile
         </a>
-        <a href="#orders" onclick="switchTab(event, 'orders')">
+        <a href="#orders" data-tab="profile" onclick="switchTab(event, 'orders')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           Orders
         </a>
-        <a href="#systems" onclick="switchTab(event, 'systems')">
+        <a href="#systems" data-tab="profile" onclick="switchTab(event, 'systems')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           Saved systems
         </a>
@@ -389,13 +389,40 @@ function switchTab(e, id) {
   document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));
   e.currentTarget.classList.add('is-active');
   document.querySelectorAll('.account-main > section').forEach(s => s.style.display = 'none');
-  document.getElementById('tab-' + id).style.display = '';
+  const section = document.getElementById('tab-' + id);
+  if (section) section.style.display = '';
 }
+
+function activateTabById(id) {
+  const navLink = document.querySelector(`.account-nav a[data-tab="${id}"]`);
+  const section = document.getElementById('tab-' + id);
+  if (!navLink || !section) return false;
+  document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));
+  document.querySelectorAll('.account-main > section').forEach(s => s.style.display = 'none');
+  navLink.classList.add('is-active');
+  section.style.display = '';
+  return true;
+}
+
+// Auto-open tab from URL hash (e.g. /account#systems)
+(function () {
+  const hash = window.location.hash.replace('#', '');
+  if (hash && ['orders', 'systems'].includes(hash)) {
+    activateTabById(hash);
+  }
+})();
 
 function deleteSystem(id) {
   if (!confirm('Delete this saved system?')) return;
-  // htmx.ajax('DELETE', '/build/system/' + id, { target: 'closest .system-row', swap: 'outerHTML' });
-  console.log('Delete system', id);
+  fetch('/build/system/' + id, { method: 'DELETE' })
+    .then(r => {
+      if (r.ok) {
+        const row = document.querySelector(`button[onclick="deleteSystem(${id})"]`).closest('.system-row');
+        if (row) row.remove();
+      } else {
+        alert('Failed to delete system.');
+      }
+    });
 }
 </script>
 {% endblock %}
