@@ -1,4 +1,5 @@
 import math
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.templating import Jinja2Templates
@@ -157,31 +158,6 @@ async def save_system(
     await session.refresh(saved)
 
     return {"id": saved.id, "message": "System saved successfully"}
-
-
-@router.get("/build/load/{saved_system_id}")
-async def load_system(
-    saved_system_id: int,
-    request: Request,
-    session: AsyncSession = Depends(get_session),
-):
-    from app.utils import authenticate
-
-    user = await authenticate(request, session)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    statement = select(SavedSystem).where(
-        SavedSystem.id == saved_system_id,
-        SavedSystem.user_id == user.id,
-    )
-    result = await session.exec(statement)
-    saved = result.first()
-
-    if not saved:
-        raise HTTPException(status_code=404, detail="Saved system not found")
-
-    return saved.configuration
 
 
 @router.post("/build/recommend")

@@ -314,11 +314,82 @@
     .budget-row { flex-direction: column; align-items: stretch; }
     .appliance-table .col-action { width: 10%; }
   }
+
+  .draft-banner {
+    display: none;
+    align-items: center; gap: 12px;
+    background: var(--gold-light);
+    border: 1.5px solid var(--gold-deep);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 14px; font-weight: 600;
+  }
+  .draft-banner.is-visible { display: flex; }
+  .draft-banner svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--gold-deep); }
+  .draft-banner a { color: var(--gold-deep); text-decoration: underline; margin-left: auto; font-weight: 700; }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.is-visible { display: flex; }
+  .modal-box {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-box h3 { margin: 0 0 8px; font-size: 18px; }
+  .modal-box p { margin: 0 0 20px; color: var(--gray-mid); font-size: 14px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--gray-mid); margin-bottom: 6px; }
+  .modal-field input {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
+    outline: none;
+  }
+  .modal-field input:focus { border-color: var(--gold-deep); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions button { flex: 1; justify-content: center; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="wrap">
+  {% if latest_draft_id %}
+  <div class="draft-banner is-visible">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3 6 6 1-4.5 4.5 1 6-5.5-3-5.5 3 1-6L3 9l6-1z"/></svg>
+    <span>You have a saved draft from {{ latest_draft_date[:10] if latest_draft_date else 'recently' }}.</span>
+    <a href="/account#systems">View saved systems →</a>
+  </div>
+  {% endif %}
+
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+      <h3>Sign in required</h3>
+      <p>Sign in to save systems to your account and sync across devices.</p>
+      <div class="modal-field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com">
+      </div>
+      <div class="modal-field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="closeLoginModal">Cancel</button>
+        <button type="button" class="btn-primary" id="submitLogin">Sign in</button>
+      </div>
+    </div>
+  </div>
   <div class="page-header">
     <h1 class="display">Build a system</h1>
     <p>Tell us what you need to power and your budget, we'll match the components.</p>
@@ -785,9 +856,10 @@ document.getElementById('saveSystemBtn').addEventListener('click', function () {
       else alert('Saved locally, but failed to sync to account.');
     });
   } else {
-    alert('System saved to your browser. Sign in to sync across devices.');
+    openLoginModal();
   }
 });
+
 
 document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
   const bundle = buildCurrentBundle();
@@ -805,7 +877,7 @@ document.getElementById('addSystemToCartBtn').addEventListener('click', function
       window.location.href = '/cart';
     } else if (r.status === 401) {
       saveToLocalStorage();
-      window.location.href = '/signin?next=/build';
+      openLoginModal();
     } else {
       alert('Failed to add system to cart.');
     }
@@ -854,5 +926,65 @@ renderAppliances();
 updateModeVisibility();
 updateTotal();
 toggleClearAll();
+
+// ─── LOGIN MODAL ───
+const loginModal = document.getElementById('loginModal');
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+
+function openLoginModal() {
+  loginModal.classList.add('is-visible');
+  loginEmail.focus();
+}
+
+function closeLoginModal() {
+  loginModal.classList.remove('is-visible');
+  loginEmail.value = '';
+  loginPassword.value = '';
+}
+
+document.getElementById('closeLoginModal').addEventListener('click', closeLoginModal);
+loginModal.addEventListener('click', function(e) {
+  if (e.target === loginModal) closeLoginModal();
+});
+
+document.getElementById('submitLogin').addEventListener('click', async function() {
+  try {
+    const res = await fetch('/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: loginEmail.value,
+        password: loginPassword.value
+      })
+    });
+    if (res.ok) {
+      closeLoginModal();
+      window.location.reload();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.detail || 'Login failed. Please check your credentials.');
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  }
+});
+
+// Auto-open tab from URL hash (e.g. /account#systems)
+(function () {
+  const hash = window.location.hash.replace('#', '');
+  if (hash && ['orders', 'systems'].includes(hash)) {
+    const navLink = document.querySelector(`.account-nav a[href="#${hash}"]`);
+    const section = document.getElementById('tab-' + hash);
+    if (navLink && section) {
+      // Deactivate all
+      document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));
+      document.querySelectorAll('.account-main > section').forEach(s => s.style.display = 'none');
+      // Activate target
+      navLink.classList.add('is-active');
+      section.style.display = '';
+    }
+  }
+})();
 </script>
 {% endblock %}
