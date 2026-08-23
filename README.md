@@ -1,1 +1,1 @@
-# ***BECAUSE***
+© 2026 [fw7th].  All Rights Reserved. This code is published for viewing purposes only. No part of this software may be copied, modified, distributed, or used without explicit written permission from the author.
