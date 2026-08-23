@@ -57,10 +57,13 @@ class SavedSystemPayload(BaseModel):
     """What gets stored in SavedSystem.configuration and returned to frontend."""
 
     build_mode: str
+    use_default_household: bool = False
     autonomy_hours: float
     preferred_chemistry: str
     appliances: list[ApplianceItem]
     products: list[SavedProductItem]
+    budget_min: float | None = None
+    budget_max: float | None = None
     total_price: float
     estimated_daily_wh: float
     estimated_peak_w: float

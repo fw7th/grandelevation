@@ -374,28 +374,3 @@ async def validate_selections(
         "warnings": warnings,
         "is_compatible": len(warnings) == 0,
     }
-
-
-@router.get("/build/alternatives/{category}")
-async def list_alternatives(
-    category: str,
-    budget_max: float | None = None,
-    session: AsyncSession = Depends(get_session),
-):
-    statement = select(Product).where(Product.category == category)
-    result = await session.exec(statement)
-    products = result.all()
-
-    if budget_max is not None:
-        products = [p for p in products if p.price <= budget_max]
-
-    return [
-        {
-            "id": p.id,
-            "name": p.name,
-            "price": p.price,
-            "image_url": p.image_url[0] if p.image_url else "",
-            "specs": p.specs,
-        }
-        for p in products
-    ]
