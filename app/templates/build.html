@@ -836,15 +836,13 @@ document.getElementById('clearAllBtn').addEventListener('click', function () {
   hideCompatWarning();
 });
 
-function submitBuildBundle() {
+function submitBuildBundle(inCart) {
   const bundle = buildCurrentBundle();
   const ids = Object.values(selectedProducts).map(p => p.id).filter(Boolean);
   if (ids.length === 0) {
     alert('Select at least one component.');
     return null;
   }
-
-
   const url = inCart ? '/build/save?in_cart=true' : '/build/save';
   return fetch(url, {
     method: 'POST',
@@ -880,9 +878,11 @@ document.getElementById('addSystemToCartBtn').addEventListener('click', function
     } else {
       alert('Failed to add system build to cart.');
     }
+  }).catch(err => {
+    console.error(err);
+    alert('Network or server error. Check console.');
   });
 });
-
 
 function buildCurrentBundle() {
   return {
