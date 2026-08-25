@@ -2,6 +2,19 @@
 
 {% block title %}Your Favorites — Grand Elevation Solar{% endblock %}
 
+{% block extra_css %}
+<style>
+  .empty-state { text-align: center; padding: 48px 20px; }
+  .empty-state h2 { margin-bottom: 6px; }
+  .empty-state p {
+    margin: 0 auto 28px;
+    max-width: 420px;
+    color: var(--gray-mid);
+    line-height: 1.5;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="wrap">
   <div class="page-header">
