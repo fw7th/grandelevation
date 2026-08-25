@@ -1,4 +1,5 @@
 import math
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.templating import Jinja2Templates
@@ -6,12 +7,14 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.build_model import (
+    SavedProductItem,
+    SavedSystemPayload,
     SystemBundle,
     SystemConfiguration,
     SystemProductSelection,
 )
 from app.database import get_session
-from app.models import Product
+from app.models import Product, SavedSystem
 from app.specs import (
     AccessoryBundleSpecs,
     BatterySpecs,
@@ -48,11 +51,166 @@ async def build_page(request: Request, session: AsyncSession = Depends(get_sessi
     from app.utils import authenticate
 
     user = await authenticate(request, session)
+
+    latest_draft_id = None
+    latest_draft_date = None
+    if user:
+        statement = (
+            select(SavedSystem)
+            .where(SavedSystem.user_id == user.id)
+            .order_by(SavedSystem.created_at.desc())
+            .limit(1)
+        )
+        result = await session.exec(statement)
+        draft = result.first()
+        if draft:
+            latest_draft_id = draft.id
+            latest_draft_date = (
+                draft.created_at.isoformat() if draft.created_at else None
+            )
+
     return templates.TemplateResponse(
         request=request,
         name="build.html",
-        context={"username": user.username if user else None},
+        context={
+            "username": user.username if user else None,
+            "latest_draft_id": latest_draft_id,
+            "latest_draft_date": latest_draft_date,
+        },
     )
+
+
+@router.post("/build/save")
+async def save_system(
+    bundle: SystemBundle,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    from app.utils import authenticate
+
+    user = await authenticate(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    # Resolve product details from DB so the snapshot is authoritative
+    products: list[SavedProductItem] = []
+    selections = bundle.selections
+
+    id_to_meta = {}
+    if selections.panel_id:
+        id_to_meta[selections.panel_id] = ("panel", selections.panel_quantity)
+    if selections.inverter_id:
+        id_to_meta[selections.inverter_id] = ("inverter", selections.inverter_quantity)
+    if selections.battery_id:
+        id_to_meta[selections.battery_id] = ("battery", selections.battery_quantity)
+    if selections.generator_id:
+        id_to_meta[selections.generator_id] = (
+            "generator",
+            selections.generator_quantity,
+        )
+    if selections.accessory_bundle_id:
+        id_to_meta[selections.accessory_bundle_id] = (
+            "accessory",
+            selections.accessory_bundle_quantity,
+        )
+
+    for pid, (cat, qty) in id_to_meta.items():
+        p = await session.get(Product, pid)
+        if not p:
+            continue
+        specs = {k: v for k, v in p.specs.items()}
+        products.append(
+            SavedProductItem(
+                id=p.id,
+                name=p.name,
+                category=cat,
+                price=p.price,
+                quantity=qty,
+                image_url=p.image_url[0] if p.image_url else None,
+                specs=specs,
+            )
+        )
+
+    payload = SavedSystemPayload(
+        build_mode=bundle.configuration.build_mode,
+        use_default_household=bundle.configuration.use_default_household,
+        autonomy_hours=bundle.configuration.autonomy_hours,
+        preferred_chemistry=bundle.configuration.preferred_chemistry,
+        appliances=bundle.configuration.appliances,
+        products=products,
+        budget_min=bundle.configuration.budget_min,
+        budget_max=bundle.configuration.budget_max,
+        total_price=bundle.total_price,
+        estimated_daily_wh=bundle.estimated_daily_wh,
+        estimated_peak_w=bundle.estimated_peak_w,
+        created_at=datetime.utcnow().isoformat(),
+    )
+
+    saved = SavedSystem(
+        user_id=user.id,
+        configuration=payload.model_dump(),
+        total_price=bundle.total_price,
+        estimated_daily_wh=bundle.estimated_daily_wh,
+        estimated_peak_w=bundle.estimated_peak_w,
+    )
+    session.add(saved)
+    await session.commit()
+    await session.refresh(saved)
+
+    return {"id": saved.id, "message": "System saved successfully"}
+
+
+@router.get("/build/load/{saved_system_id}")
+async def load_system(
+    saved_system_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    from app.utils import authenticate
+
+    user = await authenticate(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    statement = select(SavedSystem).where(
+        SavedSystem.id == saved_system_id,
+        SavedSystem.user_id == user.id,
+    )
+    result = await session.exec(statement)
+    saved = result.first()
+
+    if not saved:
+        raise HTTPException(status_code=404, detail="Saved system not found")
+
+    return saved.configuration
+
+
+@router.delete("/build/system/{saved_system_id}")
+async def delete_saved_system(
+    saved_system_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    from app.utils import authenticate
+
+    user = await authenticate(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    statement = select(SavedSystem).where(
+        SavedSystem.id == saved_system_id,
+        SavedSystem.user_id == user.id,
+    )
+    result = await session.exec(statement)
+    saved = result.first()
+
+    if not saved:
+        raise HTTPException(status_code=404, detail="Saved system not found")
+
+    await session.delete(saved)
+    await session.commit()
+
+    return {"message": "Deleted successfully"}
 
 
 @router.post("/build/recommend")
@@ -374,28 +532,3 @@ async def validate_selections(
         "warnings": warnings,
         "is_compatible": len(warnings) == 0,
     }
-
-
-@router.get("/build/alternatives/{category}")
-async def list_alternatives(
-    category: str,
-    budget_max: float | None = None,
-    session: AsyncSession = Depends(get_session),
-):
-    statement = select(Product).where(Product.category == category)
-    result = await session.exec(statement)
-    products = result.all()
-
-    if budget_max is not None:
-        products = [p for p in products if p.price <= budget_max]
-
-    return [
-        {
-            "id": p.id,
-            "name": p.name,
-            "price": p.price,
-            "image_url": p.image_url[0] if p.image_url else "",
-            "specs": p.specs,
-        }
-        for p in products
-    ]

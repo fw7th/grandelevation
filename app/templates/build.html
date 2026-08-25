@@ -314,11 +314,82 @@
     .budget-row { flex-direction: column; align-items: stretch; }
     .appliance-table .col-action { width: 10%; }
   }
+
+  .draft-banner {
+    display: none;
+    align-items: center; gap: 12px;
+    background: var(--gold-light);
+    border: 1.5px solid var(--gold-deep);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 14px; font-weight: 600;
+  }
+  .draft-banner.is-visible { display: flex; }
+  .draft-banner svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--gold-deep); }
+  .draft-banner a { color: var(--gold-deep); text-decoration: underline; margin-left: auto; font-weight: 700; }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.is-visible { display: flex; }
+  .modal-box {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal-box h3 { margin: 0 0 8px; font-size: 18px; }
+  .modal-box p { margin: 0 0 20px; color: var(--gray-mid); font-size: 14px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--gray-mid); margin-bottom: 6px; }
+  .modal-field input {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--ink); font-family: 'Inter', sans-serif; font-size: 14px;
+    outline: none;
+  }
+  .modal-field input:focus { border-color: var(--gold-deep); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions button { flex: 1; justify-content: center; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="wrap">
+  {% if latest_draft_id %}
+  <div class="draft-banner is-visible">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3 6 6 1-4.5 4.5 1 6-5.5-3-5.5 3 1-6L3 9l6-1z"/></svg>
+    <span>You have a saved draft from {{ latest_draft_date[:10] if latest_draft_date else 'recently' }}.</span>
+    <a href="/account#systems">View saved systems →</a>
+  </div>
+  {% endif %}
+
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+      <h3>Sign in required</h3>
+      <p>Sign in to save systems to your account and sync across devices.</p>
+      <div class="modal-field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com">
+      </div>
+      <div class="modal-field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="closeLoginModal">Cancel</button>
+        <button type="button" class="btn-primary" id="submitLogin">Sign in</button>
+      </div>
+    </div>
+  </div>
   <div class="page-header">
     <h1 class="display">Build a system</h1>
     <p>Tell us what you need to power and your budget, we'll match the components.</p>
@@ -655,6 +726,76 @@ function toggleClearAll() {
   document.getElementById('clearAllBtn').style.display = hasAny ? '' : 'none';
 }
 
+function restoreFromPayload(data) {
+  // Clear existing selections
+  Object.keys(selectedProducts).forEach(clearSlot);
+
+  // Restore appliances
+  if (data.appliances && Array.isArray(data.appliances)) {
+    appliances = data.appliances.map(a => ({
+      name: a.name || '',
+      qty: a.qty || 1,
+      watts: a.watts || 0,
+      hours: a.hours_per_day || a.hours || 0
+    }));
+  } else {
+    appliances = [];
+  }
+
+  // Restore preferences
+  if (data.build_mode) {
+    buildMode = data.build_mode;
+    const radio = document.querySelector(`input[name="buildMode"][value="${buildMode}"]`);
+    if (radio) radio.checked = true;
+  }
+  if (typeof data.use_default_household === 'boolean') {
+    useDefaultCheckbox.checked = data.use_default_household;
+  } else if (typeof data.use_default_household !== 'undefined') {
+    useDefaultCheckbox.checked = !!data.use_default_household;
+  }
+  if (data.autonomy_hours !== undefined) {
+    autonomySlider.value = data.autonomy_hours;
+    autonomyReadout.textContent = data.autonomy_hours + ' h';
+  }
+  if (data.preferred_chemistry) {
+    document.getElementById('preferredChemistry').value = data.preferred_chemistry;
+  }
+  if (data.budget_min !== undefined) {
+    document.getElementById('budgetMin').value = data.budget_min || 0;
+  }
+  if (data.budget_max !== undefined) {
+    document.getElementById('budgetMax').value = data.budget_max || 500000;
+  }
+
+  // Restore products
+  if (data.products && Array.isArray(data.products)) {
+    data.products.forEach(prod => {
+      const cat = prod.category;
+      if (!cat) return;
+      selectProduct(cat, {
+        id: prod.id,
+        name: prod.name,
+        price: prod.price,
+        image_url: prod.image_url || '',
+        specs: prod.specs || {}
+      }, prod.quantity || 1);
+    });
+  }
+
+  renderAppliances();
+  updateModeVisibility();
+  updateTotal();
+  toggleClearAll();
+  saveToLocalStorage();
+
+  // Clean ?load= from URL so refresh doesn't re-fetch
+  if (window.history.replaceState) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('load');
+    window.history.replaceState({}, document.title, url.pathname + url.hash);
+  }
+}
+
 function showCompatWarning(msg) {
   const banner = document.getElementById('compatBanner');
   document.getElementById('compatText').textContent = msg;
@@ -785,9 +926,10 @@ document.getElementById('saveSystemBtn').addEventListener('click', function () {
       else alert('Saved locally, but failed to sync to account.');
     });
   } else {
-    alert('System saved to your browser. Sign in to sync across devices.');
+    openLoginModal();
   }
 });
+
 
 document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
   const bundle = buildCurrentBundle();
@@ -805,7 +947,7 @@ document.getElementById('addSystemToCartBtn').addEventListener('click', function
       window.location.href = '/cart';
     } else if (r.status === 401) {
       saveToLocalStorage();
-      window.location.href = '/signin?next=/build';
+      openLoginModal();
     } else {
       alert('Failed to add system to cart.');
     }
@@ -846,13 +988,96 @@ document.getElementById('budgetMin').addEventListener('change', saveToLocalStora
 document.getElementById('budgetMax').addEventListener('change', saveToLocalStorage);
 
 // ─── INIT ───
-if (!loadFromLocalStorage()) {
-  appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
-  useDefaultCheckbox.checked = true;
+function normalInit() {
+  if (!loadFromLocalStorage()) {
+    appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
+    useDefaultCheckbox.checked = true;
+  }
+  renderAppliances();
+  updateModeVisibility();
+  updateTotal();
+  toggleClearAll();
 }
-renderAppliances();
-updateModeVisibility();
-updateTotal();
-toggleClearAll();
+
+const urlParams = new URLSearchParams(window.location.search);
+const loadId = urlParams.get('load');
+
+if (loadId && username) {
+  fetch('/build/load/' + encodeURIComponent(loadId))
+    .then(r => {
+      if (!r.ok) throw new Error('Failed to load saved system');
+      return r.json();
+    })
+    .then(data => {
+      restoreFromPayload(data);
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Could not load saved system. Falling back to last local draft.');
+      normalInit();
+    });
+} else {
+  normalInit();
+}
+
+// ─── LOGIN MODAL ───
+const loginModal = document.getElementById('loginModal');
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+
+function openLoginModal() {
+  loginModal.classList.add('is-visible');
+  loginEmail.focus();
+}
+
+function closeLoginModal() {
+  loginModal.classList.remove('is-visible');
+  loginEmail.value = '';
+  loginPassword.value = '';
+}
+
+document.getElementById('closeLoginModal').addEventListener('click', closeLoginModal);
+loginModal.addEventListener('click', function(e) {
+  if (e.target === loginModal) closeLoginModal();
+});
+
+document.getElementById('submitLogin').addEventListener('click', async function() {
+  try {
+    const res = await fetch('/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: loginEmail.value,
+        password: loginPassword.value
+      })
+    });
+    if (res.ok) {
+      closeLoginModal();
+      window.location.reload();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.detail || 'Login failed. Please check your credentials.');
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+  }
+});
+
+// Auto-open tab from URL hash (e.g. /account#systems)
+(function () {
+  const hash = window.location.hash.replace('#', '');
+  if (hash && ['orders', 'systems'].includes(hash)) {
+    const navLink = document.querySelector(`.account-nav a[href="#${hash}"]`);
+    const section = document.getElementById('tab-' + hash);
+    if (navLink && section) {
+      // Deactivate all
+      document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));
+      document.querySelectorAll('.account-main > section').forEach(s => s.style.display = 'none');
+      // Activate target
+      navLink.classList.add('is-active');
+      section.style.display = '';
+    }
+  }
+})();
 </script>
 {% endblock %}
