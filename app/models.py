@@ -88,7 +88,7 @@ class SavedSystem(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
-    name: str | None = None
+    in_cart: bool = Field(default=False)
     configuration: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     total_price: float = Field(default=0.0)
     estimated_daily_wh: float | None = None

@@ -85,6 +85,7 @@ async def save_system(
     bundle: SystemBundle,
     request: Request,
     session: AsyncSession = Depends(get_session),
+    in_cart: bool = False,
 ):
     from app.utils import authenticate
 
@@ -152,6 +153,7 @@ async def save_system(
         total_price=bundle.total_price,
         estimated_daily_wh=bundle.estimated_daily_wh,
         estimated_peak_w=bundle.estimated_peak_w,
+        in_cart=in_cart,
     )
     session.add(saved)
     await session.commit()

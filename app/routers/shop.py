@@ -10,7 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.database import get_session
 from app.security import password_hash
 
-from ..models import CartItem, Invoice, Product, Users
+from ..models import CartItem, Invoice, Product, SavedSystem, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])

@@ -843,7 +843,10 @@ function submitBuildBundle() {
     alert('Select at least one component.');
     return null;
   }
-  return fetch('/build/save', {
+
+
+  const url = inCart ? '/build/save?in_cart=true' : '/build/save';
+  return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(bundle)
@@ -852,7 +855,7 @@ function submitBuildBundle() {
 
 document.getElementById('buyNowBtn').addEventListener('click', function () {
   saveToLocalStorage();
-  const req = submitBuildBundle();
+  const req = submitBuildBundle(false);
   if (!req) return;
   req.then(r => {
     if (r.ok) {
@@ -867,7 +870,7 @@ document.getElementById('buyNowBtn').addEventListener('click', function () {
 
 document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
   saveToLocalStorage();
-  const req = submitBuildBundle();
+  const req = submitBuildBundle(true);
   if (!req) return;
   req.then(r => {
     if (r.ok) {
@@ -879,6 +882,7 @@ document.getElementById('addSystemToCartBtn').addEventListener('click', function
     }
   });
 });
+
 
 function buildCurrentBundle() {
   return {
