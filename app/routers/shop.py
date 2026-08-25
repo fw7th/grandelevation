@@ -141,6 +141,24 @@ async def cart_remove(
     return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
 
 
+@router.post("/cart/system/remove")
+async def cart_remove_system(
+    request: Request,
+    system_id: int = Form(...),
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+    if not user:
+        return RedirectResponse("/catalog")
+
+    system = await session.get(SavedSystem, system_id)
+    if system and system.user_id == user.id:
+        await session.delete(system)
+        await session.commit()
+
+    return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
+
+
 @router.post("/cart/update")
 async def cart_update(
     request: Request,
