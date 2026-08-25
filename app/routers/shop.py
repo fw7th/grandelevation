@@ -10,7 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.database import get_session
 from app.security import password_hash
 
-from ..models import CartItem, Invoice, Product, Users
+from ..models import CartItem, Invoice, Product, SavedSystem, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
@@ -38,6 +38,21 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     for cart_item, product in cart_items:
         subtotal += cart_item.quantity * product.price
 
+    # System builds from saved systems
+    stmt_sys = (
+        select(SavedSystem)
+        .where(
+            SavedSystem.user_id == user.id,
+            SavedSystem.in_cart == True,
+        )
+        .order_by(SavedSystem.created_at.desc())
+    )
+    result_sys = await session.exec(stmt_sys)
+    saved_systems = result_sys.all()
+
+    for sys in saved_systems:
+        subtotal += sys.total_price
+
     # Dopamine hit: product just added?
     added_product = None
     added_param = request.query_params.get("added")
@@ -47,13 +62,26 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
         except (ValueError, TypeError):
             pass
 
+    system_bundles = []
+    for sys in saved_systems:
+        cfg = sys.configuration
+        products = cfg.get("products", []) if isinstance(cfg, dict) else []
+        system_bundles.append(
+            {
+                "id": sys.id,
+                "name": "Custom Solar System",
+                "products": products,
+                "total_price": sys.total_price,
+            }
+        )
+
     return templates.TemplateResponse(
         request=request,
         name="cart.html",
         context={
             "username": user.username if user else None,
             "cart_items": cart_items,
-            "system_bundles": [],
+            "system_bundles": system_bundles,
             "total": subtotal,
             "subtotal": subtotal,
             "added_product": added_product,
@@ -109,6 +137,24 @@ async def cart_remove(
             await session.commit()
         except SQLAlchemyError:
             await session.rollback()
+
+    return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/cart/system/remove")
+async def cart_remove_system(
+    request: Request,
+    system_id: int = Form(...),
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+    if not user:
+        return RedirectResponse("/catalog")
+
+    system = await session.get(SavedSystem, system_id)
+    if system and system.user_id == user.id:
+        await session.delete(system)
+        await session.commit()
 
     return RedirectResponse("/cart", status_code=status.HTTP_302_FOUND)
 

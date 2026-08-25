@@ -266,29 +266,36 @@
 <div class="wrap">
   <div class="page-header">
     <h1 class="display">Your cart</h1>
-    <p>{% if cart_items %}{{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %}{% else %}Nothing here yet{% endif %}</p>
+    <p>{% set item_count = cart_items|length + system_bundles|length %}{% if item_count %}{{ item_count }} item{% if item_count != 1 %}s{% endif %}{% else %}Nothing here yet{% endif %}</p>
   </div>
 
   {% if cart_items or system_bundles %}
   <div class="cart-layout">
     <div class="cart-section">
       {% if system_bundles %}
-      <h2 class="display">System bundles</h2>
-      <p class="cart-subhead">Complete kits ready for installation.</p>
+      <h2 class="display">System builds</h2>
+      <p class="cart-subhead">Custom configurations from the builder.</p>
       {% for bundle in system_bundles %}
       <div class="bundle-row">
         <div class="bundle-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         </div>
         <div class="bundle-info">
-          <div class="bundle-name">{{ bundle.name or 'Custom Solar System' }}</div>
+          <div class="bundle-name">Custom Solar System</div>
           <div class="bundle-count">{{ bundle.products|length }} components</div>
         </div>
-        <div class="bundle-price">₦{{ "{:,.2f}".format(bundle.total_price) }}</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="bundle-price">₦{{ "{:,.2f}".format(bundle.total_price) }}</div>
+          <form action="/cart/system/remove" method="post" style="display:inline;">
+            <input type="hidden" name="system_id" value="{{ bundle.id }}">
+            <button type="submit" class="cart-item-remove" style="margin-top:0;" aria-label="Remove build">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </form>
+        </div>
       </div>
       {% endfor %}
       {% endif %}
-
       <h2 class="display">Items</h2>
       <p class="cart-subhead">Individual products in your cart.</p>
       <div class="cart-list">

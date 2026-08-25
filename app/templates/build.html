@@ -529,9 +529,11 @@
           <span class="total-value" id="systemTotal">₦0</span>
         </div>
         <div class="summary-actions">
-          <button type="button" class="btn-secondary" id="saveSystemBtn">Save for later</button>
-          <button type="button" class="btn-primary" id="addSystemToCartBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+          <button type="button" class="btn-primary" id="buyNowBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+            Buy now
+          </button>
+          <button type="button" class="btn-secondary" id="addSystemToCartBtn">
             Add system to cart
           </button>
         </div>
@@ -834,45 +836,51 @@ document.getElementById('clearAllBtn').addEventListener('click', function () {
   hideCompatWarning();
 });
 
-document.getElementById('saveSystemBtn').addEventListener('click', function () {
-  saveToLocalStorage();
-  const username = {{ username | tojson }};
-  if (username) {
-    const bundle = buildCurrentBundle();
-    fetch('/build/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bundle)
-    }).then(r => {
-      if (r.ok) alert('Saved to your account.');
-      else alert('Saved locally, but failed to sync to account.');
-    });
-  } else {
-    openLoginModal();
-  }
-});
-
-
-document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
+function submitBuildBundle(inCart) {
   const bundle = buildCurrentBundle();
   const ids = Object.values(selectedProducts).map(p => p.id).filter(Boolean);
   if (ids.length === 0) {
     alert('Select at least one component.');
-    return;
+    return null;
   }
-  fetch('/cart/system', {
+  const url = inCart ? '/build/save?in_cart=true' : '/build/save';
+  return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(bundle)
-  }).then(r => {
+  });
+}
+
+document.getElementById('buyNowBtn').addEventListener('click', function () {
+  saveToLocalStorage();
+  const req = submitBuildBundle(false);
+  if (!req) return;
+  req.then(r => {
+    if (r.ok) {
+      alert('System build saved. Checkout integration coming soon.');
+    } else if (r.status === 401) {
+      openLoginModal();
+    } else {
+      alert('Failed to save system build.');
+    }
+  });
+});
+
+document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
+  saveToLocalStorage();
+  const req = submitBuildBundle(true);
+  if (!req) return;
+  req.then(r => {
     if (r.ok) {
       window.location.href = '/cart';
     } else if (r.status === 401) {
-      saveToLocalStorage();
       openLoginModal();
     } else {
-      alert('Failed to add system to cart.');
+      alert('Failed to add system build to cart.');
     }
+  }).catch(err => {
+    console.error(err);
+    alert('Network or server error. Check console.');
   });
 });
 
