@@ -160,59 +160,6 @@ async def save_system(
     return {"id": saved.id, "message": "System saved successfully"}
 
 
-@router.get("/build/load/{saved_system_id}")
-async def load_system(
-    saved_system_id: int,
-    request: Request,
-    session: AsyncSession = Depends(get_session),
-):
-    from app.utils import authenticate
-
-    user = await authenticate(request, session)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    statement = select(SavedSystem).where(
-        SavedSystem.id == saved_system_id,
-        SavedSystem.user_id == user.id,
-    )
-    result = await session.exec(statement)
-    saved = result.first()
-
-    if not saved:
-        raise HTTPException(status_code=404, detail="Saved system not found")
-
-    return saved.configuration
-
-
-@router.delete("/build/system/{saved_system_id}")
-async def delete_saved_system(
-    saved_system_id: int,
-    request: Request,
-    session: AsyncSession = Depends(get_session),
-):
-    from app.utils import authenticate
-
-    user = await authenticate(request, session)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    statement = select(SavedSystem).where(
-        SavedSystem.id == saved_system_id,
-        SavedSystem.user_id == user.id,
-    )
-    result = await session.exec(statement)
-    saved = result.first()
-
-    if not saved:
-        raise HTTPException(status_code=404, detail="Saved system not found")
-
-    await session.delete(saved)
-    await session.commit()
-
-    return {"message": "Deleted successfully"}
-
-
 @router.post("/build/recommend")
 async def recommend_system(
     config: SystemConfiguration,

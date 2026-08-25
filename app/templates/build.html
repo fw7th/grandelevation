@@ -364,14 +364,6 @@
 
 {% block content %}
 <div class="wrap">
-  {% if latest_draft_id %}
-  <div class="draft-banner is-visible">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3 6 6 1-4.5 4.5 1 6-5.5-3-5.5 3 1-6L3 9l6-1z"/></svg>
-    <span>You have a saved draft from {{ latest_draft_date[:10] if latest_draft_date else 'recently' }}.</span>
-    <a href="/account#systems">View saved systems →</a>
-  </div>
-  {% endif %}
-
   <div class="modal-overlay" id="loginModal">
     <div class="modal-box">
       <h3>Sign in required</h3>
@@ -724,76 +716,6 @@ function updateTotal() {
 function toggleClearAll() {
   const hasAny = Object.keys(selectedProducts).length > 0;
   document.getElementById('clearAllBtn').style.display = hasAny ? '' : 'none';
-}
-
-function restoreFromPayload(data) {
-  // Clear existing selections
-  Object.keys(selectedProducts).forEach(clearSlot);
-
-  // Restore appliances
-  if (data.appliances && Array.isArray(data.appliances)) {
-    appliances = data.appliances.map(a => ({
-      name: a.name || '',
-      qty: a.qty || 1,
-      watts: a.watts || 0,
-      hours: a.hours_per_day || a.hours || 0
-    }));
-  } else {
-    appliances = [];
-  }
-
-  // Restore preferences
-  if (data.build_mode) {
-    buildMode = data.build_mode;
-    const radio = document.querySelector(`input[name="buildMode"][value="${buildMode}"]`);
-    if (radio) radio.checked = true;
-  }
-  if (typeof data.use_default_household === 'boolean') {
-    useDefaultCheckbox.checked = data.use_default_household;
-  } else if (typeof data.use_default_household !== 'undefined') {
-    useDefaultCheckbox.checked = !!data.use_default_household;
-  }
-  if (data.autonomy_hours !== undefined) {
-    autonomySlider.value = data.autonomy_hours;
-    autonomyReadout.textContent = data.autonomy_hours + ' h';
-  }
-  if (data.preferred_chemistry) {
-    document.getElementById('preferredChemistry').value = data.preferred_chemistry;
-  }
-  if (data.budget_min !== undefined) {
-    document.getElementById('budgetMin').value = data.budget_min || 0;
-  }
-  if (data.budget_max !== undefined) {
-    document.getElementById('budgetMax').value = data.budget_max || 500000;
-  }
-
-  // Restore products
-  if (data.products && Array.isArray(data.products)) {
-    data.products.forEach(prod => {
-      const cat = prod.category;
-      if (!cat) return;
-      selectProduct(cat, {
-        id: prod.id,
-        name: prod.name,
-        price: prod.price,
-        image_url: prod.image_url || '',
-        specs: prod.specs || {}
-      }, prod.quantity || 1);
-    });
-  }
-
-  renderAppliances();
-  updateModeVisibility();
-  updateTotal();
-  toggleClearAll();
-  saveToLocalStorage();
-
-  // Clean ?load= from URL so refresh doesn't re-fetch
-  if (window.history.replaceState) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('load');
-    window.history.replaceState({}, document.title, url.pathname + url.hash);
-  }
 }
 
 function showCompatWarning(msg) {
