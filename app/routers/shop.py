@@ -38,6 +38,21 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
     for cart_item, product in cart_items:
         subtotal += cart_item.quantity * product.price
 
+    # System builds from saved systems
+    stmt_sys = (
+        select(SavedSystem)
+        .where(
+            SavedSystem.user_id == user.id,
+            SavedSystem.in_cart == True,
+        )
+        .order_by(SavedSystem.created_at.desc())
+    )
+    result_sys = await session.exec(stmt_sys)
+    saved_systems = result_sys.all()
+
+    for sys in saved_systems:
+        subtotal += sys.total_price
+
     # Dopamine hit: product just added?
     added_product = None
     added_param = request.query_params.get("added")
@@ -47,13 +62,26 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
         except (ValueError, TypeError):
             pass
 
+    system_bundles = []
+    for sys in saved_systems:
+        cfg = sys.configuration
+        products = cfg.get("products", []) if isinstance(cfg, dict) else []
+        system_bundles.append(
+            {
+                "id": sys.id,
+                "name": "Custom Solar System",
+                "products": products,
+                "total_price": sys.total_price,
+            }
+        )
+
     return templates.TemplateResponse(
         request=request,
         name="cart.html",
         context={
             "username": user.username if user else None,
             "cart_items": cart_items,
-            "system_bundles": [],
+            "system_bundles": system_bundles,
             "total": subtotal,
             "subtotal": subtotal,
             "added_product": added_product,
