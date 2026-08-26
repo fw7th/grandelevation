@@ -823,7 +823,30 @@ document.getElementById('clearAllBtn').addEventListener('click', function () {
 
 document.getElementById('buyNowBtn').addEventListener('click', function () {
   saveToLocalStorage();
-  alert('Buy now coming soon.');
+  const items = Object.values(selectedProducts).map(p => ({
+    product_id: p.id,
+    quantity: p.quantity || 1
+  })).filter(i => i.product_id);
+  if (items.length === 0) {
+    alert('Select at least one component.');
+    return;
+  }
+  fetch('/checkout/build', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: items })
+  }).then(r => {
+    if (r.ok) {
+      window.location.href = '/checkout';
+    } else if (r.status === 401) {
+      openLoginModal();
+    } else {
+      alert('Failed to start checkout.');
+    }
+  }).catch(err => {
+    console.error(err);
+    alert('Network error.');
+  });
 });
 
 document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
