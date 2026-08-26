@@ -75,7 +75,48 @@ async def checkout(
             # If buy_now_mode, we also need to pass the product_id and quantity for JS
             "buy_now_product_id": product_id if buy_now_mode else None,
             "buy_now_quantity": quantity if buy_now_mode else None,
-            "system_bundles": [],
+            "total": subtotal,
+            "subtotal": subtotal,
+        },
+    )
+
+
+@router.post("/checkout/build")
+async def checkout_build(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    data = await request.json()
+    items = data.get("items", [])
+    if not items:
+        raise HTTPException(status_code=400, detail="No items provided")
+
+    checkout_items = []
+    subtotal = 0.0
+
+    for entry in items:
+        product = await session.get(Product, entry["product_id"])
+        if not product:
+            continue
+        item = {
+            "product": product,
+            "quantity": entry.get("quantity", 1),
+            "subtotal": product.price * entry.get("quantity", 1),
+        }
+        checkout_items.append(item)
+        subtotal += item["subtotal"]
+
+    return templates.TemplateResponse(
+        request=request,
+        name="checkout.html",
+        context={
+            "username": user.username,
+            "checkout_items": checkout_items,
+            "build_mode": True,
             "total": subtotal,
             "subtotal": subtotal,
         },
