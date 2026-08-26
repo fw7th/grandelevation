@@ -238,6 +238,21 @@
 </div>
 {% endif %}
 
+{% if build_added %}
+<div id="build-toast" class="add-toast">
+  <div class="add-toast-inner">
+    <div class="add-toast-img">
+      <div class="add-toast-img-placeholder">⚡</div>
+    </div>
+    <div>
+      <div class="add-toast-title">Added to cart</div>
+      <div class="add-toast-name">System build items</div>
+    </div>
+  </div>
+  <div class="add-toast-bar"></div>
+</div>
+{% endif %}
+
 <div class="wrap">
   <div class="page-header">
     <h1 class="display">Your cart</h1>
@@ -352,6 +367,25 @@ if (toast) {
     gone = true;
     toast.remove();
   };
+
+const buildToast = document.getElementById('build-toast');
+if (buildToast) {
+  let buildGone = false;
+  const removeBuildToast = () => {
+    if (buildGone) return;
+    buildGone = true;
+    buildToast.remove();
+  };
+  buildToast.addEventListener('animationend', (e) => {
+    if (e.animationName === 'toastOut') removeBuildToast();
+  });
+  document.addEventListener('click', () => {
+    buildToast.classList.add('dismissed');
+    buildToast.addEventListener('animationend', (e) => {
+      if (e.animationName === 'toastOut') removeBuildToast();
+    }, {once: true});
+  }, {once: true});
+}
 
   // Normal auto-dismiss
   toast.addEventListener('animationend', (e) => {

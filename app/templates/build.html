@@ -842,7 +842,7 @@ document.getElementById('addSystemToCartBtn').addEventListener('click', function
     body: JSON.stringify({ items: items })
   }).then(r => {
     if (r.ok) {
-      window.location.href = '/cart';
+      window.location.href = '/cart?build_added=1';
     } else if (r.status === 401) {
       openLoginModal();
     } else {

@@ -44,6 +44,8 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
         except (ValueError, TypeError):
             pass
 
+    build_added = request.query_params.get("build_added") == "1"
+
     return templates.TemplateResponse(
         request=request,
         name="cart.html",
@@ -53,6 +55,7 @@ async def cart(request: Request, session: AsyncSession = Depends(get_session)):
             "total": subtotal,
             "subtotal": subtotal,
             "added_product": added_product,
+            "build_added": build_added,
         },
     )
 
@@ -86,7 +89,9 @@ async def cart_add_build(
         await session.rollback()
         raise HTTPException(status_code=500, detail="Failed to add items")
 
-    return RedirectResponse("/cart", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(
+        "/cart?build_added=1", status_code=status.HTTP_303_SEE_OTHER
+    )
 
 
 @router.post("/cart/add")
