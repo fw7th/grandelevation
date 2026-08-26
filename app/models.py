@@ -1,6 +1,6 @@
 # models.py
 from datetime import datetime, timedelta
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
@@ -79,20 +79,6 @@ class CartItem(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", index=True)
     product_id: int = Field(foreign_key="product.id", index=True)
     quantity: int = Field(default=1, ge=1)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-class SavedSystem(SQLModel, table=True):
-    __tablename__ = "saved_systems"
-
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="users.id", index=True)
-    in_cart: bool = Field(default=False)
-    configuration: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    total_price: float = Field(default=0.0)
-    estimated_daily_wh: float | None = None
-    estimated_peak_w: float | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

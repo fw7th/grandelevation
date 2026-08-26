@@ -315,21 +315,6 @@
     .appliance-table .col-action { width: 10%; }
   }
 
-  .draft-banner {
-    display: none;
-    align-items: center; gap: 12px;
-    background: var(--gold-light);
-    border: 1.5px solid var(--gold-deep);
-    color: var(--ink);
-    border-radius: 14px;
-    padding: 14px 18px;
-    margin-bottom: 24px;
-    font-size: 14px; font-weight: 600;
-  }
-  .draft-banner.is-visible { display: flex; }
-  .draft-banner svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--gold-deep); }
-  .draft-banner a { color: var(--gold-deep); text-decoration: underline; margin-left: auto; font-weight: 700; }
-
   .modal-overlay {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.5);
@@ -836,51 +821,36 @@ document.getElementById('clearAllBtn').addEventListener('click', function () {
   hideCompatWarning();
 });
 
-function submitBuildBundle(inCart) {
-  const bundle = buildCurrentBundle();
-  const ids = Object.values(selectedProducts).map(p => p.id).filter(Boolean);
-  if (ids.length === 0) {
-    alert('Select at least one component.');
-    return null;
-  }
-  const url = inCart ? '/build/save?in_cart=true' : '/build/save';
-  return fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bundle)
-  });
-}
-
 document.getElementById('buyNowBtn').addEventListener('click', function () {
   saveToLocalStorage();
-  const req = submitBuildBundle(false);
-  if (!req) return;
-  req.then(r => {
-    if (r.ok) {
-      alert('System build saved. Checkout integration coming soon.');
-    } else if (r.status === 401) {
-      openLoginModal();
-    } else {
-      alert('Failed to save system build.');
-    }
-  });
+  alert('Buy now coming soon.');
 });
 
 document.getElementById('addSystemToCartBtn').addEventListener('click', function () {
   saveToLocalStorage();
-  const req = submitBuildBundle(true);
-  if (!req) return;
-  req.then(r => {
+  const items = Object.values(selectedProducts).map(p => ({
+    product_id: p.id,
+    quantity: p.quantity || 1
+  })).filter(i => i.product_id);
+  if (items.length === 0) {
+    alert('Select at least one component.');
+    return;
+  }
+  fetch('/cart/add-build', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: items })
+  }).then(r => {
     if (r.ok) {
-      window.location.href = '/cart';
+      window.location.href = '/cart?build_added=1';
     } else if (r.status === 401) {
       openLoginModal();
     } else {
-      alert('Failed to add system build to cart.');
+      alert('Failed to add to cart.');
     }
   }).catch(err => {
     console.error(err);
-    alert('Network or server error. Check console.');
+    alert('Network error.');
   });
 });
 
@@ -930,25 +900,6 @@ function normalInit() {
 }
 
 const urlParams = new URLSearchParams(window.location.search);
-const loadId = urlParams.get('load');
-
-if (loadId && username) {
-  fetch('/build/load/' + encodeURIComponent(loadId))
-    .then(r => {
-      if (!r.ok) throw new Error('Failed to load saved system');
-      return r.json();
-    })
-    .then(data => {
-      restoreFromPayload(data);
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Could not load saved system. Falling back to last local draft.');
-      normalInit();
-    });
-} else {
-  normalInit();
-}
 
 // ─── LOGIN MODAL ───
 const loginModal = document.getElementById('loginModal');
@@ -993,21 +944,5 @@ document.getElementById('submitLogin').addEventListener('click', async function(
   }
 });
 
-// Auto-open tab from URL hash (e.g. /account#systems)
-(function () {
-  const hash = window.location.hash.replace('#', '');
-  if (hash && ['orders', 'systems'].includes(hash)) {
-    const navLink = document.querySelector(`.account-nav a[href="#${hash}"]`);
-    const section = document.getElementById('tab-' + hash);
-    if (navLink && section) {
-      // Deactivate all
-      document.querySelectorAll('.account-nav a').forEach(a => a.classList.remove('is-active'));
-      document.querySelectorAll('.account-main > section').forEach(s => s.style.display = 'none');
-      // Activate target
-      navLink.classList.add('is-active');
-      section.style.display = '';
-    }
-  }
-})();
 </script>
 {% endblock %}
