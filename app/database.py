@@ -1,8 +1,8 @@
 # database.py
-import os
+# import os
 from collections.abc import AsyncGenerator
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
