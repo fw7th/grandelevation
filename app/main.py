@@ -1,7 +1,10 @@
+import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.database import init_db
 from app.routers import (
@@ -16,6 +19,9 @@ from app.routers import (
     shop,
 )
 
+load_dotenv()
+SECRET_KEY = os.getenv("SESSION_MIDDLEWARE_SECRET_KEY")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,6 +33,12 @@ app = FastAPI(lifespan=lifespan)
 
 # Static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    max_age=3600,  # optional: session cookie expiry in seconds
+)
 
 # Routers
 app.include_router(admin.router)

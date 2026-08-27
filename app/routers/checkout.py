@@ -30,14 +30,13 @@ async def checkout(
     checkout_items = []
     subtotal = 0.0
     buy_now_mode = product_id is not None
+    build_mode = False
 
     if buy_now_mode:
-        # Single product – fetch and build item
+        # ... your existing buy_now code ...
         product = await session.get(Product, product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
-        # We need a dummy "cart_item" only for consistency
-        # but we can just create a dict
         item = {
             "product": product,
             "quantity": quantity,
@@ -45,8 +44,27 @@ async def checkout(
         }
         checkout_items.append(item)
         subtotal = item["subtotal"]
+
+    elif request.query_params.get("build") and request.session.get(
+        "checkout_build_items"
+    ):
+        # ===== NEW: Build mode from session =====
+        build_mode = True
+        items = request.session.get("checkout_build_items")  # consume once
+        for entry in items:
+            product = await session.get(Product, entry["product_id"])
+            if not product:
+                continue
+            item = {
+                "product": product,
+                "quantity": entry.get("quantity", 1),
+                "subtotal": product.price * entry.get("quantity", 1),
+            }
+            checkout_items.append(item)
+            subtotal += item["subtotal"]
+
     else:
-        # Cart mode
+        # ... your existing cart mode code ...
         statement = (
             select(CartItem, Product)
             .join(Product, CartItem.product_id == Product.id)
@@ -54,13 +72,11 @@ async def checkout(
             .order_by(CartItem.updated_at.desc())
         )
         results = await session.exec(statement)
-        cart_items = results.all()
-        for cart_item, product in cart_items:
+        for cart_item, product in results.all():
             item = {
                 "product": product,
                 "quantity": cart_item.quantity,
                 "subtotal": cart_item.quantity * product.price,
-                # optionally store cart_item_id if needed
             }
             checkout_items.append(item)
             subtotal += item["subtotal"]
@@ -72,14 +88,32 @@ async def checkout(
             "username": user.username,
             "checkout_items": checkout_items,
             "buy_now_mode": buy_now_mode,
-            # If buy_now_mode, we also need to pass the product_id and quantity for JS
             "buy_now_product_id": product_id if buy_now_mode else None,
             "buy_now_quantity": quantity if buy_now_mode else None,
-            "system_bundles": [],
             "total": subtotal,
             "subtotal": subtotal,
+            "build_mode": build_mode,
+            "build_items": [],
         },
     )
+
+
+@router.post("/checkout/build")
+async def checkout_build(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    user = await authenticate(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    data = await request.json()
+    items = data.get("items", [])
+    if not items:
+        raise HTTPException(status_code=400, detail="No items provided")
+
+    request.session["checkout_build_items"] = items
+    return {"redirect_url": "/checkout?build=1"}  # <-- JSON, not RedirectResponse
 
 
 @router.post("/checkout/complete")
@@ -96,14 +130,16 @@ async def complete_checkout(
     payment_method = data.get("payment_method", "transfer")
     delivery_location = data.get("location", "")
     delivery_note = data.get("delivery_note", "")
-    items_payload = data.get("items")  # optional list of {product_id, quantity}
-    delivery_fee = data.get("delivery_fee", 0.0)  # <-- use provided fee, default 0
+    items_payload = data.get("items")  # buy-now only
+    client_delivery_fee = data.get("delivery_fee", 0.0)
 
     items_list = []
     subtotal = 0.0
+    source = None  # 'buy_now' | 'build' | 'cart'
 
+    # ─── 1. Buy-now mode ───
     if items_payload:
-        # Buy‑Now mode – use the provided items
+        source = "buy_now"
         for item in items_payload:
             product_id = item.get("product_id")
             qty = item.get("quantity", 1)
@@ -123,8 +159,32 @@ async def complete_checkout(
                     "subtotal": item_subtotal,
                 }
             )
+
+    # ─── 2. Build mode (from session) ───
+    elif request.session.get("checkout_build_items"):
+        source = "build"
+        build_items = request.session.get("checkout_build_items")
+        for entry in build_items:
+            product_id = entry.get("product_id")
+            qty = entry.get("quantity", 1)
+            product = await session.get(Product, product_id)
+            if not product:
+                continue
+            item_subtotal = product.price * qty
+            subtotal += item_subtotal
+            items_list.append(
+                {
+                    "product_id": product.id,
+                    "name": product.name,
+                    "price": product.price,
+                    "quantity": qty,
+                    "subtotal": item_subtotal,
+                }
+            )
+
+    # ─── 3. Cart mode ───
     else:
-        # Cart mode – load from cart
+        source = "cart"
         statement = (
             select(CartItem, Product)
             .join(Product, CartItem.product_id == Product.id)
@@ -149,14 +209,15 @@ async def complete_checkout(
                 }
             )
 
-    # Delivery fee – same calculation
-    total_qty = sum(item["quantity"] for item in items_list)
-    delivery_fee = total_qty * 4000 if delivery_method == "delivery" else 0.0
+    if not items_list:
+        raise HTTPException(status_code=400, detail="No items to checkout")
+
+    # ─── Delivery fee (trust client; fix the overwrite bug) ───
+    delivery_fee = client_delivery_fee if delivery_method == "delivery" else 0.0
     total = subtotal + delivery_fee
 
-    # Generate invoice number
+    # ─── Create invoice ───
     invoice_number = f"INV-{int(time.time())}-{random.randint(1000, 9999)}"
-
     invoice = Invoice(
         user_id=user.id,
         invoice_number=invoice_number,
@@ -168,18 +229,20 @@ async def complete_checkout(
         delivery_method=delivery_method,
         delivery_location=delivery_location,
         delivery_note=delivery_note,
-        status="pending",  # or "completed" if you prefer
+        status="pending",
     )
     session.add(invoice)
     await session.commit()
     await session.refresh(invoice)
 
-    # Clear the cart ONLY if we used cart mode (i.e., no items_payload)
-    if not items_payload:
+    # ─── Cleanup ───
+    if source == "cart":
         stmt = delete(CartItem).where(CartItem.user_id == user.id)
         await session.exec(stmt)
         await session.commit()
-    # If it's buy‑now, we don't touch the cart (user might have other items)
+
+    if source == "build":
+        request.session.pop("checkout_build_items", None)
 
     return {"invoice_id": invoice.id, "invoice_number": invoice_number}
 

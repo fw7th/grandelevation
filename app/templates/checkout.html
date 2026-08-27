@@ -895,9 +895,10 @@ function submitOrder() {
 </script>
 
 <script>
-  // Buy‑Now mode flags (passed from backend)
-  const buyNowMode = {{ buy_now_mode|tojson }};
-  const buyNowProductId = {{ buy_now_product_id|tojson }};
-  const buyNowQuantity = {{ buy_now_quantity|tojson }};
+  const buyNowMode = {{ buy_now_mode|default(false)|tojson }};
+  const buyNowProductId = {{ buy_now_product_id|default(None)|tojson }};
+  const buyNowQuantity = {{ buy_now_quantity|default(None)|tojson }};
+  const buildMode = {{ build_mode|default(false)|tojson }};
+  const buildItems = {{ build_items|default([])|tojson }};
 </script>
 {% endblock %}

@@ -39,32 +39,3 @@ class SystemBundle(BaseModel):
     compatibility_warnings: list[str] = []
     estimated_daily_wh: float
     estimated_peak_w: float
-
-
-class SavedProductItem(BaseModel):
-    """A product snapshot inside a saved system."""
-
-    id: int
-    name: str
-    category: str
-    price: float
-    quantity: int
-    image_url: str | None = None
-    specs: dict = {}
-
-
-class SavedSystemPayload(BaseModel):
-    """What gets stored in SavedSystem.configuration and returned to frontend."""
-
-    build_mode: str
-    use_default_household: bool = False
-    autonomy_hours: float
-    preferred_chemistry: str
-    appliances: list[ApplianceItem]
-    products: list[SavedProductItem]
-    budget_min: float | None = None
-    budget_max: float | None = None
-    total_price: float
-    estimated_daily_wh: float
-    estimated_peak_w: float
-    created_at: str | None = None  # ISO format
