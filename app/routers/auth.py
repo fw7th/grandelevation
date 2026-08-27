@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 from datetime import datetime, timedelta
 
@@ -18,7 +19,7 @@ from ..security import (
     password_hash,
     record_attempt,
 )
-from ..utils import authenticate
+from ..utils import authenticate, sync_gmail_dispatch
 
 router = APIRouter(tags=["auth"])
 
@@ -363,13 +364,11 @@ async def forgot_password_post(
 
             print("Reset Link: ", reset_link)
 
-            """
             await asyncio.to_thread(
                 sync_gmail_dispatch,
                 email,
                 reset_link,
             )
-            """
 
         return templates.TemplateResponse(
             request=request,
