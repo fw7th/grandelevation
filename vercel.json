@@ -4,8 +4,8 @@
   "cleanUrls": true,
   "git": {
     "deploymentEnabled": {
-      "main": false,
-      "*": false
+      "main": true,
+      "*": true
     }
   },
   "builds": [
