@@ -983,26 +983,31 @@ loginModal.addEventListener('click', function(e) {
 
 document.getElementById('submitLogin').addEventListener('click', async function() {
   try {
+    const formData = new FormData();
+    formData.append('email', loginEmail.value);
+    formData.append('password', loginPassword.value);
+
     const res = await fetch('/signin', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: loginEmail.value,
-        password: loginPassword.value
-      })
+      body: formData
+      // Do NOT set Content-Type header — browser sets it automatically with boundary
     });
-    if (res.ok) {
-      closeLoginModal();
+
+    // fetch() follows redirects automatically.
+    // Success: backend 303 → /catalog → res.url ends with /catalog
+    // Failure: backend returns 200 HTML (signin template) → res.url stays /signin
+    if (res.url && res.url.includes('/catalog')) {
       window.location.reload();
-    } else {
-      const data = await res.json().catch(() => ({}));
-      alert(data.detail || 'Login failed. Please check your credentials.');
+      return;
     }
+
+    // If we got here, login failed (still on /signin page)
+    alert('Login failed. Please check your credentials.');
+
   } catch (e) {
     alert('Network error. Please try again.');
   }
 });
-
 normalInit();
 </script>
 {% endblock %}
