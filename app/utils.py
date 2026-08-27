@@ -1,9 +1,11 @@
 import base64
+import json
 import os
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from dotenv import load_dotenv
 from fastapi import Request as FastAPIRequest
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -12,6 +14,8 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from .models import Product, Session, Users
+
+load_dotenv()
 
 
 async def get_active_categories(session: AsyncSession) -> list[str]:
@@ -35,13 +39,20 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
 def sync_gmail_dispatch(recipient_email: str, reset_link: str):
     """Synchronous executor block that interacts with the blocking Google SDK client."""
+
     creds = None
 
+    # Try env var first (Vercel)
+    token_env = os.getenv("GMAIL_TOKEN")
+    if token_env:
+        creds = Credentials.from_authorized_user_info(json.loads(token_env), SCOPES)
+
+    # Fallback to local file (dev)
     if os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
 
     if not creds:
-        raise ValueError("Missing token.json file. Run initialization first.")
+        raise ValueError("No GMAIL_TOKEN env var and no token.json found.")
 
     # Background token refresh tracking
     if creds.expired and creds.refresh_token:
