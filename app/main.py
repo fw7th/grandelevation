@@ -1,5 +1,6 @@
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -29,10 +30,13 @@ async def lifespan(app: FastAPI):
     yield
 
 
+# This is /var/task/app/ in production, and ./app/ locally
+BASE_DIR = Path(__file__).parent
+
 app = FastAPI(lifespan=lifespan)
 
 # Static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 app.add_middleware(
     SessionMiddleware,
@@ -56,4 +60,4 @@ app.include_router(checkout.router)
 async def home():
     from fastapi.responses import FileResponse
 
-    return FileResponse("app/static/index.html")
+    return FileResponse(BASE_DIR / "static" / "index.html")

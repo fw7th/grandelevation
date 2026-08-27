@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlmodel import delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app import templates
 
 from ..database import get_session
 from ..models import CartItem, Favorite, Product, Users
@@ -10,7 +11,6 @@ from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
 from ..utils import authenticate
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 async def require_admin(

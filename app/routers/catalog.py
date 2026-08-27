@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app import templates
 
 from ..database import get_session
 from ..models import Favorite, Product
@@ -12,7 +13,6 @@ from ..specs import (
 from ..utils import authenticate, get_active_categories
 
 router = APIRouter(tags=["catalog"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/catalog")

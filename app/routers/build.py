@@ -1,10 +1,10 @@
 import math
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app import templates
 from app.build_model import (
     SystemBundle,
     SystemConfiguration,
@@ -21,7 +21,6 @@ from app.specs import (
 )
 
 router = APIRouter(tags=["build"])
-templates = Jinja2Templates(directory="app/templates")
 
 PEAK_SUN_HOURS = 4.5
 SYSTEM_EFFICIENCY = 0.80

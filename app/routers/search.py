@@ -3,6 +3,7 @@ from sqlalchemy import or_
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app import templates
 from app.database import get_session
 from app.models import Favorite, Product
 
@@ -17,10 +18,6 @@ async def search_page(
     q: str = Query(default=""),
     session: AsyncSession = Depends(get_session),
 ):
-    from fastapi.templating import Jinja2Templates
-
-    templates = Jinja2Templates(directory="app/templates")
-
     user = await authenticate(request, session)
     products = []
     query = q.strip()

@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app import templates
 
 from ..database import get_session
 from ..models import Favorite, Product
 from ..utils import authenticate
 
 router = APIRouter(tags=["favorites"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.post("/favorites/{product_id}")

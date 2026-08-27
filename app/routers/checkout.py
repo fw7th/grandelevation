@@ -7,13 +7,13 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app import templates
 from app.database import get_session
 
 from ..models import CartItem, Invoice, Product, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["checkout"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/checkout")

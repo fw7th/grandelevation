@@ -3,11 +3,12 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app import BASE_DIR, templates
 
 from ..database import get_session
 from ..models import PasswordResetToken, Session, Users
@@ -20,7 +21,6 @@ from ..security import (
 from ..utils import authenticate
 
 router = APIRouter(tags=["auth"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/signup", response_class=HTMLResponse)
@@ -343,7 +343,7 @@ async def forgot_password_post(
 
         if user_id and has_available_token:
             return FileResponse(
-                "app/static/rate-limited.html",
+                BASE_DIR / "static" / "rate-limited.html",
                 status_code=429,
             )
 
@@ -384,21 +384,21 @@ async def forgot_password_post(
     except ValueError:
         await session.rollback()
         return FileResponse(
-            "app/static/500.html",
+            BASE_DIR / "static" / "500.html",
             status_code=500,
         )
 
     except SQLAlchemyError:
         await session.rollback()
         return FileResponse(
-            "app/static/500.html",
+            BASE_DIR / "static" / "500.html",
             status_code=500,
         )
 
     except Exception:
         await session.rollback()
         return FileResponse(
-            "app/static/500.html",
+            BASE_DIR / "static" / "500.html",
             status_code=500,
         )
 
@@ -420,7 +420,7 @@ async def reset_password(
 
     if existing_token is None:
         return FileResponse(
-            "app/static/expired-link.html",
+            BASE_DIR / "static" / "expired-link.html",
             status_code=400,
         )
 
@@ -479,7 +479,7 @@ async def reset_password_post(
 
         if reset_token is None:
             return FileResponse(
-                "app/static/expired-link.html",
+                BASE_DIR / "static" / "expired-link.html",
                 status_code=400,
             )
 
@@ -488,7 +488,7 @@ async def reset_password_post(
         print("mipa")
         if user is None:
             return FileResponse(
-                "app/static/404.html",
+                BASE_DIR / "static" / "404.html",
                 status_code=400,
             )
 
@@ -519,7 +519,7 @@ async def reset_password_post(
     except SQLAlchemyError:
         await session.rollback()
         return FileResponse(
-            "app/static/500.html",
+            BASE_DIR / "static" / "500.html",
             status_code=500,
         )
 
@@ -527,7 +527,7 @@ async def reset_password_post(
         await session.rollback()
         print(e)
         return FileResponse(
-            "app/static/500.html",
+            BASE_DIR / "static" / "500.html",
             status_code=500,
         )
 

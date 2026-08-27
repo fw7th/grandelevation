@@ -2,11 +2,11 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app import templates
 from app.database import get_session
 from app.security import password_hash
 
@@ -14,7 +14,6 @@ from ..models import CartItem, Invoice, Product, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["shop"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/cart")
