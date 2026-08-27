@@ -821,7 +821,8 @@ document.getElementById('clearAllBtn').addEventListener('click', function () {
   hideCompatWarning();
 });
 
-document.getElementById('buyNowBtn').addEventListener('click', function () {
+document.getElementById('buyNowBtn').addEventListener('click', async function (event) {
+  event.preventDefault();
   saveToLocalStorage();
   const items = Object.values(selectedProducts).map(p => ({
     product_id: p.id,
@@ -831,22 +832,39 @@ document.getElementById('buyNowBtn').addEventListener('click', function () {
     alert('Select at least one component.');
     return;
   }
-  fetch('/checkout/build', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items: items })
-  }).then(r => {
+
+  try {
+    const r = await fetch('/checkout/build', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: items })
+    });
+
     if (r.ok) {
-      window.location.href = '/checkout';
-    } else if (r.status === 401) {
-      openLoginModal();
-    } else {
-      alert('Failed to start checkout.');
+      const data = await r.json();
+      window.location.href = data.redirect_url;   // <-- navigate to /checkout?build=1
+      return;
     }
-  }).catch(err => {
-    console.error(err);
-    alert('Network error.');
-  });
+
+    if (r.status === 401) {
+      openLoginModal();
+      return;
+    }
+
+    let msg = 'Failed to start checkout.';
+    try {
+      const data = await r.json();
+      msg = data.detail || JSON.stringify(data) || msg;
+    } catch (e) {
+      msg = r.statusText || msg;
+    }
+    console.error('checkout/build error:', r.status, msg);
+    alert('Checkout failed (' + r.status + '): ' + msg);
+
+  } catch (err) {
+    console.error('Network error:', err);
+    alert('Network error: ' + err.message);
+  }
 });
 
 document.getElementById('addSystemToCartBtn').addEventListener('click', function () {

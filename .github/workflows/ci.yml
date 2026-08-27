@@ -39,4 +39,5 @@ jobs:
           PYTHONPATH: .
           VERIFY_TOKEN: dummy_token
           DATABASE_URL: postgresql://user:password@host/dbname
+          SECRET_KEY = siuuuuu
         run: uv run pytest tests/ -v --tb=short
