@@ -20,7 +20,7 @@ from app.routers import (
 )
 
 load_dotenv()
-SECRET_KEY = os.getenv("SESSION_MIDDLEWARE_SECRET_KEY")
+SECRET_KEY = os.getenv("SESSION_MIDDLEWARE_SECRET_KEY", "siuuuuu")
 
 
 @asynccontextmanager
