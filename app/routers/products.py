@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import FileResponse
 from sqlalchemy import func, or_
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app import templates
+from app import BASE_DIR, templates
 
 from ..database import get_session
 from ..models import Favorite, Product
@@ -19,38 +20,46 @@ async def product_page(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
-    user = await authenticate(request, session)
+    try:
+        user = await authenticate(request, session)
 
-    is_favorited = None
-    if user:
-        fav_statement = select(Favorite.product_id).where(
-            Favorite.user_id == user.id,
+        is_favorited = None
+        if user:
+            fav_statement = select(Favorite.product_id).where(
+                Favorite.user_id == user.id,
+            )
+            fav_result = await session.exec(fav_statement)
+            fav_ = fav_result.one_or_none()
+            is_favorited = fav_ if fav_ else None
+
+        statement = select(Product).where(Product.id == slug)
+        result = await session.exec(statement)
+        product = result.one()
+
+        similar_products = await get_similar_products(product, session)
+
+        print("Product Images: ", product.image_url)
+
+        await session.commit()
+        return templates.TemplateResponse(
+            request=request,
+            name="/products.html",
+            context={
+                "username": user.username if user else None,
+                "product": product,
+                "images": product.image_url or [],
+                "is_favorited": is_favorited,
+                "categories": await get_active_categories(session),
+                "similar_products": similar_products,
+            },
         )
-        fav_result = await session.exec(fav_statement)
-        fav_ = fav_result.one_or_none()
-        is_favorited = fav_ if fav_ else None
 
-    statement = select(Product).where(Product.id == slug)
-    result = await session.exec(statement)
-    product = result.one()
-
-    similar_products = await get_similar_products(product, session)
-
-    print("Product Images: ", product.image_url)
-
-    await session.commit()
-    return templates.TemplateResponse(
-        request=request,
-        name="/products.html",
-        context={
-            "username": user.username if user else None,
-            "product": product,
-            "images": product.image_url or [],
-            "is_favorited": is_favorited,
-            "categories": await get_active_categories(session),
-            "similar_products": similar_products,
-        },
-    )
+    except Exception:
+        await session.rollback()
+        return FileResponse(
+            BASE_DIR / "static" / "500.html",
+            status_code=500,
+        )
 
 
 COMMON_NAME_WORDS = {

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app import templates
+from app import BASE_DIR, templates
 
 from ..database import get_session
 from ..models import Favorite, Product
@@ -20,26 +21,36 @@ async def catalog(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
-    user = await authenticate(request, session)
+    try:
+        user = await authenticate(request, session)
 
-    products = await get_daily_featured(session, count=15)
+        products = await get_daily_featured(session, count=15)
 
-    favorite_ids: set[int] = set()
-    if user:
-        fav_statement = select(Favorite.product_id).where(Favorite.user_id == user.id)
-        fav_result = await session.exec(fav_statement)
-        favorite_ids = set(fav_result.all())
+        favorite_ids: set[int] = set()
+        if user:
+            fav_statement = select(Favorite.product_id).where(
+                Favorite.user_id == user.id
+            )
+            fav_result = await session.exec(fav_statement)
+            favorite_ids = set(fav_result.all())
 
-    return templates.TemplateResponse(
-        request=request,
-        name="catalog.html",
-        context={
-            "products": products,
-            "username": user.username if user else None,
-            "favorite_ids": favorite_ids,
-            "categories": await get_active_categories(session),
-        },
-    )
+        return templates.TemplateResponse(
+            request=request,
+            name="catalog.html",
+            context={
+                "products": products,
+                "username": user.username if user else None,
+                "favorite_ids": favorite_ids,
+                "categories": await get_active_categories(session),
+            },
+        )
+
+    except Exception:
+        await session.rollback()
+        return FileResponse(
+            BASE_DIR / "static" / "500.html",
+            status_code=500,
+        )
 
 
 @router.get("/catalog/category/{category}")
@@ -48,29 +59,39 @@ async def catalog_by_category(
     category: str,
     session: AsyncSession = Depends(get_session),
 ):
-    user = await authenticate(request, session)
+    try:
+        user = await authenticate(request, session)
 
-    if category not in SPEC_MODELS:
-        raise HTTPException(status_code=404, detail="Unknown category")
+        if category not in SPEC_MODELS:
+            raise HTTPException(status_code=404, detail="Unknown category")
 
-    statement = select(Product).where(Product.category == category)
-    result = await session.exec(statement)
-    products = result.all()
+        statement = select(Product).where(Product.category == category)
+        result = await session.exec(statement)
+        products = result.all()
 
-    favorite_ids: set[int] = set()
-    if user:
-        fav_statement = select(Favorite.product_id).where(Favorite.user_id == user.id)
-        fav_result = await session.exec(fav_statement)
-        favorite_ids = set(fav_result.all())
+        favorite_ids: set[int] = set()
+        if user:
+            fav_statement = select(Favorite.product_id).where(
+                Favorite.user_id == user.id
+            )
+            fav_result = await session.exec(fav_statement)
+            favorite_ids = set(fav_result.all())
 
-    return templates.TemplateResponse(
-        request=request,
-        name="catalog.html",
-        context={
-            "products": products,
-            "username": user.username if user else None,
-            "favorite_ids": favorite_ids,
-            "categories": await get_active_categories(session),
-            "active_category": category,
-        },
-    )
+        return templates.TemplateResponse(
+            request=request,
+            name="catalog.html",
+            context={
+                "products": products,
+                "username": user.username if user else None,
+                "favorite_ids": favorite_ids,
+                "categories": await get_active_categories(session),
+                "active_category": category,
+            },
+        )
+
+    except Exception:
+        await session.rollback()
+        return FileResponse(
+            BASE_DIR / "static" / "500.html",
+            status_code=500,
+        )

@@ -1,10 +1,11 @@
 import math
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app import templates
+from app import BASE_DIR, templates
 from app.build_model import (
     SystemBundle,
     SystemConfiguration,
@@ -44,14 +45,21 @@ def _product_to_dict(product: Product, quantity: int = 1) -> dict:
 
 @router.get("/build")
 async def build_page(request: Request, session: AsyncSession = Depends(get_session)):
-    from app.utils import authenticate
+    try:
+        from app.utils import authenticate
 
-    user = await authenticate(request, session)
-    return templates.TemplateResponse(
-        request=request,
-        name="build.html",
-        context={"username": user.username if user else None},
-    )
+        user = await authenticate(request, session)
+        return templates.TemplateResponse(
+            request=request,
+            name="build.html",
+            context={"username": user.username if user else None},
+        )
+
+    except Exception:
+        return FileResponse(
+            BASE_DIR / "static" / "500.html",
+            status_code=500,
+        )
 
 
 @router.post("/build/recommend")
@@ -59,59 +67,67 @@ async def recommend_system(
     config: SystemConfiguration,
     session: AsyncSession = Depends(get_session),
 ) -> SystemBundle:
-    daily_wh = sum(a.qty * a.watts * a.hours_per_day for a in config.appliances)
-    peak_w = sum(a.qty * a.watts for a in config.appliances)
-    autonomy_days = config.autonomy_hours / 24
+    try:
+        daily_wh = sum(a.qty * a.watts * a.hours_per_day for a in config.appliances)
+        peak_w = sum(a.qty * a.watts for a in config.appliances)
+        autonomy_days = config.autonomy_hours / 24
 
-    result = await session.exec(select(Product))
-    all_products = result.all()
+        result = await session.exec(select(Product))
+        all_products = result.all()
 
-    panels = [p for p in all_products if p.category == "panel"]
-    inverters = [p for p in all_products if p.category == "inverter"]
-    batteries = [p for p in all_products if p.category == "battery"]
-    generators = [p for p in all_products if p.category == "solar_generator"]
-    accessories = [p for p in all_products if p.category == "accessory"]
+        panels = [p for p in all_products if p.category == "panel"]
+        inverters = [p for p in all_products if p.category == "inverter"]
+        batteries = [p for p in all_products if p.category == "battery"]
+        generators = [p for p in all_products if p.category == "solar_generator"]
+        accessories = [p for p in all_products if p.category == "accessory"]
 
-    if config.preferred_chemistry != "any":
-        batteries = [
-            b
-            for b in batteries
-            if b.specs.get("chemistry") == config.preferred_chemistry
+        if config.preferred_chemistry != "any":
+            batteries = [
+                b
+                for b in batteries
+                if b.specs.get("chemistry") == config.preferred_chemistry
+            ]
+
+        inverters = [
+            inv for inv in inverters if inv.specs.get("type") in ("hybrid", "off_grid")
         ]
 
-    inverters = [
-        inv for inv in inverters if inv.specs.get("type") in ("hybrid", "off_grid")
-    ]
+        if config.build_mode == "generator":
+            best = _search_generator_mode(
+                config,
+                daily_wh,
+                peak_w,
+                autonomy_days,
+                generators,
+                panels,
+                accessories,
+            )
+        else:
+            best = _search_custom_mode(
+                config,
+                daily_wh,
+                peak_w,
+                autonomy_days,
+                panels,
+                inverters,
+                batteries,
+                accessories,
+            )
 
-    if config.build_mode == "generator":
-        best = _search_generator_mode(
-            config,
-            daily_wh,
-            peak_w,
-            autonomy_days,
-            generators,
-            panels,
-            accessories,
-        )
-    else:
-        best = _search_custom_mode(
-            config,
-            daily_wh,
-            peak_w,
-            autonomy_days,
-            panels,
-            inverters,
-            batteries,
-            accessories,
-        )
+        if best is None:
+            raise HTTPException(
+                status_code=404,
+                detail="No valid system found for your requirements and budget.",
+            )
 
-    if best is None:
-        raise HTTPException(
-            status_code=404,
-            detail="No valid system found for your requirements and budget.",
-        )
+        return best
 
-    return best
+    except Exception:
+        await session.rollback()
+        return FileResponse(
+            BASE_DIR / "static" / "500.html",
+            status_code=500,
+        )
 
 
 def _search_custom_mode(

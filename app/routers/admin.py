@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlmodel import delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app import templates
+from app import BASE_DIR, templates
 
 from ..database import get_session
 from ..models import CartItem, Favorite, Product, Users
@@ -19,7 +19,10 @@ async def require_admin(
     user = await authenticate(request, session)
     if user is None or user.role != "admin":
         # raise PageException(message=None, status_code=404)
-        raise HTTPException(status_code=404)
+        return FileResponse(
+            BASE_DIR / "static" / "404.html",
+            status_code=404,
+        )
     return user
 
 
