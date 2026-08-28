@@ -18,11 +18,7 @@ async def require_admin(
 ) -> Users:
     user = await authenticate(request, session)
     if user is None or user.role != "admin":
-        # raise PageException(message=None, status_code=404)
-        return FileResponse(
-            BASE_DIR / "static" / "404.html",
-            status_code=404,
-        )
+        raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
 
