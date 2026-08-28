@@ -364,11 +364,14 @@ async def forgot_password_post(
 
             print("Reset Link: ", reset_link)
 
-            await asyncio.to_thread(
-                sync_gmail_dispatch,
-                email,
-                reset_link,
-            )
+            try:
+                await asyncio.to_thread(
+                    sync_gmail_dispatch,
+                    email,
+                    reset_link,
+                )
+            except Exception as e:
+                print(e)
 
         return templates.TemplateResponse(
             request=request,
