@@ -716,8 +716,11 @@ function hideCompatWarning() {
 }
 
 // ─── LOCAL STORAGE ───
+const STORAGE_VERSION = 1;
+
 function saveToLocalStorage() {
   const payload = {
+    version: STORAGE_VERSION,
     appliances: appliances,
     selectedProducts: selectedProducts,
     budgetMin: document.getElementById('budgetMin').value,
@@ -736,6 +739,8 @@ function loadFromLocalStorage() {
   if (!raw) return false;
   try {
     const data = JSON.parse(raw);
+    if (data.version !== STORAGE_VERSION) return false; // wipe old formats
+
     if (data.appliances) appliances = data.appliances;
     if (data.selectedProducts) {
       selectedProducts = data.selectedProducts;
@@ -746,10 +751,7 @@ function loadFromLocalStorage() {
     if (data.budgetMin !== undefined) document.getElementById('budgetMin').value = data.budgetMin;
     if (data.budgetMax !== undefined) document.getElementById('budgetMax').value = data.budgetMax;
     if (typeof data.useDefault === 'boolean') useDefaultCheckbox.checked = data.useDefault;
-    if (data.buildMode) {
-      buildMode = data.buildMode;
-      document.querySelector(`input[name="buildMode"][value="${buildMode}"]`).checked = true;
-    }
+    if (data.buildMode) buildMode = data.buildMode;
     if (data.autonomyHours !== undefined) {
       autonomySlider.value = data.autonomyHours;
       autonomyReadout.textContent = data.autonomyHours + ' h';
@@ -758,6 +760,7 @@ function loadFromLocalStorage() {
     return true;
   } catch (e) { return false; }
 }
+
 
 // ─── BACKEND INTEGRATION ───
 document.getElementById('autoBuildBtn').addEventListener('click', async function () {
@@ -930,10 +933,25 @@ document.getElementById('budgetMax').addEventListener('change', saveToLocalStora
 
 // ─── INIT ───
 function normalInit() {
-  if (!loadFromLocalStorage()) {
+  const hadStorage = loadFromLocalStorage();
+
+  if (!hadStorage) {
     appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
     useDefaultCheckbox.checked = true;
+    buildMode = 'custom';
+  } else {
+    if (useDefaultCheckbox.checked) {
+      appliances = JSON.parse(JSON.stringify(DEFAULT_APPLIANCES));
+    }
+    if (buildMode !== 'custom' && buildMode !== 'generator') {
+      buildMode = 'custom';
+    }
   }
+
+  // Sync radio button to JS state
+  const modeRadio = document.querySelector(`input[name="buildMode"][value="${buildMode}"]`);
+  if (modeRadio) modeRadio.checked = true;
+
   renderAppliances();
   updateModeVisibility();
   updateTotal();
@@ -965,25 +983,31 @@ loginModal.addEventListener('click', function(e) {
 
 document.getElementById('submitLogin').addEventListener('click', async function() {
   try {
+    const formData = new FormData();
+    formData.append('email', loginEmail.value);
+    formData.append('password', loginPassword.value);
+
     const res = await fetch('/signin', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: loginEmail.value,
-        password: loginPassword.value
-      })
+      body: formData
+      // Do NOT set Content-Type header — browser sets it automatically with boundary
     });
-    if (res.ok) {
-      closeLoginModal();
+
+    // fetch() follows redirects automatically.
+    // Success: backend 303 → /catalog → res.url ends with /catalog
+    // Failure: backend returns 200 HTML (signin template) → res.url stays /signin
+    if (res.url && res.url.includes('/catalog')) {
       window.location.reload();
-    } else {
-      const data = await res.json().catch(() => ({}));
-      alert(data.detail || 'Login failed. Please check your credentials.');
+      return;
     }
+
+    // If we got here, login failed (still on /signin page)
+    alert('Login failed. Please check your credentials.');
+
   } catch (e) {
     alert('Network error. Please try again.');
   }
 });
-
+normalInit();
 </script>
 {% endblock %}
