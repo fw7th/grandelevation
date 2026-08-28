@@ -56,8 +56,9 @@ def sync_gmail_dispatch(recipient_email: str, reset_link: str):
     # Background token refresh tracking
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
+        if not os.getenv("VERCEL"):
+            with open("token.json", "w") as token:
+                token.write(creds.to_json())
 
     # Initialize client
     service = build("gmail", "v1", credentials=creds)
