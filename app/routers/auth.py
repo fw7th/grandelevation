@@ -59,111 +59,103 @@ async def signup_post(
     email: str | None = Form(default=None),
     password: str | None = Form(default=None),
 ):
+    errors = {}
+
+    username = (username or "").strip()
+    email = (email or "").strip()
+    password = password or ""
+
+    # ---------- Validation ----------
+    if not username:
+        errors["username"] = "Username is required."
+
+    if not email:
+        errors["email"] = "Email is required."
+    elif "@" not in email or "." not in email.rsplit("@", 1)[1]:
+        errors["email"] = "Enter a valid email address."
+
+    if len(password) < 8:
+        errors["password"] = "Password must be at least 8 characters."
+
+    # ---------- Username uniqueness ----------
+    if username:
+        statement = select(Users).where(Users.username == username)
+        result = await session.exec(statement)
+        if result.first():
+            errors["username"] = "This username is already taken."
+
+    # ---------- Email uniqueness ----------
+    if email:
+        statement = select(Users).where(Users.email == email)
+        result = await session.exec(statement)
+        if result.first():
+            errors["email"] = "An account with this email already exists."
+
+    # ---------- Validation failed ----------
+    if errors:
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={
+                "errors": errors,
+                "username": username,
+                "email": email,
+            },
+        )
+
+    # ---------- Create user and session ----------
+    user = Users(
+        username=username,
+        email=email,
+        password_hash=password_hash.hash(password),
+    )
+
+    token = create_session_token()
+
     try:
-        errors = {}
+        session.add(user)
+        await session.flush()
 
-        username = (username or "").strip()
-        email = (email or "").strip()
-        password = password or ""
-
-        # ---------- Validation ----------
-        if not username:
-            errors["username"] = "Username is required."
-
-        if not email:
-            errors["email"] = "Email is required."
-        elif "@" not in email or "." not in email.rsplit("@", 1)[1]:
-            errors["email"] = "Enter a valid email address."
-
-        if len(password) < 8:
-            errors["password"] = "Password must be at least 8 characters."
-
-        # ---------- Username uniqueness ----------
-        if username:
-            statement = select(Users).where(Users.username == username)
-            result = await session.exec(statement)
-            if result.first():
-                errors["username"] = "This username is already taken."
-
-        # ---------- Email uniqueness ----------
-        if email:
-            statement = select(Users).where(Users.email == email)
-            result = await session.exec(statement)
-            if result.first():
-                errors["email"] = "An account with this email already exists."
-
-        # ---------- Validation failed ----------
-        if errors:
-            return templates.TemplateResponse(
-                request=request,
-                name="signup.html",
-                context={
-                    "errors": errors,
-                    "username": username,
-                    "email": email,
-                },
+        session.add(
+            Session(
+                token=token,
+                user_id=user.id,
+                expires_at=datetime.utcnow() + timedelta(days=30),
             )
-
-        # ---------- Create user and session ----------
-        user = Users(
-            username=username,
-            email=email,
-            password_hash=password_hash.hash(password),
         )
 
-        token = create_session_token()
+        await session.commit()
 
-        try:
-            session.add(user)
-            await session.flush()
-
-            session.add(
-                Session(
-                    token=token,
-                    user_id=user.id,
-                    expires_at=datetime.utcnow() + timedelta(days=30),
-                )
-            )
-
-            await session.commit()
-
-        except IntegrityError:
-            await session.rollback()
-
-            return templates.TemplateResponse(
-                request=request,
-                name="signup.html",
-                context={
-                    "errors": {
-                        "username": "Username or email has just been taken. Please try again."
-                    },
-                    "username": username,
-                    "email": email,
-                },
-            )
-
-        response = RedirectResponse(
-            url="/catalog",
-            status_code=303,
-        )
-
-        response.set_cookie(
-            key="session_token",
-            value=token,
-            max_age=60 * 60 * 24 * 30,  # 30 days
-            httponly=True,
-            secure=False,  # True in production
-            samesite="lax",
-        )
-
-        return response
-
-    except Exception:
+    except IntegrityError:
         await session.rollback()
-        return FileResponse(
-            BASE_DIR / "static" / "500.html",
-            status_code=500,
+
+        return templates.TemplateResponse(
+            request=request,
+            name="signup.html",
+            context={
+                "errors": {
+                    "username": "Username or email has just been taken. Please try again."
+                },
+                "username": username,
+                "email": email,
+            },
         )
+
+    response = RedirectResponse(
+        url="/catalog",
+        status_code=303,
+    )
+
+    response.set_cookie(
+        key="session_token",
+        value=token,
+        max_age=60 * 60 * 24 * 30,  # 30 days
+        httponly=True,
+        secure=False,  # True in production
+        samesite="lax",
+    )
+
+    return response
 
 
 @router.get("/signin")
@@ -191,123 +183,111 @@ async def signin_post(
     password: str | None = Form(default=None),
     remember_me: bool = Form(False),
 ):
+    errors = {}
+    email = (email or "").strip()
+    password = password or ""
+    ip_address = request.client.host if request.client else "unknown"
+
+    # ---------- Lockout check (before touching the password at all) ----------
+    if email and await is_locked_out(email, session):
+        errors["email"] = "Too many failed attempts. Please try again in 15 minutes."
+        return templates.TemplateResponse(
+            request=request,
+            name="signin.html",
+            context={"errors": errors, "email": email},
+        )
+
+    # ---------- Validation ----------
+    if not email:
+        errors["email"] = "Email is required."
+    elif "@" not in email or "." not in email.rsplit("@", 1)[1]:
+        errors["email"] = "Enter a valid email address."
+
+    if not password:
+        errors["password"] = "Password is required."
+
+    statement = select(Users).where(Users.email == email)
+    result = await session.exec(statement)
+    user = result.first()
+
+    login_ok = user is not None and password_hash.verify(password, user.password_hash)
+
+    if user is None or not login_ok:
+        errors["email"] = "Invalid email or password."
+
+    # ---------- Record this attempt regardless of outcome ----------
+    if email:
+        await record_attempt(
+            email,
+            ip_address,
+            succeeded=bool(login_ok),
+            session=session,
+        )
+
+    # ---------- Validation failed ----------
+    if errors:
+        return templates.TemplateResponse(
+            request=request,
+            name="signin.html",
+            context={
+                "errors": errors,
+                "email": email,
+            },
+        )
+
+    # ---------- Create session ----------
+    token = create_session_token()
+
     try:
-        errors = {}
-        email = (email or "").strip()
-        password = password or ""
-        ip_address = request.client.host if request.client else "unknown"
-
-        # ---------- Lockout check (before touching the password at all) ----------
-        if email and await is_locked_out(email, session):
-            errors["email"] = (
-                "Too many failed attempts. Please try again in 15 minutes."
+        ttl = timedelta(days=30) if remember_me else timedelta(hours=3)
+        session.add(
+            Session(
+                token=token,
+                user_id=user.id,
+                expires_at=datetime.utcnow() + ttl,
             )
-            return templates.TemplateResponse(
-                request=request,
-                name="signin.html",
-                context={"errors": errors, "email": email},
-            )
-
-        # ---------- Validation ----------
-        if not email:
-            errors["email"] = "Email is required."
-        elif "@" not in email or "." not in email.rsplit("@", 1)[1]:
-            errors["email"] = "Enter a valid email address."
-
-        if not password:
-            errors["password"] = "Password is required."
-
-        statement = select(Users).where(Users.email == email)
-        result = await session.exec(statement)
-        user = result.first()
-
-        login_ok = user is not None and password_hash.verify(
-            password, user.password_hash
         )
 
-        if user is None or not login_ok:
-            errors["email"] = "Invalid email or password."
+        await session.commit()
 
-        # ---------- Record this attempt regardless of outcome ----------
-        if email:
-            await record_attempt(
-                email,
-                ip_address,
-                succeeded=bool(login_ok),
-                session=session,
-            )
-
-        # ---------- Validation failed ----------
-        if errors:
-            return templates.TemplateResponse(
-                request=request,
-                name="signin.html",
-                context={
-                    "errors": errors,
-                    "email": email,
-                },
-            )
-
-        # ---------- Create session ----------
-        token = create_session_token()
-
-        try:
-            ttl = timedelta(days=30) if remember_me else timedelta(hours=3)
-            session.add(
-                Session(
-                    token=token,
-                    user_id=user.id,
-                    expires_at=datetime.utcnow() + ttl,
-                )
-            )
-
-            await session.commit()
-
-        except IntegrityError:
-            await session.rollback()
-
-            return templates.TemplateResponse(
-                request=request,
-                name="signin.html",
-                context={
-                    "errors": {
-                        "email": "There was an issue while logging in. Please contact us."
-                    },
-                    "email": email,
-                },
-            )
-
-        response = RedirectResponse(
-            url="/catalog",
-            status_code=303,
-        )
-
-        if remember_me:
-            response.set_cookie(
-                key="session_token",
-                value=token,
-                max_age=60 * 60 * 24 * 30,  # 30 days
-                httponly=True,
-                secure=False,  # True in production
-                samesite="lax",
-            )
-        else:
-            response.set_cookie(
-                key="session_token",
-                value=token,
-                httponly=True,
-                secure=False,
-                samesite="lax",
-            )
-
-        return response
-
-    except Exception:
+    except IntegrityError:
         await session.rollback()
-        return FileResponse(
-            BASE_DIR / "static" / "500.html",
-            status_code=500,
+
+        return templates.TemplateResponse(
+            request=request,
+            name="signin.html",
+            context={
+                "errors": {
+                    "email": "There was an issue while logging in. Please contact us."
+                },
+                "email": email,
+            },
         )
+
+    response = RedirectResponse(
+        url="/catalog",
+        status_code=303,
+    )
+
+    if remember_me:
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            max_age=60 * 60 * 24 * 30,  # 30 days
+            httponly=True,
+            secure=False,  # True in production
+            samesite="lax",
+        )
+    else:
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+        )
+
+    return response
 
 
 @router.get("/forgot-password")
@@ -443,37 +423,29 @@ async def reset_password(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
-    try:
-        token = request.query_params.get("token")
-        print("Token: ", token)
-        statement = select(PasswordResetToken).where(
-            PasswordResetToken.token_hash == token,
-            PasswordResetToken.used_at.is_(None),
-            PasswordResetToken.expires_at > datetime.utcnow(),
-        )
-        result = await session.exec(statement)
-        existing_token = result.first()
+    token = request.query_params.get("token")
+    print("Token: ", token)
+    statement = select(PasswordResetToken).where(
+        PasswordResetToken.token_hash == token,
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > datetime.utcnow(),
+    )
+    result = await session.exec(statement)
+    existing_token = result.first()
 
-        if existing_token is None:
-            return FileResponse(
-                BASE_DIR / "static" / "expired-link.html",
-                status_code=400,
-            )
-
-        return templates.TemplateResponse(
-            request,
-            name="reset-password.html",
-            context={
-                "token": token,
-            },
-        )
-
-    except Exception:
-        await session.rollback()
+    if existing_token is None:
         return FileResponse(
-            BASE_DIR / "static" / "500.html",
-            status_code=500,
+            BASE_DIR / "static" / "expired-link.html",
+            status_code=400,
         )
+
+    return templates.TemplateResponse(
+        request,
+        name="reset-password.html",
+        context={
+            "token": token,
+        },
+    )
 
 
 @router.post("/reset-password")
@@ -580,30 +552,23 @@ async def logout(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ):
-    try:
-        token = request.cookies.get("session_token")
+    token = request.cookies.get("session_token")
 
-        if token:
-            statement = select(Session).where(Session.token == token)
-            result = await session.exec(statement)
+    if token:
+        statement = select(Session).where(Session.token == token)
+        result = await session.exec(statement)
 
-            db_session = result.first()
+        db_session = result.first()
 
-            if db_session:
-                await session.delete(db_session)
-                await session.commit()
+        if db_session:
+            await session.delete(db_session)
+            await session.commit()
 
-        response = RedirectResponse(
-            url="/",
-            status_code=303,
-        )
+    response = RedirectResponse(
+        url="/",
+        status_code=303,
+    )
 
-        response.delete_cookie("session_token")
+    response.delete_cookie("session_token")
 
-        return response
-
-    except Exception:
-        return FileResponse(
-            BASE_DIR / "static" / "500.html",
-            status_code=500,
-        )
+    return response

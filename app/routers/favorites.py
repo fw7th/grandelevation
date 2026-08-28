@@ -18,47 +18,39 @@ async def toggle_favorite(
     product_id: int,
     session: AsyncSession = Depends(get_session),
 ):
-    try:
-        user = await authenticate(request, session)
+    user = await authenticate(request, session)
 
-        if not user:
-            # Plain RedirectResponse won't navigate the browser on an htmx
-            # request (htmx follows redirects via XHR). HX-Redirect is the
-            # header htmx checks for "navigate the whole page here instead".
-            response = Response(status_code=200)
-            response.headers["HX-Redirect"] = "/signup"
-            return response
+    if not user:
+        # Plain RedirectResponse won't navigate the browser on an htmx
+        # request (htmx follows redirects via XHR). HX-Redirect is the
+        # header htmx checks for "navigate the whole page here instead".
+        response = Response(status_code=200)
+        response.headers["HX-Redirect"] = "/signup"
+        return response
 
-        statement = select(Favorite).where(
-            Favorite.user_id == user.id, Favorite.product_id == product_id
-        )
-        result = await session.exec(statement)
-        existing = result.first()
+    statement = select(Favorite).where(
+        Favorite.user_id == user.id, Favorite.product_id == product_id
+    )
+    result = await session.exec(statement)
+    existing = result.first()
 
-        if existing:
-            await session.delete(existing)
-            is_favorited = False
-        else:
-            session.add(Favorite(user_id=user.id, product_id=product_id))
-            is_favorited = True
+    if existing:
+        await session.delete(existing)
+        is_favorited = False
+    else:
+        session.add(Favorite(user_id=user.id, product_id=product_id))
+        is_favorited = True
 
-        await session.commit()
+    await session.commit()
 
-        return templates.TemplateResponse(
-            request=request,
-            name="_favorite_button.html",
-            context={
-                "product_id": product_id,
-                "is_favorited": is_favorited,
-            },
-        )
-
-    except Exception:
-        await session.rollback()
-        return FileResponse(
-            BASE_DIR / "static" / "500.html",
-            status_code=500,
-        )
+    return templates.TemplateResponse(
+        request=request,
+        name="_favorite_button.html",
+        context={
+            "product_id": product_id,
+            "is_favorited": is_favorited,
+        },
+    )
 
 
 @router.get("/favorites")
