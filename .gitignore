@@ -23,6 +23,9 @@ develop-eggs/
 credentials.json
 token.json
 
+# Personal stuff
+/app/static/products/
+
 # Do not ignore
 !.env.example
 .env*
