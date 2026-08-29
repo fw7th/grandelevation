@@ -783,3 +783,16 @@ html, body { overflow-x: hidden; }
   .nav-drawer-backdrop { display: block; }
   .nav-drawer { display: flex; }
 }
+
+/* ─── DESKTOP: force-hide every mobile-only nav piece ─── */
+@media (min-width: 641px) {
+  .nav-menu-btn,
+  .nav-drawer,
+  .nav-drawer-backdrop,
+  .nav-drawer-header,
+  .nav-drawer-title,
+  .nav-drawer-body,
+  .nav-drawer-close {
+    display: none !important;
+  }
+}
