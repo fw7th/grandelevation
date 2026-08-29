@@ -549,120 +549,237 @@ html[data-theme="dark"] .favorite-btn {
   color: var(--ink);
 }
 
-/* ─── SHARED RESPONSIVE ─── */
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE (replaces everything that was below this line)
+   ───────────────────────────────────────────────────────── */
+
+/* 2-col product grid on tablets+ */
 @media (min-width: 720px) {
   .product-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Stop the phantom right-side gutter on every page */
+html, body { overflow-x: hidden; }
+
+/* ----------- MOBILE (≤640px) ----------- */
+
+/* Stop any phantom horizontal scroll on every page */
+html, body { overflow-x: hidden; }
+
+/* ═══════════════════════════════════════════════
+   MOBILE NAV — hamburger + slide-out drawer
+   Below 640px the search bar and all nav-actions
+   (Build a system, Faves, Account/Sign in, Cart,
+   theme toggle) move into a drawer opened by a
+   single menu button. Nothing can overflow because
+   nothing but the logo and the menu button sits in
+   the top bar.
+   ═══════════════════════════════════════════════ */
 @media (max-width: 640px) {
   .wrap { padding: 0 20px; }
 
-  /*
-   * Mobile nav becomes three deliberate rows:
-   *   1. logo + Build a system + Faves
-   *   2. account + Cart + theme
-   *   3. full-width search
-   *
-   * The desktop nav remains a single flex row. `display: contents` lets the
-   * action links participate directly in this mobile grid, avoiding the
-   * horizontal overflow caused by treating all actions as one flex group.
-   */
   .nav {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    grid-template-rows: auto auto auto;
-    column-gap: 12px;
-    row-gap: 12px;
-    padding: 20px 0;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 16px 0;
+    gap: 12px;
+    position: relative;
+  }
+
+  /* Top row: logo ... hamburger (order handles this naturally, both flex-basis auto) */
+  .nav-brand { order: 1; }
+  .nav-menu-btn { order: 2; }
+
+  /* Search bar becomes its own full-width second row */
+  .nav > .search-bar {
+    order: 3;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
+    padding: 10px 48px 10px 18px;
+  }
+  .nav > .search-bar .search-submit {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Actions row is relocated into the drawer by JS, so hide the empty slot in .nav */
+  .nav > .nav-actions {
+    display: none;
+  }
+
+  /* Hamburger button, always visible on mobile */
+  .nav-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .nav-menu-btn svg { width: 20px; height: 20px; }
+
+  /* Drawer overlay */
+  .nav-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 998;
+  }
+  .nav-drawer-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Drawer panel, slides in from the right */
+  .nav-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(80vw, 320px);
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 999;
+    overflow-y: auto;
+  }
+  .nav-drawer.is-open {
+    transform: translateX(0);
+  }
+  .nav-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-drawer-title {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .nav-drawer-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .nav-drawer-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .nav-drawer-close svg { width: 18px; height: 18px; }
+
+  /* Action links, restyled as a stacked full-width list inside the drawer */
+  .nav-drawer .nav-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+  }
+  .nav-drawer .nav-build-link,
+  .nav-drawer .nav-icon-link {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 15px;
+  }
+  .nav-drawer .nav-build-link:hover,
+  .nav-drawer .nav-icon-link:hover {
+    background: var(--gold-light);
+  }
+  .nav-drawer .nav-build-link svg,
+  .nav-drawer .nav-icon-link svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .nav-drawer .theme-toggle {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+  .nav-drawer .theme-toggle::after {
+    content: 'Dark mode';
+    font-size: 15px;
+    font-weight: 600;
+  }
+  html[data-theme="dark"] .nav-drawer .theme-toggle::after {
+    content: 'Light mode';
+  }
+
+  /* Prevent background scroll while drawer is open */
+  body.nav-drawer-open { overflow: hidden; }
+
+  /* Product cards */
+  .product-card { flex-direction: column; }
+  .product-card-image { width: 100%; height: 200px; }
+  .product-card-info { padding: 16px 20px 20px; gap: 6px; }
+  .product-card-name { font-size: 17px; }
+
+  /* Footer */
+  .footer-columns { grid-template-columns: 1fr; gap: 24px; }
+  .footer-bar { flex-direction: column; gap: 8px; text-align: center; }
+
+  /* Page header */
+  .page-header h1 { font-size: 26px; }
+
+  /* Category pills */
+  .category-strip { padding: 12px 0; }
+  .category-strip .category-pill {
+    min-height: 44px;
+    display: inline-flex;
     align-items: center;
   }
 
-  .nav-brand {
-    grid-column: 1;
-    grid-row: 1;
-  }
+  /* Bigger touch targets */
+  .favorite-btn { width: 44px; height: 44px; }
+}
 
-  .nav-actions {
-    display: contents;
-  }
+/* ----------- TINY PHONES (≤480px) ----------- */
+@media (max-width: 480px) {
+  .page-header { padding: 24px 0 20px; }
+  .page-header h1 { font-size: 22px; }
+  .product-card-image { height: 180px; }
+  .site-footer { padding: 32px 0 24px; }
+  .nav-brand img { height: 32px; }
+}
 
-  .nav-build-link {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-    padding: 8px 12px;
-    font-size: 13px;
-    gap: 6px;
-  }
-
-  .nav-build-link svg {
-    width: 19px;
-    height: 19px;
-  }
-
-  .nav-icon-link {
-    font-size: 13px;
-    gap: 6px;
-  }
-
-  .nav-icon-link svg {
-    width: 19px;
-    height: 19px;
-  }
-
-  /* Faves: top row, right edge. */
-  .nav-actions .nav-icon-link:nth-of-type(2) {
-    grid-column: 3;
-    grid-row: 1;
-    justify-self: end;
-  }
-
-  /* Account/sign-in and Cart: second row. */
-  .nav-actions .nav-icon-link:nth-of-type(3) {
-    grid-column: 1;
-    grid-row: 2;
-    justify-self: start;
-  }
-
-  .nav-actions .nav-icon-link:nth-of-type(4) {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: end;
-  }
-
-  .theme-toggle {
-    grid-column: 3;
-    grid-row: 2;
-    justify-self: end;
-    width: 44px;
-    height: 38px;
-  }
-
-  .theme-toggle svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .search-bar {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    order: initial;
-    width: 100%;
-    max-width: none;
-    min-width: 0;
-    flex: none;
-  }
-
-  .product-card { flex-direction: column; }
-  .product-card-image { width: 100%; height: 160px; }
-  .product-card-info { padding: 16px 20px 20px; }
-  .footer-columns {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  .footer-bar {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-  .page-header h1 { font-size: 26px; }
+/* The hamburger button and drawer only exist for mobile layout purposes;
+   hide them completely on larger screens so desktop is untouched */
+.nav-menu-btn,
+.nav-drawer-backdrop,
+.nav-drawer {
+  display: none;
+}
+@media (max-width: 640px) {
+  .nav-menu-btn { display: inline-flex; }
+  .nav-drawer-backdrop { display: block; }
+  .nav-drawer { display: flex; }
 }
