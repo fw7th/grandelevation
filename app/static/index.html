@@ -149,6 +149,8 @@
     padding: 10px 22px;
     font-size: 14px;
     font-weight: 600;
+    line-height: 1.2;
+    display: inline-block;
     transition: background 0.15s ease, color 0.15s ease;
   }
 
@@ -418,6 +420,26 @@
   .values { padding: 40px 0; }
   .closing { padding: 60px 0; }
   .closing h2 { font-size: 24px; }
+
+  /* Nav CTA pill: smaller padding so it doesn't crowd the logo on narrow screens */
+  .nav-cta {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* Hero buttons: stack full-width instead of wrapping awkwardly mid-row */
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .btn-primary {
+    justify-content: center;
+    width: 100%;
+  }
+  .btn-secondary {
+    text-align: center;
+  }
 }
 
   @media (prefers-reduced-motion: reduce) {
@@ -497,14 +519,14 @@
           <path d="M18 4l4 8 8 1.5-6 6 1.5 8L18 24l-7.5 3.5L12 19.5 6 13.5 14 12z"/>
         </svg>
         <h3>Compatibility checked automatically</h3>
-        <p>Pick your panels, inverter, and battery, and we check voltage, wattage, and current ratings before you order, not after it shows up broken.</p>
+        <p>Pick your panels, inverter, and battery, as we check voltage, wattage, and current ratings, to give you a quotation, right there on the spot.</p>
       </div>
       <div class="value-card">
         <svg class="icon-mark" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M18 32s12-7.5 12-17a8 8 0 0 0-12-7 8 8 0 0 0-12 7c0 9.5 12 17 12 17z"/>
         </svg>
         <h3>Sourced when you order</h3>
-        <p>We bring in equipment as orders come in rather than holding warehouse stock, so you get current parts, not whatever's been sitting on a shelf.</p>
+        <p>We bring in equipment as orders come in rather than holding warehouse stock, so you get new, current parts, as they're manufactured.</p>
       </div>
       <div class="value-card">
         <svg class="icon-mark" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -512,7 +534,7 @@
           <path d="M6 14h24M12 22h6"/>
         </svg>
         <h3>Your orders, all in one place</h3>
-        <p>Create an account to track what you've ordered and reorder the same setup later without digging through old emails.</p>
+        <p>Create an account to track what you've ordered and reorder the same setup later without complex navigation.</p>
       </div>
     </div>
   </div>
