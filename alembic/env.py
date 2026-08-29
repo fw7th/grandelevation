@@ -12,7 +12,7 @@ from alembic import context
 
 # Make sure every table class registers on SQLModel.metadata before
 # Alembic tries to autogenerate against it.
-from app import models  # noqa: F401  -- adjust import path to match your package layout
+from app import models  # -- adjust import path to match your package layout
 
 load_dotenv()
 
