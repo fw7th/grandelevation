@@ -7,7 +7,6 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.database import init_db
 from app.routers import (
     admin,
     auth,
@@ -26,7 +25,6 @@ SECRET_KEY = os.getenv("SESSION_MIDDLEWARE_SECRET_KEY", "siuuuuu")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
     yield
 
 

@@ -25,3 +25,4 @@ token.json
 
 # Do not ignore
 !.env.example
+.env*
