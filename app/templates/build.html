@@ -309,8 +309,16 @@
   @media (max-width: 640px) {
     .builder-grid { grid-template-columns: 1fr; }
     .summary-inner { flex-direction: column; align-items: stretch; }
-    .summary-actions { width: 100%; }
-    .summary-actions .btn-primary, .summary-actions .btn-secondary { flex: 1; justify-content: center; }
+    .summary-actions {
+      width: 100%;
+      flex-direction: column;
+    }
+    .summary-actions .btn-primary,
+    .summary-actions .btn-secondary {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 20px;
+    }
     .budget-row { flex-direction: column; align-items: stretch; }
     .appliance-table .col-action { width: 10%; }
   }
@@ -350,15 +358,17 @@
 
   .summary-savings {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 4px;
     font-size: 13px;
     margin-top: 2px;
   }
-  .savings-label {
-    display: inline-flex;
+  .savings-row {
+    display: flex;
     align-items: center;
     gap: 6px;
+  }
+  .savings-label {
     color: var(--gray-mid);
     font-weight: 500;
   }
@@ -376,23 +386,25 @@
     position: relative;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 1.5px solid var(--gray-mid);
+    gap: 4px;
     color: var(--gray-mid);
+    font-size: 12px;
     cursor: help;
-    flex-shrink: 0;
   }
-  .info-trigger svg { width: 10px; height: 10px; }
+  .info-trigger-text {
+    font-weight: 700;
+    color: var(--gold-deep);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
 
   .info-dropdown {
     position: absolute;
     bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%) scale(0.96);
+    left: 0;
+    transform: translateY(4px) scale(0.96);
     width: 280px;
+    max-width: 80vw;
     background: var(--bg);
     border: 1.5px solid var(--border);
     border-radius: 12px;
@@ -414,13 +426,13 @@
   .info-trigger:focus .info-dropdown {
     opacity: 1;
     pointer-events: auto;
-    transform: translateX(-50%) scale(1);
+    transform: translateY(0) scale(1);
   }
   .info-dropdown::after {
     content: '';
     position: absolute;
     top: 100%;
-    left: 50%;
+    left: 16px;
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
@@ -597,17 +609,17 @@
             <span class="total-value" id="systemTotal">₦0</span>
           </div>
           <div class="summary-savings" id="savingsLine" style="display:none;">
-            <span class="savings-label">
-              You save vs diesel
-              <span class="info-trigger" tabindex="0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                <div class="info-dropdown">
-                  <p id="savingsTipMath">Based on diesel at <strong>₦1,150/litre</strong> and a generator yield of <strong>~3.5 kWh/litre</strong>.</p>
-                  <p id="savingsTipProjected">This is the daily fuel cost you avoid by running solar instead of a diesel generator.</p>
-                </div>
-              </span>
+            <div class="savings-row">
+              <span class="savings-label">You save vs diesel</span>
+              <span class="savings-value" id="dailySavings">—</span>
+            </div>
+            <span class="info-trigger" tabindex="0">
+              <span class="info-trigger-text">Click here</span> to view more savings info
+              <div class="info-dropdown">
+                <p id="savingsTipMath">Based on diesel at <strong>₦1,150/litre</strong> and a generator yield of <strong>~3.5 kWh/litre</strong>.</p>
+                <p id="savingsTipProjected">This is the daily fuel cost you avoid by running solar instead of a diesel generator.</p>
+              </div>
             </span>
-            <span class="savings-value" id="dailySavings">—</span>
           </div>
         </div>
         <div class="summary-actions">

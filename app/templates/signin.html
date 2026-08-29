@@ -178,6 +178,8 @@
     padding: 10px 22px;
     font-size: 14px;
     font-weight: 600;
+    line-height: 1.2;
+    display: inline-block;
     transition: background 0.15s ease, color 0.15s ease;
   }
 
@@ -425,6 +427,15 @@
     .wrap { padding: 0 20px; }
     .footer { flex-direction: column; gap: 12px; text-align: center; }
     .auth-main { padding: 16px 0 64px; }
+  }
+
+  @media (max-width: 480px) {
+    .nav-brand span { display: none; }
+    .nav-cta {
+      padding: 8px 16px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
