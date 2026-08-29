@@ -45,6 +45,7 @@
     font-family: 'Inter', sans-serif; font-size: 14px; padding: 11px 14px;
     border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); color: var(--ink);
   }
+  .field-hint { font-size: 12px; color: var(--gray-mid); }
   #specs-fields { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 4px; }
   .empty-note { font-size: 13px; color: var(--gray-mid); }
   .btn-primary {
@@ -52,6 +53,24 @@
     padding: 13px 26px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px;
   }
   .btn-primary:hover { background: var(--gold-deep); }
+
+  .existing-images {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px; margin-top: 4px;
+  }
+  .existing-image {
+    position: relative; border: 1.5px solid var(--border); border-radius: 8px;
+    overflow: hidden; aspect-ratio: 1; background: var(--gold-light);
+  }
+  .existing-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .existing-image .remove-toggle {
+    position: absolute; top: 6px; right: 6px; background: rgba(10,10,10,0.65);
+    border-radius: 6px; padding: 4px 6px; display: flex; align-items: center; gap: 4px;
+  }
+  .existing-image .remove-toggle label {
+    color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;
+  }
+  .existing-image.marked-for-removal { opacity: 0.4; }
 </style>
 </head>
 <body>
@@ -62,7 +81,8 @@
     {{ errors.get("specs", "") }}
   </div>
 
-  <form action="{{ '/admin/products/' ~ product.id ~ '/edit' if product else '/admin/products/new' }}" method="post">
+  <form action="{{ '/admin/products/' ~ product.id ~ '/edit' if product else '/admin/products/new' }}"
+        method="post" enctype="multipart/form-data">
     <div class="field">
       <label for="category">Category</label>
       <select id="category" name="category" required
@@ -96,13 +116,30 @@
       <textarea id="description" name="description" rows="3">{{ form_values.get('description', '') }}</textarea>
     </div>
 
+    {% if existing_images %}
     <div class="field">
-      <label for="image_url">Image paths</label>
-      {% set raw_img = form_values.get('image_url', '') %}
-      <input type="text" id="image_url" name="image_url"
-             placeholder="/static/products/panel-450w.jpg, /static/products/panel-450w-side.jpg"
-             value="{% if raw_img is sequence and raw_img is not string %}{{ raw_img | join(', ') }}{% else %}{{ raw_img or '' }}{% endif %}">
-      <small class="field-hint">Comma-separated URLs. The first image is used as the main thumbnail.</small>
+      <label>Current images</label>
+      <div class="existing-images">
+        {% for url in existing_images %}
+        <div class="existing-image" data-image-card>
+          <img src="{{ url }}" alt="">
+          <div class="remove-toggle">
+            <input type="checkbox" id="keep_{{ loop.index }}" name="keep_images" value="{{ url }}"
+                   checked
+                   onchange="this.closest('[data-image-card]').classList.toggle('marked-for-removal', !this.checked)">
+            <label for="keep_{{ loop.index }}">Keep</label>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <small class="field-hint">Uncheck an image to remove it when you save.</small>
+    </div>
+    {% endif %}
+
+    <div class="field">
+      <label for="images">{{ "Add images" if existing_images else "Images" }}</label>
+      <input type="file" id="images" name="images" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+      <small class="field-hint">JPEG, PNG, WebP or GIF. Up to 4MB each.</small>
     </div>
 
     <div id="specs-fields">
