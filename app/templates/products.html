@@ -339,12 +339,12 @@
   <input type="hidden" name="quantity" id="qtyHidden" value="1">
 </div>
 
-      <button type="submit" name="action" value="add" class="btn-pill-detail btn-add-list" id="addToCartBtn">
+      <button type="submit" name="action" value="add" class="btn-pill-detail btn-add-list" id="addToCartBtn"{% if not username %}data-requires-auth{% endif %}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.4 12.4a2 2 0 0 0 2 1.6h9.2a2 2 0 0 0 2-1.6L23 6H6"/></svg>
         Add to cart
       </button>
 
-    <button type="button" class="btn-pill-detail btn-add-cart" id="buyNowBtn">
+    <button type="button" class="btn-pill-detail btn-add-cart" id="buyNowBtn" {% if not username %}data-requires-auth{% endif %}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
       </svg>
@@ -490,6 +490,7 @@
     form.addEventListener('submit', updateHidden);
   }
 
+{% if username %}
   // Buy Now reads hidden input
   var buyNowBtn = document.getElementById('buyNowBtn');
   if (buyNowBtn) {
@@ -499,7 +500,8 @@
       window.location.href = url;
     });
   }
-})();
+{% endif %}
+
 
 /* ===== Auth guard for guest Add-to-Cart ===== */
 {% if not username %}
