@@ -111,6 +111,7 @@
     margin-top: 32px;
     padding-top: 24px;
     border-top: 2px solid var(--border);
+    justify-content: center;   /* ← center on desktop */
   }
   .btn-whatsapp {
     display: inline-flex;
@@ -173,13 +174,221 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  /* ─── Back to catalog ─── */
+  .back-to-catalog-wrap {
+    text-align: center;
+    margin-top: 16px;
+  }
+  .back-to-catalog {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gold-deep);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 15px;
+    transition: opacity 0.15s;
+  }
+  .back-to-catalog:hover {
+    opacity: 0.75;
+    text-decoration: underline;
+  }
+
+  /* ─── Account details dropdown ─── */
+  .account-details-dropdown {
+    margin-top: 24px;
+    text-align: center;
+  }
+  .dropdown-details {
+    display: inline-block;
+    text-align: left;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--bg);
+    transition: border-color 0.15s;
+    min-width: 300px;
+  }
+  .dropdown-details:hover {
+    border-color: var(--gold-deep);
+  }
+  .dropdown-details summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+  }
+  .dropdown-details summary::-webkit-details-marker {
+    display: none;
+  }
+  .dropdown-details summary::after {
+    content: '▼';
+    font-size: 10px;
+    color: var(--gray-mid);
+    transition: transform 0.2s;
+  }
+  .dropdown-details[open] summary::after {
+    transform: rotate(180deg);
+  }
+  .dropdown-content {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+    text-align: left;
+  }
+  .bank-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .bank-row:last-child {
+    border-bottom: none;
+  }
+  .bank-row .field {
+    font-size: 13px;
+    color: var(--gray-mid);
+  }
+  .bank-row .value {
+    font-weight: 700;
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+  .copy-field-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-mid);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+  .copy-field-btn:hover {
+    border-color: var(--gold-deep);
+    color: var(--gold-deep);
+  }
+  .copy-field-btn.copied {
+    border-color: #22c55e;
+    color: #22c55e;
+  }
+
+  /* ─── Profile link ─── */
+  .profile-link {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--gray-mid);
+  }
+  .profile-link a {
+    color: var(--gold-deep);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .profile-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* ─── Success Toast (snappier) ─── */
+  .success-toast {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+  .success-toast.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .toast-content {
+    background: var(--bg, #fff);
+    padding: 44px 36px;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    transform: scale(0.6);
+    animation: toastPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    max-width: 90%;
+    width: 320px;
+  }
+  @keyframes toastPop {
+    to { transform: scale(1); }
+  }
+  .checkmark-wrap {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    position: relative;
+  }
+  .checkmark-svg {
+    width: 72px;
+    height: 72px;
+    animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes checkPop {
+    0%   { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .checkmark-circle {
+    stroke: var(--gold-deep, #d4af37);
+    stroke-width: 3;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    animation: strokeDraw 0.55s cubic-bezier(0.65, 0, 0.45, 1) 0.15s forwards;
+  }
+  .checkmark-path {
+    stroke: var(--gold-deep, #d4af37);
+    stroke-width: 3;
+    /* Fully drawn from the start — only the circle wraps around it */
+  }
+  @keyframes strokeDraw {
+    100% { stroke-dashoffset: 0; }
+  }
+  .toast-content h2 {
+    font-family: 'Sora', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--ink, #111);
+  }
+  .toast-content p {
+    color: var(--gray-mid, #666);
+    margin: 0;
+    font-size: 14px;
+  }
+  .success-toast.auto-hide {
+    animation: toastFadeOut 0.5s ease 1.8s forwards;
+  }
+  @keyframes toastFadeOut {
+    to { opacity: 0; pointer-events: none; }
+  }
+
   @media (max-width: 640px) {
     .invoice-wrapper { padding: 24px 16px; }
     .invoice-header { flex-direction: column; align-items: stretch; }
     .invoice-meta { text-align: left; }
     .invoice-info { grid-template-columns: 1fr; gap: 16px; }
 
-    /* Table: scroll horizontally instead of squashing/overflowing the page */
     .invoice-table {
       min-width: 480px;
     }
@@ -189,7 +398,6 @@
       padding-right: 12px;
     }
 
-    /* Action buttons: stack full-width instead of squeezing two pills side by side */
     .invoice-actions {
       flex-direction: column;
       gap: 12px;
@@ -199,11 +407,33 @@
       width: 100%;
       justify-content: center;
     }
+
+    .toast-content {
+      padding: 32px 24px;
+      width: 280px;
+    }
+    .toast-content h2 {
+      font-size: 17px;
+    }
   }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- ═══ Success Toast (only shows when ?completed=1) ═══ -->
+<div id="success-toast" class="success-toast hidden">
+  <div class="toast-content">
+    <div class="checkmark-wrap">
+      <svg class="checkmark-svg" viewBox="0 0 52 52">
+        <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+        <path class="checkmark-path" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+      </svg>
+    </div>
+    <h2>Thank you for shopping with us!</h2>
+    <p>Your order has been placed successfully.</p>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="invoice-wrapper">
     <div class="invoice-header">
@@ -273,7 +503,7 @@
     <div style="margin: 12px 0 0; font-size:13px;color:var(--gray-mid);">
       Payment method: <strong>{{ invoice.payment_method|capitalize }}</strong>
       {% if invoice.payment_method == 'transfer' %}
-        – Please transfer the total amount to the account provided on checkout.
+        – If you've made your payment, please kindly wait a maximum of 2-3 days for arrival. 
       {% else %}
         – You will pay when you pick up the order.
       {% endif %}
@@ -296,8 +526,49 @@
       </button>
     </div>
 
+    <!-- Back to catalog -->
+    <div class="back-to-catalog-wrap">
+      <a href="/catalog" class="back-to-catalog">← Back to catalog</a>
+    </div>
+
     <div class="invoice-footer">
       This invoice is generated automatically. For any questions, please contact us on WhatsApp.
+    </div>
+
+    <!-- Bank account details dropdown -->
+    <div class="account-details-dropdown">
+      <details class="dropdown-details">
+        <summary>View our bank account details for transfer</summary>
+        <div class="dropdown-content">
+          <div class="bank-row">
+            <div>
+              <div class="field">Bank</div>
+              <div class="value" id="bank-name">First Bank of Nigeria</div>
+            </div>
+            <button class="copy-field-btn" onclick="copyField('bank-name', this)">Copy</button>
+          </div>
+          <div class="bank-row">
+            <div>
+              <div class="field">Account Name</div>
+              <div class="value" id="account-name">Grand Elevation Solar Ltd</div>
+            </div>
+            <button class="copy-field-btn" onclick="copyField('account-name', this)">Copy</button>
+          </div>
+          <div class="bank-row">
+            <div>
+              <div class="field">Account Number</div>
+              <div class="value" id="account-number">0123456789</div>
+            </div>
+            <button class="copy-field-btn" onclick="copyField('account-number', this)">Copy</button>
+          </div>
+          <p style="font-size: 12px; color: var(--gray-mid); margin-top: 10px;">Please use your invoice number as the payment reference.</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Profile page link -->
+    <div class="profile-link">
+      You can find all invoices directly on your <a href="/account#orders">profile page</a>.
     </div>
   </div>
 </div>
@@ -315,5 +586,34 @@
       }, 2000);
     });
   }
+
+  // ─── Copy individual bank field ───
+  function copyField(elementId, btn) {
+    const text = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.textContent;
+      btn.textContent = '✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 1500);
+    });
+  }
+
+  // ─── Toast logic ───
+  (function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('completed') === '1') {
+      const toast = document.getElementById('success-toast');
+      toast.classList.remove('hidden');
+      toast.classList.add('auto-hide');
+      setTimeout(() => {
+        if (window.history.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }, 2400);
+    }
+  })();
 </script>
 {% endblock %}
