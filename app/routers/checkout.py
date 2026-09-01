@@ -2,7 +2,7 @@ import random
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from sqlmodel import delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -24,7 +24,7 @@ async def checkout(
 ):
     user = await authenticate(request, session)
     if not user:
-        return RedirectResponse("/catalog")
+        return RedirectResponse("/signin?next=/checkout")
 
     checkout_items = []
     subtotal = 0.0
@@ -104,7 +104,13 @@ async def checkout_build(
 ):
     user = await authenticate(request, session)
     if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": "Not authenticated",
+                "redirect_url": "/signin?next=/checkout",
+            },
+        )
 
     data = await request.json()
     items = data.get("items", [])
@@ -122,7 +128,13 @@ async def complete_checkout(
 ):
     user = await authenticate(request, session)
     if not user:
-        raise HTTPException(status_code=401, detail="Please sign in first")
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": "Please sign in first",
+                "redirect_url": "/signin?next=/checkout",
+            },
+        )
 
     data = await request.json()
     delivery_method = data.get("delivery_method", "delivery")
