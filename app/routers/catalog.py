@@ -16,6 +16,7 @@ from ..utils import authenticate, get_active_categories
 router = APIRouter(tags=["catalog"])
 
 
+@router.get("/")
 @router.get("/catalog")
 async def catalog(
     request: Request,

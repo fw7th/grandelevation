@@ -52,10 +52,3 @@ app.include_router(shop.router)
 app.include_router(search.router)
 app.include_router(build.router)
 app.include_router(checkout.router)
-
-
-@app.get("/")
-async def home():
-    from fastapi.responses import FileResponse
-
-    return FileResponse(BASE_DIR / "static" / "index.html")
