@@ -49,6 +49,7 @@ async def toggle_favorite(
         context={
             "product_id": product_id,
             "is_favorited": is_favorited,
+            "username": user.username,
         },
     )
 

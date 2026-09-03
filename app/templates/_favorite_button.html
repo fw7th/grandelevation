@@ -1,3 +1,4 @@
+{% if username %}
 <button
   type="button"
   class="favorite-btn {% if is_favorited %}is-favorited{% endif %}"
@@ -9,3 +10,14 @@
 >
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
 </button>
+{% else %}
+<button
+  type="button"
+  class="favorite-btn"
+  aria-label="Sign in to favorite"
+  aria-pressed="false"
+  data-requires-auth
+>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+</button>
+{% endif %}
