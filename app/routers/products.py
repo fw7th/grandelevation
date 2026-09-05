@@ -27,14 +27,15 @@ async def product_page(
         if user:
             fav_statement = select(Favorite.product_id).where(
                 Favorite.user_id == user.id,
+                Favorite.product_id == slug,
             )
             fav_result = await session.exec(fav_statement)
-            fav_ = fav_result.one_or_none()
+            fav_ = fav_result.all()
             is_favorited = fav_ if fav_ else None
 
         statement = select(Product).where(Product.id == slug)
         result = await session.exec(statement)
-        product = result.one()
+        product = result.one_or_none()
 
         similar_products = await get_similar_products(product, session)
 
@@ -54,8 +55,9 @@ async def product_page(
             },
         )
 
-    except Exception:
+    except Exception as e:
         await session.rollback()
+        print("EXCEPTION (500; PRODUCTS): ", e)
         return FileResponse(
             BASE_DIR / "static" / "500.html",
             status_code=500,
