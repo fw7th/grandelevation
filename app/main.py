@@ -8,7 +8,6 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.routers import (
-    admin,
     auth,
     build,
     catalog,
@@ -18,6 +17,8 @@ from app.routers import (
     search,
     shop,
 )
+from app.routers.admin import orders as admin_orders
+from app.routers.admin import products as admin_products
 
 load_dotenv()
 SECRET_KEY = os.getenv("SESSION_MIDDLEWARE_SECRET_KEY", "siuuuuu")
@@ -43,7 +44,8 @@ app.add_middleware(
 )
 
 # Routers
-app.include_router(admin.router)
+app.include_router(admin_products.router)
+app.include_router(admin_orders.router)
 app.include_router(products.router)
 app.include_router(auth.router)
 app.include_router(catalog.router)

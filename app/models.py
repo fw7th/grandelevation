@@ -101,3 +101,19 @@ class Invoice(SQLModel, table=True):
 
     # optional relationship back to user (not required for public view)
     user: Optional["Users"] = Relationship(back_populates="invoices")
+
+
+class Orders(SQLModel, table=True):
+    __tablename__ = "orders"
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    invoice_id: int = Field(foreign_key="invoices.id", index=True)
+    status: str = Field(default="pending")  # "pending" | "issue" | "done"
+    delivery_fee: float = 0.0
+    location: str | None = None  # actual address, or "PICKUP" for pickup orders
+    bank_account_name: str | None = None  # only set for transfer payments
+    order_total: float
+    items: List[dict] = Field(default_factory=list, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

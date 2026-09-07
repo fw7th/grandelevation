@@ -39,6 +39,12 @@
     text-decoration: none; display: inline-block;
   }
   .btn-primary:hover { background: var(--gold-deep); }
+  .btn-secondary {
+    background: none; color: var(--ink); border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+    text-decoration: none; display: inline-block;
+  }
+  .btn-secondary:hover { border-color: var(--ink); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); }
   th { color: var(--gray-mid); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.04em; }
@@ -58,7 +64,10 @@
 <div class="wrap">
   <div class="topbar">
     <h1 class="display">Products</h1>
-    <a href="/admin/products/new" class="btn-primary">+ Add product</a>
+    <div style="display:flex; gap:10px;">
+      <a href="/admin/orders" class="btn-secondary">View orders</a>
+      <a href="/admin/products/new" class="btn-primary">+ Add product</a>
+    </div>
   </div>
 
   <table>
