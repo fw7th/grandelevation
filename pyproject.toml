@@ -37,4 +37,4 @@ dev = [
 extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
-ignore = ["B008", "I001", "DTZ003", "DTZ011", "BLE001", "S112", "UP006", "UP035", "F401", "UP007"]
+ignore = ["B008", "I001", "DTZ003", "DTZ011", "BLE001", "S112", "UP006", "UP035", "F401", "UP007", "RUF100"]
