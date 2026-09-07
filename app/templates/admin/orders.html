@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders — Admin</title>
+<script>
+(function() {
+  const stored = localStorage.getItem('theme');
+  const theme = stored || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0A0A; --bg: #FAF8F3; --gold: #F2A623;
+    --gold-light: #FBDFA8; --gold-deep: #E8651C;
+    --gray-mid: #6B6B6B; --border: rgba(10,10,10,0.1); --error: #B3261E;
+  }
+  html[data-theme="dark"] {
+    --ink: #F4F1EA; --bg: #14130F; --gold-light: #4A3A1A;
+    --gold-deep: #FFB648; --gray-mid: #9B968A; --border: rgba(244,241,234,0.12);
+    --error: #FF8A80;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+  .display { font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .topbar h1 { font-size: 22px; }
+
+  .status-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .status-tab {
+    font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px;
+    border: 1.5px solid var(--border); color: var(--ink); text-decoration: none;
+  }
+  .status-tab.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--gray-mid); font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.04em; }
+
+  .status-tag {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+  .status-pending { background: var(--gold-light); color: var(--ink); }
+  .status-issue { background: var(--error); color: #fff; }
+  .status-done { background: var(--gold-deep); color: #fff; }
+
+  .meta-line { font-size: 12px; color: var(--gray-mid); margin-top: 2px; }
+
+  .row-actions-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row-actions-wrap form { display: inline; }
+  .row-actions-wrap select {
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+    padding: 6px 8px; border-radius: 6px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--ink); cursor: pointer;
+  }
+  .row-actions-wrap button {
+    font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); background: none;
+    cursor: pointer; color: var(--ink); border-radius: 6px; padding: 6px 10px;
+  }
+  .row-actions-wrap button.delete-btn { color: var(--error); border-color: var(--error); }
+  .row-actions-wrap button.delete-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: none; color: var(--ink); border: 1.5px solid var(--border); border-radius: 999px;
+    padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+    text-decoration: none; display: inline-block;
+  }
+  .btn-secondary:hover { border-color: var(--ink); }
+
+  a { text-decoration: none; color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1 class="display">Orders</h1>
+    <a href="/admin/products" class="btn-secondary">View products</a>
+  </div>
+
+  <div class="status-tabs">
+    <a href="/admin/orders" class="status-tab {% if not active_status %}active{% endif %}">All</a>
+    <a href="/admin/orders?status=pending" class="status-tab {% if active_status == 'pending' %}active{% endif %}">Pending</a>
+    <a href="/admin/orders?status=issue" class="status-tab {% if active_status == 'issue' %}active{% endif %}">Issue</a>
+    <a href="/admin/orders?status=done" class="status-tab {% if active_status == 'done' %}active{% endif %}">Done</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Location</th>
+        <th>Bank account name</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>
+          #{{ order.id }}
+          <div class="meta-line">Invoice #{{ order.invoice_id }}</div>
+          <div class="meta-line">{{ order.created_at.strftime("%d %b %Y, %H:%M") }}</div>
+        </td>
+        <td>{{ order.location or "—" }}</td>
+        <td>{{ order.bank_account_name or "—" }}</td>
+        <td>
+          ₦{{ "%.2f"|format(order.order_total) }}
+          {% if order.delivery_fee %}
+          <div class="meta-line">incl. ₦{{ "%.2f"|format(order.delivery_fee) }} delivery</div>
+          {% endif %}
+        </td>
+        <td><span class="status-tag status-{{ order.status }}">{{ order.status }}</span></td>
+        <td>
+          <div class="row-actions-wrap">
+            <form action="/admin/orders/{{ order.id }}/status" method="post">
+              <select name="status" onchange="this.form.submit()">
+                <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
+                <option value="issue" {% if order.status == "issue" %}selected{% endif %}>Issue</option>
+                <option value="done" {% if order.status == "done" %}selected{% endif %}>Done</option>
+              </select>
+            </form>
+            <form action="/admin/orders/{{ order.id }}/delete" method="post">
+              <button type="submit" class="delete-btn"
+                      {% if order.status != "done" %}disabled title="Mark as done before deleting"{% endif %}
+                      onclick="return confirm('Delete this order? This cannot be undone.')">
+                Delete
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No orders{% if active_status %} with status "{{ active_status }}"{% endif %}.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

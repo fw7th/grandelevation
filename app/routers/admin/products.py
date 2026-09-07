@@ -1,17 +1,17 @@
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from sqlmodel import delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app import BASE_DIR, templates
 
-from ..blob_storage import BlobStorageError, delete_images, upload_image
-from ..database import get_session
-from ..models import CartItem, Favorite, Product, Users
-from ..specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
-from ..utils import authenticate
+from ...blob_storage import BlobStorageError, delete_images, upload_image
+from ...database import get_session
+from ...models import CartItem, Favorite, Product, Users
+from ...specs import ADMIN_FORM_FIELDS, FIELD_CHOICES, validate_specs
+from ...utils import authenticate
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(prefix="/admin/products", tags=["admin-products"])
 
 
 async def require_admin(
@@ -23,7 +23,7 @@ async def require_admin(
     return user
 
 
-@router.get("/products")
+@router.get("")
 async def admin_products_list(
     request: Request,
     admin: Users = Depends(require_admin),
@@ -39,7 +39,7 @@ async def admin_products_list(
     )
 
 
-@router.get("/products/new")
+@router.get("/new")
 async def admin_product_new(request: Request, admin: Users = Depends(require_admin)):
     return templates.TemplateResponse(
         request=request,
@@ -56,7 +56,7 @@ async def admin_product_new(request: Request, admin: Users = Depends(require_adm
     )
 
 
-@router.get("/products/specs-fields")
+@router.get("/specs-fields")
 async def admin_specs_fields(
     request: Request,
     category: str = "",
@@ -91,7 +91,7 @@ async def _upload_new_images(
     return urls, None
 
 
-@router.post("/products/new")
+@router.post("/new")
 async def admin_product_create(
     request: Request,
     admin: Users = Depends(require_admin),
@@ -151,7 +151,7 @@ async def admin_product_create(
     return RedirectResponse(url="/admin/products", status_code=303)
 
 
-@router.get("/products/{product_id}/edit")
+@router.get("/{product_id}/edit")
 async def admin_product_edit(
     request: Request,
     product_id: int,
@@ -182,7 +182,7 @@ async def admin_product_edit(
     )
 
 
-@router.post("/products/{product_id}/edit")
+@router.post("/{product_id}/edit")
 async def admin_product_update(
     request: Request,
     product_id: int,
@@ -264,7 +264,7 @@ async def admin_product_update(
     return RedirectResponse(url="/admin/products", status_code=303)
 
 
-@router.post("/products/{product_id}/delete")
+@router.post("/{product_id}/delete")
 async def admin_product_delete(
     product_id: int,
     admin: Users = Depends(require_admin),
