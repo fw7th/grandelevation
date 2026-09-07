@@ -9,7 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app import BASE_DIR, templates
 from app.database import get_session
 
-from ..models import CartItem, Invoice, Product, Users
+from ..models import CartItem, Invoice, Orders, Product, Users
 from ..utils import authenticate
 
 router = APIRouter(tags=["checkout"])
@@ -143,6 +143,14 @@ async def complete_checkout(
     delivery_note = data.get("delivery_note", "")
     items_payload = data.get("items")  # buy-now only
     client_delivery_fee = data.get("delivery_fee", 0.0)
+    bank_account_name = data.get("bank_account_name", "").strip()
+
+    # ─── Validate bank account name when paying by transfer ───
+    if payment_method == "transfer" and not bank_account_name:
+        raise HTTPException(
+            status_code=400,
+            detail="Bank account name is required for transfer payments",
+        )
 
     items_list = []
     subtotal = 0.0
@@ -245,6 +253,19 @@ async def complete_checkout(
     session.add(invoice)
     await session.commit()
     await session.refresh(invoice)
+
+    # ─── Create order record (all payment/delivery combos) ───
+    order = Orders(
+        user_id=user.id,
+        invoice_id=invoice.id,
+        delivery_fee=delivery_fee,
+        location=delivery_location if delivery_method == "delivery" else "PICKUP",
+        bank_account_name=bank_account_name if payment_method == "transfer" else None,
+        order_total=total,
+        items=items_list,
+    )
+    session.add(order)
+    await session.commit()
 
     # ─── Cleanup ───
     if source == "cart":

@@ -476,6 +476,56 @@
   @media (max-width: 640px) {
     .delivery-toggle { flex-direction: column; }
   }
+
+  /* ─── AUTH MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.visible {
+    display: flex;
+  }
+  .modal-box {
+    background: var(--bg);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  .modal-icon {
+    color: var(--gold-deep);
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .modal-icon .icon-svg {
+    width: 40px;
+    height: 40px;
+  }
+  .modal-box h3 {
+    font-family: 'Sora', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .modal-box p {
+    font-size: 13.5px;
+    color: var(--gray-mid);
+    line-height: 1.6;
+  }
+
+  /* ─── FIELD ERROR HIGHLIGHT ─── */
+  .form-group input.field-error {
+    border-color: #e0453c;
+    box-shadow: 0 0 0 3px rgba(224,69,60,0.12);
+  }
 </style>
 {% endblock %}
 
@@ -624,7 +674,7 @@
           </div>
         </label>
 
-        <label class="payment-method" onclick="setPayment('pickup')" id="pm-pickup">
+        <label class="payment-method" onclick="setPayment('pickup')" id="pm-pickup" style="display:none;">
           <input type="radio" name="payment_method" value="pickup">
           <div class="pm-info">
             <div class="pm-name">Pay on Pickup</div>
@@ -666,6 +716,14 @@
           <a href="https://wa.me/2348107730018" target="_blank" style="color:var(--gold-deep);font-weight:600;">WhatsApp</a>. 
           We'll confirm your payment and relay delivery pricing if applicable.
         </p>
+
+        <div class="form-group" id="bank-name-group" style="margin-top:18px;">
+          <label for="bank-account-name">Account name you transferred from</label>
+          <input type="text" id="bank-account-name" name="bank_account_name" placeholder="e.g. John A. Doe">
+          <p style="font-size:12px;color:var(--gray-mid);margin-top:6px;">
+            This should match the sender name on your transfer receipt, so we can match it to your payment.
+          </p>
+        </div>
       </div>
 
       <!-- Pickup Payment Details -->
@@ -744,6 +802,25 @@
     <a href="/catalog" class="btn-pill" style="margin-top:16px;">Browse catalog</a>
   </div>
   {% endif %}
+
+  <!-- Auth Modal: shown when bank account name is missing for a transfer payment -->
+  <div class="modal-overlay" id="bank-name-modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon">
+        <svg class="icon-svg" viewBox="0 0 24 24" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h3>We need the sender's account name</h3>
+      <p>
+        Before you confirm you've paid, please tell us the account name your transfer was sent from.
+        This is the name on your bank receipt &rarr; it's how we match your payment to your order.
+      </p>
+      <p style="margin-top:8px;">
+        If you click "Payment completed" without this, we won't be able to confirm your transfer
+        and your order may be delayed. Fill in the field above and try again.
+      </p>
+      <button type="button" class="btn-pill" onclick="closeBankNameModal()" style="margin-top:16px;">Got it</button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -785,6 +862,19 @@ function setDelivery(mode) {
   const subtotal = parseFloat(document.getElementById('summary-rail').dataset.subtotal) || 0;
   document.getElementById('summary-total').textContent = formatMoney(subtotal);
   document.getElementById('bank-amount-text').textContent = formatMoney(subtotal);
+
+  // ─── "Pay on Pickup" only makes sense when collecting in person ───
+  const pmPickup = document.getElementById('pm-pickup');
+  if (mode === 'delivery') {
+    pmPickup.style.display = 'none';
+    if (paymentMode === 'pickup') {
+      setPayment('transfer');
+    }
+  } else {
+    pmPickup.style.display = '';
+  }
+
+  updatePayButtonLabel();
 }
 
   function setPayment(mode) {
@@ -795,9 +885,32 @@ function setDelivery(mode) {
     document.getElementById('bank-details').classList.toggle('visible', mode === 'transfer');
     document.getElementById('pickup-pay-details').classList.toggle('visible', mode === 'pickup');
 
-    const btnText = document.getElementById('pay-btn-text');
-    btnText.textContent = mode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
+    updatePayButtonLabel();
   }
+
+  // Button label depends on BOTH delivery mode and payment mode:
+  //  delivery + transfer -> "Payment completed"
+  //  delivery + pay-on-pickup -> "Confirm order"
+  //  pickup   + transfer -> "Payment completed"
+  //  pickup   + pay-on-pickup -> "Generate invoice"
+  function updatePayButtonLabel() {
+    const btnText = document.getElementById('pay-btn-text');
+    if (paymentMode === 'transfer') {
+      btnText.textContent = 'Payment completed';
+    } else if (deliveryMode === 'delivery') {
+      btnText.textContent = 'Confirm order';
+    } else {
+      btnText.textContent = 'Generate invoice';
+    }
+  }
+
+  function closeBankNameModal() {
+    document.getElementById('bank-name-modal-overlay').classList.remove('visible');
+  }
+
+  document.getElementById('bank-account-name')?.addEventListener('input', function () {
+    this.classList.remove('field-error');
+  });
 
   function copyText(text, btn) {
     navigator.clipboard.writeText(text).then(() => {
@@ -843,13 +956,24 @@ function setDelivery(mode) {
 }
 
 function submitOrder() {
+  const deliveryMode = document.querySelector('.delivery-option.active')?.id?.replace('opt-', '') || 'delivery';
+  const paymentMode = document.querySelector('.payment-method.active')?.id?.replace('pm-', '') || 'transfer';
+  const bankAccountName = document.getElementById('bank-account-name').value.trim();
+
+  // ─── Gate: transfer payments require the sender's bank account name ───
+  if (paymentMode === 'transfer' && !bankAccountName) {
+    const field = document.getElementById('bank-account-name');
+    field.classList.add('field-error');
+    field.focus();
+    document.getElementById('bank-name-modal-overlay').classList.add('visible');
+    return;
+  }
+
   const btn = document.getElementById('pay-btn');
   btn.disabled = true;
   const btnText = document.getElementById('pay-btn-text');
   btnText.textContent = 'Processing...';
 
-  const deliveryMode = document.querySelector('.delivery-option.active')?.id?.replace('opt-', '') || 'delivery';
-  const paymentMode = document.querySelector('.payment-method.active')?.id?.replace('pm-', '') || 'transfer';
   const location = document.getElementById('location').value.trim();
   const deliveryNote = document.getElementById('delivery-note').value.trim();
 
@@ -858,6 +982,7 @@ function submitOrder() {
     payment_method: paymentMode,
     location: location,
     delivery_note: deliveryNote,
+    bank_account_name: bankAccountName,
   };
 
   // ─── ONLY ADD DELIVERY FEE IF CALCULATED ───
@@ -889,7 +1014,7 @@ function submitOrder() {
   .catch(error => {
     alert(error.message);
     btn.disabled = false;
-    btnText.textContent = paymentMode === 'transfer' ? 'I\'ve sent the transfer' : 'Confirm pickup order';
+    updatePayButtonLabel();
   });
 }
 </script>
