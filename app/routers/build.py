@@ -26,7 +26,33 @@ router = APIRouter(tags=["build"])
 PEAK_SUN_HOURS = 4.5
 SYSTEM_EFFICIENCY = 0.80
 VOC_TEMP_MARGIN = 1.15
-COMPONENT_PENALTY = 25000  # ₦25k per extra unit beyond the first
+
+# Fewer, larger units are preferable to many small ones (less mounting/
+# wiring/installation complexity, less rooftop or floor space). We express
+# that as a percentage premium we're willing to attribute to a bundle per
+# extra unit, rather than a flat naira amount — a flat amount either does
+# nothing at small scale or swamps real price differences at large scale
+# once daily loads push unit counts into the double digits (this is what
+# was causing the auto-builder to effectively stop comparing on price for
+# big systems). The premium is also capped per component category so a
+# 20-panel array can't accrue an unbounded, unrealistic penalty.
+UNIT_COUNT_PREMIUM_PCT = 0.03  # 3% of that component's cost per extra unit
+MAX_UNIT_COUNT_PENALTY_PCT = 0.25  # never treat a component as "worse" by
+# more than 25% of its own cost, no matter how many units it takes
+
+
+def _unit_count_penalty(component_cost: float, unit_count: int) -> float:
+    """Soft scoring penalty for needing multiple units of one component.
+
+    This never changes what the customer is actually charged (`real_total`
+    stays exact) — it only nudges which otherwise-valid, in-budget bundle
+    the ranking prefers, favoring fewer/bigger units when prices are close.
+    """
+    if unit_count <= 1 or component_cost <= 0:
+        return 0.0
+    extra_units = unit_count - 1
+    pct = min(extra_units * UNIT_COUNT_PREMIUM_PCT, MAX_UNIT_COUNT_PENALTY_PCT)
+    return component_cost * pct
 
 
 def _dod(chemistry: str) -> float:
@@ -146,7 +172,7 @@ def _search_custom_mode(
         panel_count = max(1, math.ceil(required_array_w / ps.wattage))
         total_panel_w = ps.wattage * panel_count
         panel_cost = panel.price * panel_count
-        panel_penalty = max(0, panel_count - 1) * COMPONENT_PENALTY
+        panel_penalty = _unit_count_penalty(panel_cost, panel_count)
 
         for inv in inverters:
             try:
@@ -178,7 +204,7 @@ def _search_custom_mode(
                 unit_wh = bs.nominal_voltage * bs.capacity_ah
                 batt_count = max(1, math.ceil(total_batt_wh / unit_wh))
                 batt_cost = batt.price * batt_count
-                batt_penalty = max(0, batt_count - 1) * COMPONENT_PENALTY
+                batt_penalty = _unit_count_penalty(batt_cost, batt_count)
 
                 for acc in accessories:
                     try:
@@ -261,7 +287,7 @@ def _search_generator_mode(
         gen_count_for_capacity = max(1, math.ceil(total_wh / gs.capacity_wh))
         gen_count_for_power = max(1, math.ceil(min_gen_w / gs.rated_output_power))
         gen_count = max(gen_count_for_capacity, gen_count_for_power)
-        gen_penalty = max(0, gen_count - 1) * COMPONENT_PENALTY
+        gen_penalty = _unit_count_penalty(gen.price * gen_count, gen_count)
 
         for panel in panels:
             try:
@@ -271,7 +297,7 @@ def _search_generator_mode(
 
             panel_count = max(1, math.ceil(required_panel_w / ps.wattage))
             total_panel_w = ps.wattage * panel_count
-            panel_penalty = max(0, panel_count - 1) * COMPONENT_PENALTY
+            panel_penalty = _unit_count_penalty(panel.price * panel_count, panel_count)
 
             for acc in accessories:
                 try:
