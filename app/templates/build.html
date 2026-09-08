@@ -596,11 +596,11 @@
     <div class="budget-row">
       <div class="budget-field">
         <label>Minimum (₦)</label>
-        <input type="number" id="budgetMin" placeholder="0" value="0">
+        <input type="text" inputmode="numeric" id="budgetMin" placeholder="0" value="0">
       </div>
       <div class="budget-field">
         <label>Maximum (₦)</label>
-        <input type="number" id="budgetMax" placeholder="500000" value="500000">
+        <input type="text" inputmode="numeric" id="budgetMax" placeholder="500,000" value="500,000">
       </div>
       <div class="budget-field">
         <label>Currency</label>
@@ -732,7 +732,7 @@ function renderAppliances() {
       <td><input type="text" value="${escapeHtml(app.name)}" data-idx="${idx}" data-field="name" onchange="updateAppliance(this)"></td>
       <td><input type="number" value="${app.qty}" data-idx="${idx}" data-field="qty" onchange="updateAppliance(this)"></td>
       <td><input type="number" value="${app.watts}" data-idx="${idx}" data-field="watts" onchange="updateAppliance(this)"></td>
-      <td><input type="number" value="${app.hours}" data-idx="${idx}" data-field="hours" onchange="updateAppliance(this)"></td>
+      <td><input type="number" min="0" max="24" step="0.5" value="${app.hours}" data-idx="${idx}" data-field="hours" onchange="updateAppliance(this)"></td>
       <td><button type="button" class="btn-icon" onclick="removeAppliance(${idx})" aria-label="Remove">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button></td>
@@ -753,7 +753,15 @@ function updateAppliance(input) {
   const idx = parseInt(input.dataset.idx);
   const field = input.dataset.field;
   let val = input.value;
-  if (field !== 'name') val = parseFloat(val) || 0;
+  if (field !== 'name') {
+    val = parseFloat(val) || 0;
+    if (val < 0) val = 0;
+    // A day only has 24 hours — clamp rather than pop a dialog, and
+    // snap the visible field to match so it doesn't silently disagree
+    // with what's stored.
+    if (field === 'hours' && val > 24) val = 24;
+    input.value = val;
+  }
   appliances[idx][field] = val;
   recalcLoad();
   saveToLocalStorage();
@@ -959,6 +967,7 @@ function loadFromLocalStorage() {
     }
     if (data.budgetMin !== undefined) document.getElementById('budgetMin').value = data.budgetMin;
     if (data.budgetMax !== undefined) document.getElementById('budgetMax').value = data.budgetMax;
+    ['budgetMin', 'budgetMax'].forEach(id => formatBudgetInput(document.getElementById(id)));
     if (typeof data.useDefault === 'boolean') useDefaultCheckbox.checked = data.useDefault;
     if (data.buildMode) buildMode = data.buildMode;
     if (data.autonomyHours !== undefined) {
@@ -986,8 +995,8 @@ document.getElementById('autoBuildBtn').addEventListener('click', async function
     use_default_household: useDefaultCheckbox.checked,
     autonomy_hours: parseFloat(autonomySlider.value),
     preferred_chemistry: document.getElementById('preferredChemistry').value,
-    budget_min: parseFloat(document.getElementById('budgetMin').value) || null,
-    budget_max: parseFloat(document.getElementById('budgetMax').value) || null,
+    budget_min: parseBudgetValue(document.getElementById('budgetMin').value),
+    budget_max: parseBudgetValue(document.getElementById('budgetMax').value),
     build_mode: buildMode
   };
 
@@ -1114,8 +1123,8 @@ function buildCurrentBundle() {
       use_default_household: useDefaultCheckbox.checked,
       autonomy_hours: parseFloat(autonomySlider.value),
       preferred_chemistry: document.getElementById('preferredChemistry').value,
-      budget_min: parseFloat(document.getElementById('budgetMin').value) || null,
-      budget_max: parseFloat(document.getElementById('budgetMax').value) || null,
+      budget_min: parseBudgetValue(document.getElementById('budgetMin').value),
+      budget_max: parseBudgetValue(document.getElementById('budgetMax').value),
       build_mode: buildMode
     },
     selections: {
@@ -1137,8 +1146,33 @@ function buildCurrentBundle() {
 }
 
 // ─── BUDGET LISTENERS ───
-document.getElementById('budgetMin').addEventListener('change', saveToLocalStorage);
-document.getElementById('budgetMax').addEventListener('change', saveToLocalStorage);
+// Budget fields are text inputs (not type="number") so we can render
+// thousands separators live as the user types — native number inputs
+// reject the "," character outright.
+function parseBudgetValue(str) {
+  if (str == null) return null;
+  const cleaned = String(str).replace(/,/g, '').trim();
+  if (cleaned === '') return null;
+  const n = parseFloat(cleaned);
+  return Number.isNaN(n) ? null : n;
+}
+
+function formatBudgetInput(input) {
+  const caretFromEnd = input.value.length - input.selectionStart;
+  const num = parseBudgetValue(input.value);
+  input.value = num === null ? '' : num.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  // keep the caret roughly where the user left it relative to the end,
+  // so typing in the middle of a long number doesn't jump to the end
+  const pos = Math.max(0, input.value.length - caretFromEnd);
+  input.setSelectionRange(pos, pos);
+}
+
+['budgetMin', 'budgetMax'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => formatBudgetInput(el));
+  el.addEventListener('blur', saveToLocalStorage);
+  el.addEventListener('change', saveToLocalStorage);
+});
 
 // ─── INIT ───
 function normalInit() {
