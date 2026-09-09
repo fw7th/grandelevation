@@ -273,6 +273,7 @@
   }
 
   .btn-primary {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -282,22 +283,113 @@
     padding: 16px 30px;
     font-size: 15px;
     font-weight: 600;
-    transition: transform 0.15s ease, background 0.15s ease;
+    isolation: isolate;
+    overflow: visible;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    will-change: transform;
+    animation: btn-sun-charge 2.6s ease-in-out infinite;
+    transition: background 0.2s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* idle "charging" glow — pure box-shadow, no extra shapes to misalign */
+  @keyframes btn-sun-charge {
+    0%, 100% {
+      box-shadow: 0 4px 14px -4px rgba(242, 166, 35, 0.35), 0 0 0 0 rgba(242, 166, 35, 0.3);
+    }
+    50% {
+      box-shadow: 0 6px 22px -4px rgba(242, 166, 35, 0.55), 0 0 0 6px rgba(242, 166, 35, 0.08);
+    }
+  }
+
+  /* expanding shockwave rings on hover — plain circles, always match the pill's own radius */
+  .btn-wave {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .btn-wave::before,
+  .btn-wave::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1.5px solid var(--gold);
+    opacity: 0;
+  }
+
+  .btn-primary:hover .btn-wave::before {
+    animation: btn-wave-out 1.4s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+  }
+
+  .btn-primary:hover .btn-wave::after {
+    animation: btn-wave-out 1.4s cubic-bezier(0.2, 0.6, 0.4, 1) infinite 0.5s;
+  }
+
+  @keyframes btn-wave-out {
+    0% { transform: scale(1); opacity: 0.55; }
+    100% { transform: scale(1.35); opacity: 0; }
   }
 
   .btn-primary:hover {
     background: var(--gold-deep);
-    transform: translateY(-1px);
+    animation-play-state: paused;
+    box-shadow: 0 10px 26px -6px rgba(242, 166, 35, 0.6);
+    transform: scale(1.06) translateY(-2px) rotate(var(--tilt, 0deg));
+  }
+
+  .btn-primary:active,
+  .btn-primary.tapped {
+    transform: scale(0.93) translateY(0);
+    background: var(--gold-deep);
+    box-shadow: 0 2px 10px -2px rgba(242, 166, 35, 0.7);
+    transition-duration: 0.12s;
   }
 
   .btn-primary svg {
     width: 16px;
     height: 16px;
-    transition: transform 0.15s ease;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .btn-primary:hover svg {
-    transform: translateX(3px);
+    transform: translateX(6px) rotate(6deg);
+  }
+
+  .btn-primary:active svg {
+    transform: translateX(2px) scale(0.88);
+  }
+
+  /* tap ripple, gold-tinted */
+  .btn-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 226, 170, 0.75) 0%, rgba(255, 226, 170, 0) 70%);
+    transform: scale(0);
+    animation: btn-ripple-anim 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    pointer-events: none;
+  }
+
+  @keyframes btn-ripple-anim {
+    to {
+      transform: scale(2.8);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-primary,
+    .btn-wave::before,
+    .btn-wave::after {
+      animation: none !important;
+    }
+    .btn-primary:hover,
+    .btn-primary:active {
+      transform: none;
+    }
   }
 
   .btn-secondary {
@@ -503,6 +595,7 @@
       <p>Grand Elevation's new ordering site checks panel, inverter, and battery specs against each other automatically, so what you order is what actually works together, to supply non-stop electricity.</p>
       <div class="hero-actions">
         <a href="/catalog" class="btn-primary">
+          <span class="btn-wave"></span>
           Browse catalog
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
@@ -547,6 +640,7 @@
     <p>Existing customer or new, the full catalog is right here.</p>
     <div class="closing-actions">
       <a href="/catalog" class="btn-primary">
+        <span class="btn-wave"></span>
         Browse catalog
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -599,6 +693,55 @@
       var next = isDark ? 'light' : 'dark';
       applyTheme(next);
       localStorage.setItem('theme', next);
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    var buttons = document.querySelectorAll('.btn-primary');
+
+    buttons.forEach(function (btn) {
+      // Spawn a ripple at the pointer/tap position
+      function spawnRipple(x, y) {
+        var rect = btn.getBoundingClientRect();
+        var ripple = document.createElement('span');
+        var size = Math.max(rect.width, rect.height) * 1.2;
+        ripple.className = 'btn-ripple';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (x - rect.left - size / 2) + 'px';
+        ripple.style.top = (y - rect.top - size / 2) + 'px';
+        btn.appendChild(ripple);
+        ripple.addEventListener('animationend', function () {
+          ripple.remove();
+        });
+      }
+
+      btn.addEventListener('pointerdown', function (e) {
+        spawnRipple(e.clientX, e.clientY);
+        btn.classList.add('tapped');
+      });
+
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (evt) {
+        btn.addEventListener(evt, function () {
+          btn.classList.remove('tapped');
+        });
+      });
+
+      // Magnetic tilt: button leans slightly toward the cursor on hover (desktop only)
+      var supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      if (supportsHover) {
+        btn.addEventListener('mousemove', function (e) {
+          var rect = btn.getBoundingClientRect();
+          var relX = (e.clientX - rect.left) / rect.width - 0.5; // -0.5 to 0.5
+          var tilt = relX * 6; // max ~3deg either way
+          btn.style.setProperty('--tilt', tilt.toFixed(2) + 'deg');
+        });
+
+        btn.addEventListener('mouseleave', function () {
+          btn.style.setProperty('--tilt', '0deg');
+        });
+      }
     });
   })();
 </script>
