@@ -8,7 +8,7 @@
   },
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
-  ]
+  ],
   "crons": [
     {
       "path": "/internal/keep-alive",
