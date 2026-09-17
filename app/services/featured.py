@@ -18,12 +18,14 @@ How the "stable for the day" part works:
 """
 
 import hashlib
+import os
 from datetime import date
 
 from sqlalchemy import String, cast, func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ..database import engine
 from ..models import Product
 from ..specs import SPEC_MODELS
 
