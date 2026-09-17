@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{% if query %}"{{ query }}" — Search{% else %}Search{% endif %} — Grand Elevation Solar{% endblock %}
+{% block title %}{% if query %}"{{ query }}" - Search{% else %}Search{% endif %} - Grand Elevation Solar{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -107,7 +107,7 @@
         <svg class="no-result-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="7" width="16" height="10" rx="1.5"/><path d="M19 10v4M7 10v4M11 10v4"/><path d="M12 21h0" stroke-width="2"/></svg>
       </div>
       <h2 class="display">Didn't find this product</h2>
-      <p>We don't have <strong>"{{ query }}"</strong> in stock right now. Reach out to us and we'll source it for you — then add it to the catalog.</p>
+      <p>We don't have <strong>"{{ query }}"</strong> in stock right now. Reach out to us and we'll source it for you, then add it to the catalog.</p>
       <a href="https://wa.me/2348107730018?text=Hi%20Grand%20Elevation%20Solar,%20I'm%20looking%20for:%20{{ query|urlencode }}" target="_blank">Request via WhatsApp →</a>
     </div>
     {% endif %}
