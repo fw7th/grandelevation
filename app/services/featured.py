@@ -18,12 +18,14 @@ How the "stable for the day" part works:
 """
 
 import hashlib
+import os
 from datetime import date
 
 from sqlalchemy import String, cast, func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from ..database import engine
 from ..models import Product
 from ..specs import SPEC_MODELS
 
@@ -50,7 +52,7 @@ async def get_daily_featured(session: AsyncSession, count: int = 15) -> list[Pro
         sorted(CATEGORIES, key=lambda c: _stable_digest(f"{c}:{day_key}"))[:remainder]
     )
 
-    is_postgres = session.bind.dialect.name == "postgresql"
+    is_postgres = engine.dialect.name == "postgresql"
 
     selected: list[Product] = []
     for category in CATEGORIES:
@@ -68,7 +70,6 @@ async def get_daily_featured(session: AsyncSession, count: int = 15) -> list[Pro
             result = await session.exec(statement)
             selected.extend(result.all())
         else:
-            # SQLite (tests) has no md5() — sort in Python instead
             result = await session.exec(
                 select(Product).where(Product.category == category)
             )

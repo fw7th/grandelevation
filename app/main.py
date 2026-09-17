@@ -13,6 +13,7 @@ from app.routers import (
     catalog,
     checkout,
     favorites,
+    internal,
     products,
     search,
     shop,
@@ -54,6 +55,7 @@ app.include_router(shop.router)
 app.include_router(search.router)
 app.include_router(build.router)
 app.include_router(checkout.router)
+app.include_router(internal.router)
 
 
 @app.get("/")

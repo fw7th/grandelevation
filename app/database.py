@@ -22,7 +22,6 @@ engine = create_async_engine(
     future=True,
 )
 
-
 SessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
