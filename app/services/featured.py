@@ -41,45 +41,40 @@ def _stable_digest(s: str) -> str:
     return hashlib.md5(s.encode()).hexdigest()
 
 
-async def get_daily_featured(
-    session: AsyncSession,
-    count: int = 15,
-) -> list[Product]:
-    """
-    Return up to `count` products, sampled as evenly as possible across
-    every category in SPEC_MODELS, deterministically randomized per day.
-
-    If a category has no products, it's simply skipped -- no error.
-    If total available products < count, returns whatever exists.
-    """
+async def get_daily_featured(session: AsyncSession, count: int = 15) -> list[Product]:
     day_key = _day_key()
-
     per_category = count // len(CATEGORIES)
     remainder = count % len(CATEGORIES)
 
-    # Give the remainder to a deterministically-but-daily-randomly chosen
-    # subset of categories, so the "extra" slot doesn't always land on
-    # the same category every day.
     bonus_categories = set(
         sorted(CATEGORIES, key=lambda c: _stable_digest(f"{c}:{day_key}"))[:remainder]
     )
 
-    selected: list[Product] = []
+    is_postgres = session.bind.dialect.name == "postgresql"
 
+    selected: list[Product] = []
     for category in CATEGORIES:
         take = per_category + (1 if category in bonus_categories else 0)
         if take <= 0:
             continue
 
-        # order by md5(id::text || day_key) -- deterministic for today,
-        # different tomorrow, no connection state required
-        statement = (
-            select(Product)
-            .where(Product.category == category)
-            .order_by(func.md5(cast(Product.id, String) + day_key))
-            .limit(take)
-        )
-        result = await session.exec(statement)
-        selected.extend(result.all())
+        if is_postgres:
+            statement = (
+                select(Product)
+                .where(Product.category == category)
+                .order_by(func.md5(cast(Product.id, String) + day_key))
+                .limit(take)
+            )
+            result = await session.exec(statement)
+            selected.extend(result.all())
+        else:
+            # SQLite (tests) has no md5() — sort in Python instead
+            result = await session.exec(
+                select(Product).where(Product.category == category)
+            )
+            rows = sorted(
+                result.all(), key=lambda p: _stable_digest(f"{p.id}:{day_key}")
+            )
+            selected.extend(rows[:take])
 
     return selected
