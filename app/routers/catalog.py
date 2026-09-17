@@ -44,13 +44,12 @@ async def catalog(
                 "categories": await get_active_categories(session),
             },
         )
-
     except Exception:
+        import traceback
+
+        traceback.print_exc()  # temporary — see the real error in test output
         await session.rollback()
-        return FileResponse(
-            BASE_DIR / "static" / "500.html",
-            status_code=500,
-        )
+        return FileResponse(BASE_DIR / "static" / "500.html", status_code=500)
 
 
 @router.get("/catalog/category/{category}")

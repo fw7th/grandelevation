@@ -9,17 +9,18 @@ Goal: show a capped, randomized set of products (default 15) that is:
     see 15 panels with zero inverters
 
 How the "stable for the day" part works:
-  Postgres' random() is seeded per-connection via setseed(), which takes
-  a float in [-1, 1]. We derive that float from today's date, so every
-  connection that runs this query today gets the same random ordering
-  today, and a different one tomorrow. No table, no scheduled job.
-
-This module has one public entrypoint: get_daily_featured().
+  Instead of seeding Postgres' random() per-connection (fragile — depends
+  on connection reuse and re-seeding correctly every time), we sort by
+  md5(product_id || today's_date). This is a pure function of the row and
+  the date: every connection, every worker process, every request
+  computes the exact same ordering for today, and a different one
+  tomorrow. No session state, no cron job, no table.
 """
 
+import hashlib
 from datetime import date
 
-from sqlalchemy import text
+from sqlalchemy import String, cast, func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -29,77 +30,51 @@ from ..specs import SPEC_MODELS
 CATEGORIES = list(SPEC_MODELS.keys())
 
 
-def _seed_for_today() -> float:
-    """
-    Derive a stable float in (-1, 1) from today's date, for Postgres
-    setseed(). Changes automatically at midnight (server timezone).
-    """
-    today = date.today()
-    # ordinal is a plain incrementing day-count int -- stable, no parsing
-    n = today.toordinal()
-    # map to a spread-out value in (-1, 1), avoiding 0 (setseed(0) is a
-    # degenerate case that behaves the same as no seed on some builds)
-    seed = ((n % 2000) / 1000.0) - 1.0
-    if seed == 0:
-        seed = 0.0001
-    return seed
+def _day_key() -> str:
+    """Today's date as a stable string. Changes at midnight (server tz)."""
+    return date.today().isoformat()  # e.g. "2026-09-17"
 
 
-async def _seed_random(session: AsyncSession) -> None:
-    """Seed this connection's random() so ORDER BY random() is stable today."""
-    seed = _seed_for_today()
-    print("Seed", seed)
-    # session.execute() (plain SQLAlchemy async, always available) rather
-    # than session.exec() (SQLModel's ORM-row-unwrapping wrapper, meant
-    # for Select statements) -- keeps this independent of SQLModel version
-    # quirks around raw text() handling.
-    # Check if the current database dialect is NOT SQLite before seeding
-    if session.bind.dialect.name != "sqlite":
-        await session.execute(text("SELECT setseed(:seed)"), {"seed": 0.5})
-    else:
-        # Optional: Use SQLite's random ordering alternative without a seed
-        # SQLite does not support seeding its random() natively out of the box
-        pass
+def _stable_digest(s: str) -> str:
+    """Process-independent hash, unlike builtin hash() which varies by
+    PYTHONHASHSEED across worker processes."""
+    return hashlib.md5(s.encode()).hexdigest()
 
 
-async def get_daily_featured(
-    session: AsyncSession,
-    count: int = 15,
-) -> list[Product]:
-    """
-    Return up to `count` products, sampled as evenly as possible across
-    every category in SPEC_MODELS, deterministically randomized per day.
-
-    If a category has no products, it's simply skipped -- no error.
-    If total available products < count, returns whatever exists.
-    """
-    await _seed_random(session)
-
+async def get_daily_featured(session: AsyncSession, count: int = 15) -> list[Product]:
+    day_key = _day_key()
     per_category = count // len(CATEGORIES)
     remainder = count % len(CATEGORIES)
 
-    # Give the remainder to a deterministically-but-daily-randomly chosen
-    # subset of categories, so the "extra" slot doesn't always land on
-    # the same category every day.
-    today_seed = _seed_for_today()
     bonus_categories = set(
-        sorted(CATEGORIES, key=lambda c: hash((c, today_seed)))[:remainder]
+        sorted(CATEGORIES, key=lambda c: _stable_digest(f"{c}:{day_key}"))[:remainder]
     )
 
-    selected: list[Product] = []
+    is_postgres = session.bind.dialect.name == "postgresql"
 
+    selected: list[Product] = []
     for category in CATEGORIES:
         take = per_category + (1 if category in bonus_categories else 0)
         if take <= 0:
             continue
 
-        statement = (
-            select(Product)
-            .where(Product.category == category)
-            .order_by(text("random()"))
-            .limit(take)
-        )
-        result = await session.exec(statement)
-        selected.extend(result.all())
+        if is_postgres:
+            statement = (
+                select(Product)
+                .where(Product.category == category)
+                .order_by(func.md5(cast(Product.id, String) + day_key))
+                .limit(take)
+            )
+            result = await session.exec(statement)
+            selected.extend(result.all())
+        else:
+            # SQLite (tests) has no md5() — sort in Python instead
+            result = await session.exec(
+                select(Product).where(Product.category == category)
+            )
+            rows = sorted(
+                result.all(), key=lambda p: _stable_digest(f"{p.id}:{day_key}")
+            )
+            selected.extend(rows[:take])
 
     return selected
