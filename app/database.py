@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 load_dotenv()
@@ -15,6 +16,8 @@ DATABASE_URL = os.getenv(
 
 engine = create_async_engine(
     DATABASE_URL,
+    poolclass=NullPool,
+    connect_args={"statement_cache_size": 0},
     echo=True,  # Logs SQL statements
     future=True,
 )
