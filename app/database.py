@@ -15,6 +15,16 @@ raw_url = os.getenv(
     "postgresql+asyncpg://fw7th:135917@localhost:5432/ges",
 )
 
+raw_url = os.getenv(
+    "NEON_POSTGRES_DATABASE_URL",
+    "postgresql+asyncpg://fw7th:135917@localhost:5432/ges",
+)
+
+if raw_url.startswith("postgresql://"):
+    raw_url = raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif raw_url.startswith("postgres://"):
+    raw_url = raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+
 
 def _strip_libpq_only_params(url: str) -> str:
     """Remove query params asyncpg doesn't understand (sslmode, channel_binding),
