@@ -31,6 +31,18 @@ ALEMBIC_MIGRATION_URL = os.getenv(
     "NEON_POSTGRES_DATABASE_URL_UNPOOLED",
     "postgresql+asyncpg://fw7th:135917@localhost:5432/ges",
 )
+
+
+if ALEMBIC_MIGRATION_URL.startswith("postgresql://"):
+    ALEMBIC_MIGRATION_URL = ALEMBIC_MIGRATION_URL.replace(
+        "postgresql://", "postgresql+asyncpg://", 1
+    )
+elif ALEMBIC_MIGRATION_URL.startswith("postgres://"):
+    ALEMBIC_MIGRATION_URL = ALEMBIC_MIGRATION_URL.replace(
+        "postgres://", "postgresql+asyncpg://", 1
+    )
+
+
 config.set_main_option("sqlalchemy.url", ALEMBIC_MIGRATION_URL)
 
 target_metadata = SQLModel.metadata

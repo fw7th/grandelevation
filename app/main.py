@@ -16,6 +16,7 @@ from app.routers import (
     internal,
     products,
     search,
+    seo,
     shop,
 )
 from app.routers.admin import orders as admin_orders
@@ -56,6 +57,7 @@ app.include_router(search.router)
 app.include_router(build.router)
 app.include_router(checkout.router)
 app.include_router(internal.router)
+app.include_router(seo.router)
 
 
 @app.get("/")
