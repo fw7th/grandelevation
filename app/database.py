@@ -1,6 +1,7 @@
 # database.py
 import os
 from collections.abc import AsyncGenerator
+from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -9,15 +10,34 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    "NHOST_DATABASE_URL",
+raw_url = os.getenv(
+    "NEON_DATABASE_POSTGRES_URL",
     "postgresql+asyncpg://fw7th:135917@localhost:5432/ges",
 )
+
+
+def _strip_libpq_only_params(url: str) -> str:
+    """Remove query params asyncpg doesn't understand (sslmode, channel_binding),
+    which SQLAlchemy would otherwise pass through as invalid connect() kwargs."""
+    parts = urlsplit(url)
+    query = parse_qs(parts.query)
+    query.pop("sslmode", None)
+    query.pop("channel_binding", None)
+    new_query = urlencode(query, doseq=True)
+    return urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment)
+    )
+
+
+DATABASE_URL = _strip_libpq_only_params(raw_url)
 
 engine = create_async_engine(
     DATABASE_URL,
     poolclass=NullPool,
-    connect_args={"statement_cache_size": 0},
+    connect_args={
+        "statement_cache_size": 0,
+        "ssl": "require",
+    },
     echo=True,  # Logs SQL statements
     future=True,
 )

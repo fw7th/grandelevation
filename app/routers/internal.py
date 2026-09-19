@@ -1,6 +1,6 @@
 # app/routers/internal.py
 """
-Small cron job to ping nhost so database doesn't get paused.
+Small cron job ping so database doesn't get paused.
 """
 
 import os

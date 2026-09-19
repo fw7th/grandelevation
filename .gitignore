@@ -25,6 +25,7 @@ token.json
 
 # Personal stuff
 /app/static/products/
+*.dump
 
 # Do not ignore
 !.env.example
