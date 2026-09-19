@@ -27,11 +27,11 @@ if config.config_file_name is not None:
 
 # Use the same DB URL source as database.py, so alembic.ini never
 # drifts out of sync with what the app itself connects to.
-DATABASE_URL = os.getenv(
-    "NHOST_DATABASE_URL",
+ALEMBIC_MIGRATION_URL = os.getenv(
+    "NEON_POSTGRES_DATABASE_URL_UNPOOLED",
     "postgresql+asyncpg://fw7th:135917@localhost:5432/ges",
 )
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+config.set_main_option("sqlalchemy.url", ALEMBIC_MIGRATION_URL)
 
 target_metadata = SQLModel.metadata
 
