@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Grand Elevation Solar{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}Grand Elevation Solar - quality solar panels, inverters, batteries, and solar generators in Lagos, Nigeria.{% endblock %}">
+<meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
 <script>
 (function() {
   const stored = localStorage.getItem('theme');

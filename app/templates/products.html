@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}{{ product.name }} - Grand Elevation Solar{% endblock %}
+{% block title %}{{ product.name }} | Grand Elevation Solar{% endblock %}
+{% block meta_description %}{{ product.name }} - {{ product.description[:140] }} Available now at Grand Elevation Solar, Lagos.{% endblock %}
 
 {% block extra_css %}
 <style>
