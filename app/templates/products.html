@@ -3,6 +3,31 @@
 {% block title %}{{ product.name }} | Grand Elevation Solar{% endblock %}
 {% block meta_description %}{{ product.name }} - {{ product.description[:140] }} Available now at Grand Elevation Solar, Lagos.{% endblock %}
 
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "@id": "https://www.grandelevationsolar.com/products/{{ product.id }}",
+  "name": {{ product.name | tojson }},
+  "image": {{ images | tojson }},
+  "description": {{ product.description | tojson }},
+  "category": {{ product.category | tojson }},
+  "brand": {
+    "@type": "Brand",
+    "name": "Grand Elevation Solar"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "https://www.grandelevationsolar.com/products/{{ product.id }}",
+    "priceCurrency": "NGN",
+    "price": {{ product.price | tojson }},
+    "availability": "https://schema.org/InStock"
+  }
+}
+</script>
+{% endblock %}
+
 {% block extra_css %}
 <style>
   /* Breadcrumb */

@@ -11,7 +11,7 @@ from ..models import Product
 
 router = APIRouter()
 
-BASE_URL = "https://grandelevationsolar.com"
+BASE_URL = "https://www.grandelevationsolar.com"
 
 
 @router.get("/robots.txt", response_class=PlainTextResponse)

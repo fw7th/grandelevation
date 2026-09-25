@@ -6,4 +6,4 @@ Disallow: /internal/
 Disallow: /checkout
 Disallow: /account
 
-Sitemap: https://grandelevationsolar.com/sitemap.xml
+Sitemap: https://www.grandelevationsolar.com/sitemap.xml
