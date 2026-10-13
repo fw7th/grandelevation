@@ -91,6 +91,7 @@
   .product-desc {
     font-size: 14.5px; line-height: 1.65; color: var(--gray-mid);
     margin-top: 10px; max-width: 640px;
+    overflow-wrap: anywhere; white-space: pre-line;
   }
 
   /* Buy Rail */
@@ -459,7 +460,7 @@
 {% block extra_js %}
 <script>
 (function () {
-  var IMAGES = [{% if images %}{% for img in images %}"{{ img }}"{% if not loop.last %},{% endif %}{% endfor %}{% endif %}];
+  var IMAGES = {{ (images or []) | tojson }};
   var current = 0;
   var imgEl = document.getElementById('galleryImage');
   var dots = document.querySelectorAll('.gallery-dots .dot');
