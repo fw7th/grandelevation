@@ -30,6 +30,7 @@ from ..models import Product
 from ..specs import SPEC_MODELS
 
 CATEGORIES = list(SPEC_MODELS.keys())
+PAGE_SIZE = 24
 
 
 def _day_key() -> str:
@@ -43,40 +44,27 @@ def _stable_digest(s: str) -> str:
     return hashlib.md5(s.encode()).hexdigest()
 
 
-async def get_daily_featured(session: AsyncSession, count: int = 15) -> list[Product]:
+async def get_catalog_page(
+    session: AsyncSession, offset: int, limit: int, category: str | None = None
+) -> tuple[list[Product], bool]:
+    """One page of products in today's stable shuffled order.
+    Fetches limit+1 rows to learn whether another page exists."""
     day_key = _day_key()
-    per_category = count // len(CATEGORIES)
-    remainder = count % len(CATEGORIES)
+    stmt = select(Product)
+    if category:
+        stmt = stmt.where(Product.category == category)
 
-    bonus_categories = set(
-        sorted(CATEGORIES, key=lambda c: _stable_digest(f"{c}:{day_key}"))[:remainder]
-    )
-
-    is_postgres = session.bind.dialect.name == "postgresql"
-
-    selected: list[Product] = []
-    for category in CATEGORIES:
-        take = per_category + (1 if category in bonus_categories else 0)
-        if take <= 0:
-            continue
-
-        if is_postgres:
-            statement = (
-                select(Product)
-                .where(Product.category == category)
-                .order_by(func.md5(cast(Product.id, String) + day_key))
-                .limit(take)
-            )
-            result = await session.exec(statement)
-            selected.extend(result.all())
-        else:
-            # SQLite (tests) has no md5() — sort in Python instead
-            result = await session.exec(
-                select(Product).where(Product.category == category)
-            )
-            rows = sorted(
-                result.all(), key=lambda p: _stable_digest(f"{p.id}:{day_key}")
-            )
-            selected.extend(rows[:take])
-
-    return selected
+    if session.bind.dialect.name == "postgresql":
+        stmt = (
+            stmt.order_by(func.md5(cast(Product.id, String) + day_key), Product.id)
+            .offset(offset)
+            .limit(limit + 1)
+        )
+        rows = (await session.exec(stmt)).all()
+    else:  # SQLite (tests)
+        all_rows = sorted(
+            (await session.exec(stmt)).all(),
+            key=lambda p: (_stable_digest(f"{p.id}:{day_key}"), p.id),
+        )
+        rows = all_rows[offset : offset + limit + 1]
+    return rows[:limit], len(rows) > limit

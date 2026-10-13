@@ -1,0 +1,14 @@
+{% if has_more %}
+<div id="scrollSentinel" class="scroll-sentinel"
+     {% if oob %}hx-swap-oob="true"{% endif %}
+     hx-get="/catalog/more?offset={{ next_offset }}{% if active_category %}&amp;category={{ active_category }}{% endif %}"
+     hx-trigger="revealed"
+     hx-target="#productGrid"
+     hx-swap="beforeend">
+  <span class="scroll-dots" role="status" aria-label="Loading more products">
+    <i></i><i></i><i></i>
+  </span>
+</div>
+{% else %}
+<div id="scrollSentinel" {% if oob %}hx-swap-oob="true"{% endif %}></div>
+{% endif %}

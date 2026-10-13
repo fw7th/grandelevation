@@ -1,0 +1,8 @@
+{% for product in products %}
+  <div class="product-card-wrap">
+    {% include "_product_card.html" %}
+    {% with product_id=product.id, is_favorited=(product.id in favorite_ids) %}
+      {% include "_favorite_button.html" %}
+    {% endwith %}
+  </div>
+{% endfor %}

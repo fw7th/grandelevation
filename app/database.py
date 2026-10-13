@@ -10,10 +10,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 load_dotenv()
 
-raw_url = os.getenv(
-    "NEON_POSTGRES_DATABASE_URL",
-    "postgresql+asyncpg://fw7th:135917@localhost:5432/ges",
-)
 
 raw_url = os.getenv(
     "NEON_POSTGRES_DATABASE_URL",
